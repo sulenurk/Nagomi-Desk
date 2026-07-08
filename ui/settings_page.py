@@ -98,11 +98,27 @@ class SettingsPage(ctk.CTkFrame):
         )
         self.queue_progress_switch.grid(row=0, column=1, rowspan=2, padx=20, pady=18)
 
+        self.cumulative_away_frame = self.create_setting_row(
+            row=4,
+            title_key="show_cumulative_away_time",
+            description_key="show_cumulative_away_time_desc"
+        )
+
+        self.cumulative_away_switch = ctk.CTkSwitch(
+            self.cumulative_away_frame,
+            text="",
+            progress_color=COLORS["primary"],
+            button_color=COLORS["text"],
+            button_hover_color=COLORS["soft"],
+            command=self.save_settings
+        )
+        self.cumulative_away_switch.grid(row=0, column=1, rowspan=2, padx=20, pady=18)
+
         self.goal_frame = ctk.CTkFrame(
             self.settings_card,
             fg_color="transparent"
         )
-        self.goal_frame.grid(row=4, column=0, padx=20, pady=(8, 20), sticky="ew")
+        self.goal_frame.grid(row=5, column=0, padx=20, pady=(8, 20), sticky="ew")
         self.goal_frame.grid_columnconfigure(0, weight=1)
 
         self.goal_title = ctk.CTkLabel(
@@ -142,7 +158,7 @@ class SettingsPage(ctk.CTkFrame):
             text_color=COLORS["green"],
             font=ctk.CTkFont(size=13, weight="bold")
         )
-        self.status_label.grid(row=5, column=0, padx=20, pady=(0, 18), sticky="w")
+        self.status_label.grid(row=6, column=0, padx=20, pady=(0, 18), sticky="w")
 
     def create_setting_row(self, row, title_key, description_key):
         frame = ctk.CTkFrame(
@@ -204,6 +220,11 @@ class SettingsPage(ctk.CTkFrame):
         else:
             self.queue_progress_switch.deselect()
 
+        if settings.get("show_cumulative_away_time", True):
+            self.cumulative_away_switch.select()
+        else:
+            self.cumulative_away_switch.deselect()
+
         goal = settings.get("daily_focus_goal_minutes", 300)
         self.goal_entry.delete(0, "end")
         self.goal_entry.insert(0, str(goal))
@@ -228,6 +249,7 @@ class SettingsPage(ctk.CTkFrame):
 
         if hasattr(self.app, "focus_page"):
             self.app.focus_page.refresh_queue_progress_visibility()
+            self.app.focus_page.refresh_away_card_visibility()
 
         self.app.save_app_data()
         self.status_label.configure(text=self.app.t("settings_saved"))
@@ -242,7 +264,8 @@ class SettingsPage(ctk.CTkFrame):
             self.auto_break_frame,
             self.auto_focus_frame,
             self.sound_frame,
-            self.queue_progress_frame
+            self.queue_progress_frame,
+            self.cumulative_away_frame
         ]:
             frame.title_label.configure(text=self.app.t(frame.title_key))
             frame.desc_label.configure(text=self.app.t(frame.description_key))

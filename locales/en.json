@@ -132,5 +132,13 @@
 "plan_stopped": "Study plan stopped.",
 "task_progress": "Task progress",
 "no_task_selected": "Select a task from Study Plan to start.",
-"queue_completed": "Study plan completed."
+"queue_completed": "Study plan completed.",
+
+"pending": "Pending",
+"active": "Active",
+
+"show_cumulative_away_time": "Show cumulative away time",
+"show_cumulative_away_time_desc": "Show today's total away time on the Focus Timer screen.",
+"away_message_seconds": "You have been away for {seconds} sec.",
+"away_message_minutes": "You have been away for {minutes} min."
 }

@@ -21,6 +21,7 @@ class FocusPage(ctk.CTkFrame):
         self.break_seconds = 5 * 60
         self.remaining_seconds = self.focus_seconds
         self.away_seconds = 0
+        self.session_away_seconds = 0
         self.session_elapsed_seconds = 0
         self.cumulative_away_seconds_today = 0
 
@@ -33,6 +34,7 @@ class FocusPage(ctk.CTkFrame):
         self.load_active_task()
         self.update_total_focus_label()
         self.update_away_metric()
+        self.refresh_away_card_visibility()
         self.update_queue_progress()
         self.refresh_queue_progress_visibility()
 
@@ -294,7 +296,7 @@ class FocusPage(ctk.CTkFrame):
 
         self.away_value = ctk.CTkLabel(
             self.away_card,
-            text="00:00",
+            text="--:--",
             text_color=COLORS["orange"],
             font=ctk.CTkFont(size=30, weight="bold")
         )
@@ -327,6 +329,8 @@ class FocusPage(ctk.CTkFrame):
             if not self.is_running and not self.is_paused:
                 self.current_mode = "focus"
                 self.remaining_seconds = self.focus_seconds
+                self.away_seconds = 0
+                self.session_away_seconds = 0
                 self.timer_label.configure(text=self.format_time(self.remaining_seconds))
                 self.start_button.configure(state="disabled")
                 self.task_progress.set(0)
@@ -401,6 +405,7 @@ class FocusPage(ctk.CTkFrame):
         self.is_paused = False
         self.is_waiting_for_next = False
         self.away_seconds = 0
+        self.session_away_seconds = 0
         self.current_mode = "focus"
 
         task = self.app.get_active_task()
@@ -516,6 +521,10 @@ class FocusPage(ctk.CTkFrame):
                 if hasattr(self.app, "statistics_page"):
                     self.app.statistics_page.refresh_stats()
 
+                self.session_away_seconds = 0
+                self.away_seconds = 0
+                self.update_away_metric()
+
                 self.switch_to_break_ready()
 
             else:
@@ -555,25 +564,36 @@ class FocusPage(ctk.CTkFrame):
     def update_away_timer(self):
         if self.is_paused:
             self.away_seconds += 1
+            self.session_away_seconds += 1
 
             if self.away_seconds < 60:
-                text = f"{self.away_seconds} sn'dir uzaktasın."
+                text = self.app.t(
+                    "away_message_seconds",
+                    seconds=self.away_seconds
+                )
             else:
                 away_minutes = self.away_seconds // 60
-                text = self.app.t("away_message", minutes=away_minutes)
+                text = self.app.t(
+                    "away_message_minutes",
+                    minutes=away_minutes
+                )
 
             self.away_warning_label.configure(text=text)
             self.update_away_metric()
 
             self.after(1000, self.update_away_timer)
-
+            
     def update_total_focus_label(self):
         total_seconds = self.app.app_data.get("total_focus_seconds_today", 0)
         self.total_focus_value.configure(text=self.format_hours_minutes(total_seconds))
 
     def update_away_metric(self):
         cumulative_away = self.get_cumulative_away_seconds_today()
-        self.away_value.configure(text=self.format_time(cumulative_away))
+
+        if cumulative_away <= 0:
+            self.away_value.configure(text="--:--")
+        else:
+            self.away_value.configure(text=self.format_time(cumulative_away))
 
     def refresh_texts(self):
         self.subtitle_label.configure(text=self.app.t("focus_subtitle"))
@@ -624,6 +644,7 @@ class FocusPage(ctk.CTkFrame):
         self.refresh_queue_progress_visibility()
         self.update_total_focus_label()
         self.update_away_metric()
+        self.refresh_away_card_visibility()
 
     def log_focus_session(self):
         task = self.app.get_active_task()
@@ -634,7 +655,7 @@ class FocusPage(ctk.CTkFrame):
             "task_title": task.get("title") if task else None,
             "mode": "focus",
             "duration_seconds": self.focus_seconds,
-            "away_seconds": self.away_seconds,
+            "away_seconds": self.session_away_seconds,
             "completed_at": datetime.now().isoformat(timespec="seconds")
         }
 
@@ -730,26 +751,26 @@ class FocusPage(ctk.CTkFrame):
         self.update_current_task_bar_text()
 
     def get_cumulative_away_seconds_today(self):
+        from datetime import date
+
+        today_str = date.today().isoformat()
         today_sessions = []
 
-        if hasattr(self.app, "statistics_page"):
-            today_sessions = self.app.statistics_page.get_today_sessions()
-        else:
-            from datetime import date
-            today_str = date.today().isoformat()
-            for session in self.app.app_data.get("sessions", []):
-                completed_at = session.get("completed_at", "")
-                if completed_at.startswith(today_str) and session.get("mode") == "focus":
-                    today_sessions.append(session)
+        for session in self.app.app_data.get("sessions", []):
+            completed_at = session.get("completed_at", "")
+
+            if (
+                completed_at.startswith(today_str)
+                and session.get("mode") == "focus"
+            ):
+                today_sessions.append(session)
 
         completed_away = sum(
             session.get("away_seconds", 0)
             for session in today_sessions
         )
 
-        current_away = self.away_seconds if self.is_paused else 0
-
-        return completed_away + current_away
+        return completed_away + self.session_away_seconds
     
     def update_current_task_bar_text(self):
         task = self.app.get_active_task()
@@ -784,3 +805,14 @@ class FocusPage(ctk.CTkFrame):
                 text=f"{elapsed_minutes} / {total_minutes} {self.app.t('minutes_short')} · "
                      f"{self.app.t('break_mode')}"
             )
+
+    def refresh_away_card_visibility(self):
+        show_away = self.app.app_data.get("settings", {}).get(
+            "show_cumulative_away_time",
+            True
+        )
+
+        if show_away:
+            self.away_card.grid()
+        else:
+            self.away_card.grid_remove()

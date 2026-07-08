@@ -90,7 +90,7 @@ class StudyPlanPage(ctk.CTkFrame):
 
         self.filter_buttons = {}
 
-        filters = ["all_tasks", "today", "this_week", "completed"]
+        filters = ["all_tasks", "pending", "active", "completed"]
 
         for index, filter_key in enumerate(filters):
             button = PillButton(
@@ -410,12 +410,29 @@ class StudyPlanPage(ctk.CTkFrame):
             widget.destroy()
 
         tasks = self.app.app_data.get("tasks", [])
+        active_task_id = self.app.app_data.get("active_task_id")
 
         if self.active_filter == "completed":
             tasks = [
                 task for task in tasks
                 if task.get("status") == "completed"
             ]
+
+        elif self.active_filter == "pending":
+            tasks = [
+                task for task in tasks
+                if task.get("status") != "completed"
+                and task.get("id") != active_task_id
+                and not task.get("hidden_from_plan", False)
+            ]
+
+        elif self.active_filter == "active":
+            tasks = [
+                task for task in tasks
+                if task.get("id") == active_task_id
+                and task.get("status") != "completed"
+            ]
+
         else:
             tasks = [
                 task for task in tasks

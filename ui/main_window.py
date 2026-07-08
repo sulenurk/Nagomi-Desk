@@ -16,7 +16,7 @@ class FocusFlowApp(ctk.CTk):
 
         self.app_data = self.load_app_data()
         self.language = self.app_data.get("language", "tr")
-        self.translations = self.load_translations(self.language)
+        self.translations = self.load_translations()
 
         self.active_page = "focus"
 
@@ -44,14 +44,46 @@ class FocusFlowApp(ctk.CTk):
         with open(self.data_path, "w", encoding="utf-8") as file:
             json.dump(self.app_data, file, indent=2, ensure_ascii=False)
 
-    def load_translations(self, language):
-        locale_path = self.base_path / "locales" / f"{language}.json"
-        with open(locale_path, "r", encoding="utf-8") as file:
-            return json.load(file)
+    def load_translations(self):
+        import json
+        import os
+
+        translations = {}
+
+        for language in ["tr", "en"]:
+            file_path = os.path.join("locales", f"{language}.json")
+
+            try:
+                with open(file_path, "r", encoding="utf-8") as file:
+                    translations[language] = json.load(file)
+
+            except FileNotFoundError:
+                print(f"[TRANSLATION ERROR] Missing file: {file_path}")
+                translations[language] = {}
+
+            except json.JSONDecodeError as error:
+                print(f"[TRANSLATION ERROR] Invalid JSON in {file_path}")
+                print(f"Line: {error.lineno}, Column: {error.colno}")
+                print(f"Message: {error.msg}")
+                translations[language] = {}
+
+        return translations
 
     def t(self, key, **kwargs):
-        text = self.translations.get(key, key)
-        return text.format(**kwargs)
+        language = self.app_data.get("language", "tr")
+
+        text = self.translations.get(language, {}).get(key)
+
+        if text is None:
+            text = self.translations.get("en", {}).get(key, key)
+
+        if kwargs:
+            try:
+                return text.format(**kwargs)
+            except Exception:
+                return text
+
+        return text
 
     def create_sidebar(self):
         self.sidebar = ctk.CTkFrame(
@@ -196,7 +228,7 @@ class FocusFlowApp(ctk.CTk):
         self.app_data["language"] = selected_language
         self.save_app_data()
 
-        self.translations = self.load_translations(selected_language)
+        self.translations = self.load_translations()
         self.refresh_texts()
 
     def refresh_texts(self):
