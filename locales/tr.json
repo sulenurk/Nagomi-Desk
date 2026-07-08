@@ -114,5 +114,16 @@
 "session_duration": "Süre",
 "session_away": "Uzak kalma",
 "no_recent_sessions": "Henüz tamamlanan odak seansı yok.",
-"no_recent_sessions_subtitle": "Bir odak seansı tamamladığında burada görünecek."
+"no_recent_sessions_subtitle": "Bir odak seansı tamamladığında burada görünecek.",
+
+"update_task": "Görevi Güncelle",
+"edit_task": "Düzenle",
+"cancel_edit": "Vazgeç",
+"task_updated": "Görev güncellendi.",
+"start_plan": "Planı Başlat",
+"queue_mode": "Sıralı Plan",
+"queue_started": "Çalışma planı başlatıldı.",
+"no_pending_tasks": "Başlatılacak bekleyen görev yok.",
+"move_task": "Taşı"
+
 }

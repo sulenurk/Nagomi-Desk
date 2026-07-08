@@ -33,6 +33,7 @@ class StudyPlanPage(ctk.CTkFrame):
         self.app = app
 
         self.active_filter = "all_tasks"
+        self.editing_task_id = None
 
         self.subject_options = [
             "math",
@@ -68,14 +69,21 @@ class StudyPlanPage(ctk.CTkFrame):
         self.subtitle_label = PageSubtitle(self.header, self.app.t("study_plan_subtitle"))
         self.subtitle_label.grid(row=1, column=0, pady=(4, 0), sticky="w")
 
+        self.start_plan_button = PrimaryButton(
+            self.header,
+            text=f"▶ {self.app.t('start_plan')}",
+            command=self.start_plan,
+            width=140
+        )
+        self.start_plan_button.grid(row=0, column=1, rowspan=2, padx=(0, 12), sticky="e")
+
         self.add_top_button = PrimaryButton(
             self.header,
             text=f"+ {self.app.t('add_task')}",
             command=self.focus_task_name_entry,
             width=130
         )
-        self.add_top_button.grid(row=0, column=1, rowspan=2, sticky="e")
-
+        self.add_top_button.grid(row=0, column=2, rowspan=2, sticky="e")
     def create_filter_bar(self):
         self.filter_frame = ctk.CTkFrame(self, fg_color="transparent")
         self.filter_frame.grid(row=1, column=0, padx=36, pady=(16, 12), sticky="w")
@@ -174,11 +182,20 @@ class StudyPlanPage(ctk.CTkFrame):
         self.add_button = PrimaryButton(
             self.add_card,
             text=self.app.t("add_task"),
-            command=self.add_task,
+            command=self.save_task_from_form,
             width=110
         )
-        self.add_button.grid(row=1, column=5, padx=(8, 20), pady=(8, 20))
+        self.add_button.grid(row=1, column=5, padx=(8, 8), pady=(8, 20))
 
+        self.cancel_edit_button = SecondaryButton(
+            self.add_card,
+            text=self.app.t("cancel_edit"),
+            command=self.cancel_edit,
+            width=90
+        )
+        self.cancel_edit_button.grid(row=1, column=6, padx=(0, 20), pady=(8, 20))
+        self.cancel_edit_button.grid_remove()
+        
         self.form_status_label = ctk.CTkLabel(
             self.add_card,
             text="",
@@ -215,7 +232,7 @@ class StudyPlanPage(ctk.CTkFrame):
 
         self.render_tasks()
 
-    def add_task(self):
+    def save_task_from_form(self):
         title = self.task_name_entry.get().strip()
         focus_value = self.focus_entry.get().strip()
         break_value = self.break_entry.get().strip()
@@ -265,24 +282,39 @@ class StudyPlanPage(ctk.CTkFrame):
             self.priority_options
         )
 
+        if self.editing_task_id:
+            self.update_existing_task(
+                task_id=self.editing_task_id,
+                subject=selected_subject,
+                title=title,
+                focus_minutes=focus_minutes,
+                break_minutes=break_minutes,
+                priority=selected_priority
+            )
+        else:
+            self.create_new_task(
+                subject=selected_subject,
+                title=title,
+                focus_minutes=focus_minutes,
+                break_minutes=break_minutes,
+                priority=selected_priority
+            )
+
+    def create_new_task(self, subject, title, focus_minutes, break_minutes, priority):
         new_task = {
             "id": f"task_{uuid.uuid4().hex[:8]}",
-            "subject": selected_subject,
+            "subject": subject,
             "title": title,
             "focus_minutes": focus_minutes,
             "break_minutes": break_minutes,
-            "priority": selected_priority,
+            "priority": priority,
             "status": "pending"
         }
 
         self.app.app_data.setdefault("tasks", []).append(new_task)
         self.app.save_app_data()
 
-        self.task_name_entry.delete(0, "end")
-        self.focus_entry.delete(0, "end")
-        self.focus_entry.insert(0, "25")
-        self.break_entry.delete(0, "end")
-        self.break_entry.insert(0, "5")
+        self.clear_task_form()
 
         self.form_status_label.configure(
             text=self.app.t("task_added"),
@@ -290,8 +322,49 @@ class StudyPlanPage(ctk.CTkFrame):
         )
 
         self.after(2000, lambda: self.form_status_label.configure(text=""))
-
         self.render_tasks()
+
+    def update_existing_task(self, task_id, subject, title, focus_minutes, break_minutes, priority):
+        for task in self.app.app_data.get("tasks", []):
+            if task.get("id") == task_id:
+                task["subject"] = subject
+                task["title"] = title
+                task["focus_minutes"] = focus_minutes
+                task["break_minutes"] = break_minutes
+                task["priority"] = priority
+                break
+
+        self.app.save_app_data()
+
+        active_task_id = self.app.app_data.get("active_task_id")
+        if active_task_id == task_id:
+            self.app.focus_page.load_active_task()
+
+        self.cancel_edit()
+
+        self.form_status_label.configure(
+            text=self.app.t("task_updated"),
+            text_color=COLORS["green"]
+        )
+
+        self.after(2000, lambda: self.form_status_label.configure(text=""))
+        self.render_tasks()
+
+    def clear_task_form(self):
+        self.task_name_entry.delete(0, "end")
+        self.focus_entry.delete(0, "end")
+        self.focus_entry.insert(0, "25")
+        self.break_entry.delete(0, "end")
+        self.break_entry.insert(0, "5")
+        self.subject_menu.set(self.app.t("math"))
+        self.priority_menu.set(self.app.t("medium"))
+
+    def cancel_edit(self):
+        self.editing_task_id = None
+        self.clear_task_form()
+        self.add_title.configure(text=self.app.t("add_new_task"))
+        self.add_button.configure(text=self.app.t("add_task"))
+        self.cancel_edit_button.grid_remove()            
     
     def render_empty_state(self):
         empty_card = AppCard(self.task_scroll)
@@ -356,9 +429,13 @@ class StudyPlanPage(ctk.CTkFrame):
                 is_active=is_active,
                 is_completed=is_completed,
                 on_start=self.start_task,
+                on_edit=self.edit_task,
                 on_delete=self.delete_task,
-                on_complete=self.complete_task
-            )
+                on_complete=self.complete_task,
+                on_drag_start=self.drag_start,
+                on_drag_release=self.drag_release
+                )
+
             card.grid(row=row_index, column=0, pady=7, sticky="ew")
 
     def delete_task(self, task_id):
@@ -395,8 +472,106 @@ class StudyPlanPage(ctk.CTkFrame):
 
         self.render_tasks()
 
+        self.start_plan_button.configure(text=f"▶ {self.app.t('start_plan')}")
+        self.cancel_edit_button.configure(text=self.app.t("cancel_edit"))
+
+        if self.editing_task_id:
+            self.add_title.configure(text=self.app.t("update_task"))
+            self.add_button.configure(text=self.app.t("update_task"))
+        else:
+            self.add_title.configure(text=self.app.t("add_new_task"))
+            self.add_button.configure(text=self.app.t("add_task"))
+
     def start_task(self, task_id):
         self.app.set_active_task(task_id)
+        self.render_tasks()
+
+    def start_plan(self):
+        started = self.app.start_task_queue()
+
+        if started:
+            self.form_status_label.configure(
+                text=self.app.t("queue_started"),
+                text_color=COLORS["green"]
+            )
+        else:
+            self.form_status_label.configure(
+                text=self.app.t("no_pending_tasks"),
+                text_color=COLORS["red"]
+            )
+
+    def edit_task(self, task_id):
+        task = None
+
+        for item in self.app.app_data.get("tasks", []):
+            if item.get("id") == task_id:
+                task = item
+                break
+
+        if not task:
+            return
+
+        self.editing_task_id = task_id
+
+        self.subject_menu.set(self.app.t(task.get("subject", "math")))
+
+        self.task_name_entry.delete(0, "end")
+        self.task_name_entry.insert(0, task.get("title", ""))
+
+        self.focus_entry.delete(0, "end")
+        self.focus_entry.insert(0, str(task.get("focus_minutes", 25)))
+
+        self.break_entry.delete(0, "end")
+        self.break_entry.insert(0, str(task.get("break_minutes", 5)))
+
+        self.priority_menu.set(self.app.t(task.get("priority", "medium")))
+
+        self.add_title.configure(text=self.app.t("update_task"))
+        self.add_button.configure(text=self.app.t("update_task"))
+        self.cancel_edit_button.grid()
+        self.task_name_entry.focus_set()
+
+    def drag_start(self, task_id):
+        self.dragged_task_id = task_id
+
+    def drag_release(self, task_id, event):
+        if not getattr(self, "dragged_task_id", None):
+            return
+
+        target_widget = self.winfo_containing(event.x_root, event.y_root)
+
+        target_task_id = None
+
+        while target_widget:
+            if hasattr(target_widget, "task"):
+                target_task_id = target_widget.task.get("id")
+                break
+            target_widget = target_widget.master
+
+        if target_task_id and target_task_id != self.dragged_task_id:
+            self.reorder_tasks(self.dragged_task_id, target_task_id)
+
+        self.dragged_task_id = None
+
+    def reorder_tasks(self, dragged_task_id, target_task_id):
+        tasks = self.app.app_data.get("tasks", [])
+
+        dragged_index = None
+        target_index = None
+
+        for index, task in enumerate(tasks):
+            if task.get("id") == dragged_task_id:
+                dragged_index = index
+            if task.get("id") == target_task_id:
+                target_index = index
+
+        if dragged_index is None or target_index is None:
+            return
+
+        dragged_task = tasks.pop(dragged_index)
+        tasks.insert(target_index, dragged_task)
+
+        self.app.save_app_data()
         self.render_tasks()
 
 
@@ -409,9 +584,16 @@ class TaskCard(AppCard):
         is_active=False,
         is_completed=False,
         on_start=None,
+        on_edit=None,
         on_delete=None,
-        on_complete=None
+        on_complete=None,
+        on_drag_start=None,
+        on_drag_release=None
     ):
+        self.on_edit = on_edit
+        self.on_drag_start = on_drag_start
+        self.on_drag_release = on_drag_release
+
         border_color = COLORS["primary"] if is_active else COLORS["card_border"]
         fg_color = COLORS["surface"] if is_completed else COLORS["card"]
 
@@ -501,20 +683,41 @@ class TaskCard(AppCard):
             width=92
         )
         self.start_button.grid(row=0, column=4, rowspan=2, padx=(0, 8), pady=20)
+        
+        self.edit_button = SecondaryButton(
+            self,
+            text="✎",
+            command=lambda: self.on_edit(task.get("id")),
+            width=44
+        )
+        self.edit_button.grid(row=0, column=5, rowspan=2, padx=(0, 8), pady=20)
+
         self.complete_button = SecondaryButton(
             self,
             text="✓",
             command=lambda: self.on_complete(task.get("id")),
             width=44
         )
-        self.complete_button.grid(row=0, column=5, rowspan=2, padx=(0, 8), pady=20)
+        self.complete_button.grid(row=0, column=6, rowspan=2, padx=(0, 8), pady=20)
         self.delete_button = SecondaryButton(
             self,
             text="×",
             command=lambda: self.on_delete(task.get("id")),
             width=44
         )
-        self.delete_button.grid(row=0, column=6, rowspan=2, padx=(0, 18), pady=20)
+        self.delete_button.grid(row=0, column=7, rowspan=2, padx=(0, 18), pady=20)
+
+        self.drag_handle = ctk.CTkLabel(
+            self,
+            text="☰",
+            text_color=COLORS["muted"],
+            font=ctk.CTkFont(size=18, weight="bold"),
+            cursor="hand2"
+        )
+        self.drag_handle.grid(row=0, column=8, rowspan=2, padx=(0, 18), pady=20)
+
+        self.drag_handle.bind("<Button-1>", lambda event: self.on_drag_start(task.get("id")))
+        self.drag_handle.bind("<ButtonRelease-1>", lambda event: self.on_drag_release(task.get("id"), event))
 
         if self.is_completed:
             self.start_button.configure(
@@ -527,3 +730,5 @@ class TaskCard(AppCard):
                 fg_color=COLORS["surface"],
                 text_color=COLORS["muted"]
             )
+
+    

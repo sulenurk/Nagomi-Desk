@@ -113,5 +113,15 @@
 "session_duration": "Duration",
 "session_away": "Away",
 "no_recent_sessions": "No completed focus sessions yet.",
-"no_recent_sessions_subtitle": "Your completed focus sessions will appear here."
+"no_recent_sessions_subtitle": "Your completed focus sessions will appear here.",
+
+"update_task": "Update Task",
+"edit_task": "Edit",
+"cancel_edit": "Cancel",
+"task_updated": "Task updated.",
+"start_plan": "Start Plan",
+"queue_mode": "Study Queue",
+"queue_started": "Study plan started.",
+"no_pending_tasks": "No pending task to start.",
+"move_task": "Move"
 }

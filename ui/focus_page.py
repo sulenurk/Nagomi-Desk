@@ -387,8 +387,14 @@ class FocusPage(ctk.CTkFrame):
 
             else:
                 self.away_warning_label.configure(text=self.app.t("break_completed"))
-                self.switch_to_focus_ready()
 
+                moved_to_next_task = self.app.move_to_next_queue_task()
+
+                if moved_to_next_task:
+                    self.away_warning_label.configure(text=self.app.t("focus_ready"))
+
+                self.switch_to_focus_ready()
+                    
     def update_away_timer(self):
         if self.is_paused:
             self.away_seconds += 1

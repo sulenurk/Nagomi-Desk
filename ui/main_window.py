@@ -257,3 +257,58 @@ class FocusFlowApp(ctk.CTk):
                     hover_color="#334155",
                     text_color="#CBD5E1"
                 )
+    
+    def get_pending_tasks(self):
+        return [
+            task for task in self.app_data.get("tasks", [])
+            if task.get("status") != "completed"
+        ]
+
+    def start_task_queue(self):
+        pending_tasks = self.get_pending_tasks()
+
+        if not pending_tasks:
+            return False
+
+        first_task = pending_tasks[0]
+        self.app_data["queue_mode_active"] = True
+        self.app_data["active_task_id"] = first_task.get("id")
+        self.save_app_data()
+
+        self.focus_page.load_active_task()
+        self.show_focus_page()
+
+        return True
+
+    def stop_task_queue(self):
+        self.app_data["queue_mode_active"] = False
+        self.save_app_data()
+
+    def move_to_next_queue_task(self):
+        if not self.app_data.get("queue_mode_active", False):
+            return False
+
+        active_task_id = self.app_data.get("active_task_id")
+        tasks = self.app_data.get("tasks", [])
+
+        active_index = None
+
+        for index, task in enumerate(tasks):
+            if task.get("id") == active_task_id:
+                active_index = index
+                break
+
+        if active_index is None:
+            return False
+
+        for next_task in tasks[active_index + 1:]:
+            if next_task.get("status") != "completed":
+                self.app_data["active_task_id"] = next_task.get("id")
+                self.save_app_data()
+                self.focus_page.load_active_task()
+                return True
+
+        self.app_data["queue_mode_active"] = False
+        self.app_data["active_task_id"] = None
+        self.save_app_data()
+        return False
