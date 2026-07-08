@@ -1,6 +1,7 @@
 import json
 import customtkinter as ctk
 from pathlib import Path
+from ui.pomodoro_page import PomodoroPage
 from ui.statistics_page import StatisticsPage
 from ui.focus_page import FocusPage
 from ui.study_plan_page import StudyPlanPage
@@ -58,7 +59,7 @@ class FocusFlowApp(ctk.CTk):
     fg_color="#030712"
 )
         self.sidebar.grid(row=0, column=0, sticky="nsew")
-        self.sidebar.grid_rowconfigure(5, weight=1)
+        self.sidebar.grid_rowconfigure(6, weight=1)
 
         self.logo_label = ctk.CTkLabel(
             self.sidebar,
@@ -91,6 +92,18 @@ class FocusFlowApp(ctk.CTk):
 )
         self.todo_button.grid(row=2, column=0, padx=20, pady=10, sticky="ew")
 
+        self.pomodoro_button = ctk.CTkButton(
+            self.sidebar,
+            text=self.t("regular_pomodoro"),
+            height=42,
+            corner_radius=14,
+            fg_color="#1E293B",
+            hover_color="#334155",
+            anchor="w",
+            command=self.show_pomodoro_page
+        )
+        self.pomodoro_button.grid(row=3, column=0, padx=20, pady=10, sticky="ew")
+
         self.statistics_button = ctk.CTkButton(
             self.sidebar,
             text=self.t("statistics"),
@@ -101,7 +114,7 @@ class FocusFlowApp(ctk.CTk):
             anchor="w",
             command=self.show_statistics_page
         )
-        self.statistics_button.grid(row=3, column=0, padx=20, pady=10, sticky="ew")
+        self.statistics_button.grid(row=4, column=0, padx=20, pady=10, sticky="ew")
 
         self.settings_button = ctk.CTkButton(
             self.sidebar,
@@ -113,13 +126,13 @@ class FocusFlowApp(ctk.CTk):
             anchor="w",
             command=self.show_settings_page
         )
-        self.settings_button.grid(row=4, column=0, padx=20, pady=10, sticky="ew")
+        self.settings_button.grid(row=5, column=0, padx=20, pady=10, sticky="ew")
 
         self.language_label = ctk.CTkLabel(
             self.sidebar,
             text=self.t("language")
         )
-        self.language_label.grid(row=6, column=0, padx=20, pady=(20, 5))
+        self.language_label.grid(row=7, column=0, padx=20, pady=(20, 5))
 
         self.language_menu = ctk.CTkOptionMenu(
     self.sidebar,
@@ -130,7 +143,7 @@ class FocusFlowApp(ctk.CTk):
     command=self.change_language
 )
         self.language_menu.set(self.language)
-        self.language_menu.grid(row=7, column=0, padx=20, pady=(0, 30), sticky="ew")
+        self.language_menu.grid(row=8, column=0, padx=20, pady=(0, 30), sticky="ew")
 
     def create_pages(self):
         self.page_container = ctk.CTkFrame(self, corner_radius=0)
@@ -140,11 +153,13 @@ class FocusFlowApp(ctk.CTk):
 
         self.focus_page = FocusPage(self.page_container, self)
         self.todo_page = StudyPlanPage(self.page_container, self)
+        self.pomodoro_page = PomodoroPage(self.page_container, self)
         self.settings_page = SettingsPage(self.page_container, self)
         self.statistics_page = StatisticsPage(self.page_container, self)
         
         self.focus_page.grid(row=0, column=0, sticky="nsew")
         self.todo_page.grid(row=0, column=0, sticky="nsew")
+        self.pomodoro_page.grid(row=0, column=0, sticky="nsew")
         self.statistics_page.grid(row=0, column=0, sticky="nsew")
         self.settings_page.grid(row=0, column=0, sticky="nsew")
 
@@ -153,6 +168,9 @@ class FocusFlowApp(ctk.CTk):
 
     def show_todo_page(self):
         self.todo_page.tkraise()
+
+    def show_pomodoro_page(self):
+        self.pomodoro_page.tkraise()
 
     def show_statistics_page(self):
         self.statistics_page.refresh_stats()
@@ -175,12 +193,14 @@ class FocusFlowApp(ctk.CTk):
         self.logo_label.configure(text=self.t("app_name"))
         self.focus_button.configure(text=self.t("focus_timer"))
         self.todo_button.configure(text=self.t("study_plan"))
+        self.pomodoro_button.configure(text=self.t("regular_pomodoro"))
         self.statistics_button.configure(text=self.t("statistics"))
         self.settings_button.configure(text=self.t("settings"))
         self.language_label.configure(text=self.t("language"))
 
         self.focus_page.refresh_texts()
         self.todo_page.refresh_texts()
+        self.pomodoro_page.refresh_texts()
         self.statistics_page.refresh_texts()
         self.settings_page.refresh_texts()
 

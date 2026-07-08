@@ -82,5 +82,19 @@
 "daily_goal": "Daily Goal",
 "goal_progress": "Goal Progress",
 "no_sessions_yet": "No completed sessions yet.",
-"weekly_overview": "Weekly Overview"
+"weekly_overview": "Weekly Overview",
+
+"pomodoro_subtitle": "Use the classic Pomodoro cycle: focus, break, repeat.",
+"pomodoro_settings": "Pomodoro Settings",
+"focus_duration": "Focus Duration",
+"short_break": "Short Break",
+"long_break": "Long Break",
+"long_break_after": "Long break after",
+"pomodoro_count": "Pomodoro Count",
+"current_cycle": "Current Cycle",
+"save_pomodoro_settings": "Save Pomodoro Settings",
+"pomodoro_settings_saved": "Pomodoro settings saved.",
+"regular_mode": "Regular Mode",
+"short_break_mode": "Short Break",
+"long_break_mode": "Long Break"
 }
