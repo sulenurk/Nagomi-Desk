@@ -73,5 +73,14 @@
 "daily_focus_goal": "Günlük odak hedefi",
 "daily_focus_goal_desc": "Bir günde ulaşmak istediğin toplam odak süresini dakika olarak belirle.",
 "save": "Kaydet",
-"settings_saved": "Ayarlar kaydedildi."
+"settings_saved": "Ayarlar kaydedildi.",
+
+"statistics_subtitle": "Bugünkü odak süreni, tamamlanan seanslarını ve hedef ilerlemeni takip et.",
+"today_focus": "Bugünkü Odak",
+"completed_sessions": "Tamamlanan Seans",
+"away_time_total": "Toplam Uzak Kalma",
+"daily_goal": "Günlük Hedef",
+"goal_progress": "Hedef İlerlemesi",
+"no_sessions_yet": "Henüz tamamlanan seans yok.",
+"weekly_overview": "Haftalık Görünüm"
 }

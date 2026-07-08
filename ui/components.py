@@ -152,3 +152,35 @@ class AppEntry(ctk.CTkEntry):
             font=ctk.CTkFont(size=13),
             **kwargs
         )
+
+class MetricCard(AppCard):
+    def __init__(self, parent, title, value, accent_color=None, **kwargs):
+        super().__init__(parent, **kwargs)
+
+        if accent_color is None:
+            accent_color = COLORS["primary"]
+
+        self.grid_columnconfigure(0, weight=1)
+
+        self.title_label = ctk.CTkLabel(
+            self,
+            text=title,
+            text_color=COLORS["muted"],
+            font=ctk.CTkFont(size=13, weight="bold")
+        )
+        self.title_label.grid(row=0, column=0, padx=18, pady=(18, 4), sticky="w")
+
+        self.value_label = ctk.CTkLabel(
+            self,
+            text=value,
+            text_color=accent_color,
+            font=ctk.CTkFont(size=30, weight="bold")
+        )
+        self.value_label.grid(row=1, column=0, padx=18, pady=(0, 18), sticky="w")
+
+    def update(self, title=None, value=None):
+        if title is not None:
+            self.title_label.configure(text=title)
+
+        if value is not None:
+            self.value_label.configure(text=value)

@@ -1,3 +1,5 @@
+from datetime import datetime
+import uuid
 import customtkinter as ctk
 
 from ui.theme import COLORS
@@ -369,11 +371,17 @@ class FocusPage(ctk.CTkFrame):
                 )
 
                 self.app.app_data["total_focus_seconds_today"] = (
-                    self.app.app_data.get("total_focus_seconds_today", 0)
-                    + self.focus_seconds
+                self.app.app_data.get("total_focus_seconds_today", 0)
+                + self.focus_seconds
                 )
+
+                self.log_focus_session()
+
                 self.app.save_app_data()
                 self.update_total_focus_label()
+
+                if hasattr(self.app, "statistics_page"):
+                    self.app.statistics_page.refresh_stats()
 
                 self.switch_to_break_ready()
 
@@ -443,3 +451,18 @@ class FocusPage(ctk.CTkFrame):
 
         self.update_total_focus_label()
         self.update_away_metric()
+
+    def log_focus_session(self):
+        task = self.app.get_active_task()
+
+        session = {
+            "id": f"session_{uuid.uuid4().hex[:8]}",
+            "task_id": task.get("id") if task else None,
+            "task_title": task.get("title") if task else None,
+            "mode": "focus",
+            "duration_seconds": self.focus_seconds,
+            "away_seconds": self.away_seconds,
+            "completed_at": datetime.now().isoformat(timespec="seconds")
+        }
+
+        self.app.app_data.setdefault("sessions", []).append(session)

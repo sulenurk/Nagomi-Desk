@@ -1,7 +1,7 @@
 import json
 import customtkinter as ctk
 from pathlib import Path
-
+from ui.statistics_page import StatisticsPage
 from ui.focus_page import FocusPage
 from ui.study_plan_page import StudyPlanPage
 from ui.settings_page import SettingsPage
@@ -91,6 +91,18 @@ class FocusFlowApp(ctk.CTk):
 )
         self.todo_button.grid(row=2, column=0, padx=20, pady=10, sticky="ew")
 
+        self.statistics_button = ctk.CTkButton(
+            self.sidebar,
+            text=self.t("statistics"),
+            height=42,
+            corner_radius=14,
+            fg_color="#1E293B",
+            hover_color="#334155",
+            anchor="w",
+            command=self.show_statistics_page
+        )
+        self.statistics_button.grid(row=3, column=0, padx=20, pady=10, sticky="ew")
+
         self.settings_button = ctk.CTkButton(
             self.sidebar,
             text=self.t("settings"),
@@ -101,7 +113,7 @@ class FocusFlowApp(ctk.CTk):
             anchor="w",
             command=self.show_settings_page
         )
-        self.settings_button.grid(row=3, column=0, padx=20, pady=10, sticky="ew")
+        self.settings_button.grid(row=4, column=0, padx=20, pady=10, sticky="ew")
 
         self.language_label = ctk.CTkLabel(
             self.sidebar,
@@ -129,9 +141,11 @@ class FocusFlowApp(ctk.CTk):
         self.focus_page = FocusPage(self.page_container, self)
         self.todo_page = StudyPlanPage(self.page_container, self)
         self.settings_page = SettingsPage(self.page_container, self)
-
+        self.statistics_page = StatisticsPage(self.page_container, self)
+        
         self.focus_page.grid(row=0, column=0, sticky="nsew")
         self.todo_page.grid(row=0, column=0, sticky="nsew")
+        self.statistics_page.grid(row=0, column=0, sticky="nsew")
         self.settings_page.grid(row=0, column=0, sticky="nsew")
 
     def show_focus_page(self):
@@ -139,6 +153,10 @@ class FocusFlowApp(ctk.CTk):
 
     def show_todo_page(self):
         self.todo_page.tkraise()
+
+    def show_statistics_page(self):
+        self.statistics_page.refresh_stats()
+        self.statistics_page.tkraise()
 
     def show_settings_page(self):
         self.settings_page.tkraise()
@@ -157,11 +175,13 @@ class FocusFlowApp(ctk.CTk):
         self.logo_label.configure(text=self.t("app_name"))
         self.focus_button.configure(text=self.t("focus_timer"))
         self.todo_button.configure(text=self.t("study_plan"))
+        self.statistics_button.configure(text=self.t("statistics"))
         self.settings_button.configure(text=self.t("settings"))
         self.language_label.configure(text=self.t("language"))
 
         self.focus_page.refresh_texts()
         self.todo_page.refresh_texts()
+        self.statistics_page.refresh_texts()
         self.settings_page.refresh_texts()
 
     def get_active_task(self):
