@@ -123,5 +123,14 @@
 "queue_mode": "Study Queue",
 "queue_started": "Study plan started.",
 "no_pending_tasks": "No pending task to start.",
-"move_task": "Move"
+"move_task": "Move",
+
+"show_queue_progress": "Show study queue progress",
+"show_queue_progress_desc": "Show study plan progress on the Focus Timer screen.",
+"study_queue": "Study Queue",
+"stop_plan": "Stop Plan",
+"plan_stopped": "Study plan stopped.",
+"task_progress": "Task progress",
+"no_task_selected": "Select a task from Study Plan to start.",
+"queue_completed": "Study plan completed."
 }

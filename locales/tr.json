@@ -124,6 +124,15 @@
 "queue_mode": "Sıralı Plan",
 "queue_started": "Çalışma planı başlatıldı.",
 "no_pending_tasks": "Başlatılacak bekleyen görev yok.",
-"move_task": "Taşı"
+"move_task": "Taşı",
+
+"show_queue_progress": "Sıralı plan ilerlemesini göster",
+"show_queue_progress_desc": "Focus Timer ekranında çalışma planı ilerlemesini göster.",
+"study_queue": "Çalışma Planı",
+"stop_plan": "Planı Durdur",
+"plan_stopped": "Çalışma planı durduruldu.",
+"task_progress": "Görev ilerlemesi",
+"no_task_selected": "Başlamak için Study Plan’dan bir görev seç.",
+"queue_completed": "Çalışma planı tamamlandı."
 
 }

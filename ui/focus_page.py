@@ -21,6 +21,8 @@ class FocusPage(ctk.CTkFrame):
         self.break_seconds = 5 * 60
         self.remaining_seconds = self.focus_seconds
         self.away_seconds = 0
+        self.session_elapsed_seconds = 0
+        self.cumulative_away_seconds_today = 0
 
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(1, weight=1)
@@ -31,6 +33,8 @@ class FocusPage(ctk.CTkFrame):
         self.load_active_task()
         self.update_total_focus_label()
         self.update_away_metric()
+        self.update_queue_progress()
+        self.refresh_queue_progress_visibility()
 
     def create_header(self):
         self.header = ctk.CTkFrame(self, fg_color="transparent")
@@ -125,6 +129,64 @@ class FocusPage(ctk.CTkFrame):
         )
         self.away_warning_label.grid(row=4, column=0, pady=(0, 30), sticky="s")
 
+        self.current_task_bar = ctk.CTkFrame(
+            self.timer_card,
+            fg_color=COLORS["surface"],
+            corner_radius=18,
+            border_width=1,
+            border_color=COLORS["card_border"]
+        )
+        self.current_task_bar.grid(row=5, column=0, padx=32, pady=(0, 30), sticky="ew")
+        self.current_task_bar.grid_columnconfigure(1, weight=1)
+
+        self.current_task_icon = ctk.CTkLabel(
+            self.current_task_bar,
+            text="📘",
+            width=42,
+            height=42,
+            fg_color=COLORS["primary_soft"],
+            text_color=COLORS["text"],
+            corner_radius=12,
+            font=ctk.CTkFont(size=18, weight="bold")
+        )
+        self.current_task_icon.grid(row=0, column=0, rowspan=2, padx=(18, 14), pady=14)
+
+        self.current_task_title = ctk.CTkLabel(
+            self.current_task_bar,
+            text=self.app.t("no_active_task"),
+            text_color=COLORS["text"],
+            font=ctk.CTkFont(size=14, weight="bold"),
+            anchor="w"
+        )
+        self.current_task_title.grid(row=0, column=1, padx=0, pady=(14, 2), sticky="ew")
+
+        self.current_task_detail = ctk.CTkLabel(
+            self.current_task_bar,
+            text=self.app.t("no_task_selected"),
+            text_color=COLORS["muted"],
+            font=ctk.CTkFont(size=12),
+            anchor="w"
+        )
+        self.current_task_detail.grid(row=1, column=1, padx=0, pady=(0, 14), sticky="ew")
+
+        self.task_progress = ctk.CTkProgressBar(
+            self.current_task_bar,
+            height=8,
+            corner_radius=4,
+            progress_color=COLORS["primary"],
+            fg_color=COLORS["card_soft"]
+        )
+        self.task_progress.grid(row=0, column=2, rowspan=2, padx=(14, 10), sticky="ew")
+        self.task_progress.set(0)
+
+        self.task_progress_label = ctk.CTkLabel(
+            self.current_task_bar,
+            text="0%",
+            text_color=COLORS["soft"],
+            font=ctk.CTkFont(size=12, weight="bold")
+        )
+        self.task_progress_label.grid(row=0, column=3, rowspan=2, padx=(0, 18), pady=14)        
+
     def create_side_panel(self):
         self.side_panel = ctk.CTkFrame(self.content, fg_color="transparent")
         self.side_panel.grid(row=0, column=1, sticky="nsew")
@@ -186,6 +248,42 @@ class FocusPage(ctk.CTkFrame):
         self.away_card.grid(row=2, column=0, sticky="ew")
         self.away_card.grid_columnconfigure(0, weight=1)
 
+        self.queue_card = AppCard(self.side_panel)
+        self.queue_card.grid(row=3, column=0, sticky="ew", pady=(16, 0))
+        self.queue_card.grid_columnconfigure(0, weight=1)
+
+        self.queue_title = ctk.CTkLabel(
+            self.queue_card,
+            text=self.app.t("study_queue"),
+            text_color=COLORS["muted"],
+            font=ctk.CTkFont(size=13, weight="bold")
+        )
+        self.queue_title.grid(row=0, column=0, padx=20, pady=(18, 4), sticky="w")
+
+        self.queue_value = ctk.CTkLabel(
+            self.queue_card,
+            text="0 / 0",
+            text_color=COLORS["primary"],
+            font=ctk.CTkFont(size=30, weight="bold")
+        )
+        self.queue_value.grid(row=1, column=0, padx=20, pady=(0, 8), sticky="w")
+
+        self.queue_detail = ctk.CTkLabel(
+            self.queue_card,
+            text="",
+            text_color=COLORS["muted"],
+            font=ctk.CTkFont(size=13)
+        )
+        self.queue_detail.grid(row=2, column=0, padx=20, pady=(0, 14), sticky="w")
+
+        self.stop_plan_button = SecondaryButton(
+            self.queue_card,
+            text=self.app.t("stop_plan"),
+            command=self.stop_plan,
+            width=140
+        )
+        self.stop_plan_button.grid(row=3, column=0, padx=20, pady=(0, 18), sticky="w")
+
         self.away_title = ctk.CTkLabel(
             self.away_card,
             text=self.app.t("away_time"),
@@ -219,6 +317,10 @@ class FocusPage(ctk.CTkFrame):
         if not task:
             self.active_task_label.configure(text=self.app.t("no_active_task"))
             self.active_task_detail_label.configure(text="")
+
+            self.current_task_title.configure(text=self.app.t("no_active_task"))
+            self.current_task_detail.configure(text=self.app.t("no_task_selected"))
+
             self.focus_seconds = 25 * 60
             self.break_seconds = 5 * 60
 
@@ -226,6 +328,9 @@ class FocusPage(ctk.CTkFrame):
                 self.current_mode = "focus"
                 self.remaining_seconds = self.focus_seconds
                 self.timer_label.configure(text=self.format_time(self.remaining_seconds))
+                self.start_button.configure(state="disabled")
+                self.task_progress.set(0)
+                self.task_progress_label.configure(text="0%")
 
             return
 
@@ -240,6 +345,12 @@ class FocusPage(ctk.CTkFrame):
                  f"{break_minutes} {self.app.t('break_minutes')}"
         )
 
+        self.current_task_title.configure(text=f"{subject} · {title}")
+        self.current_task_detail.configure(
+            text=f"{focus_minutes} {self.app.t('focus_minutes')} · "
+                 f"{break_minutes} {self.app.t('break_minutes')}"
+        )
+
         self.focus_seconds = focus_minutes * 60
         self.break_seconds = break_minutes * 60
 
@@ -247,11 +358,14 @@ class FocusPage(ctk.CTkFrame):
             self.current_mode = "focus"
             self.remaining_seconds = self.focus_seconds
             self.timer_label.configure(text=self.format_time(self.remaining_seconds))
+            self.start_button.configure(state="normal")
             self.status_pill.configure(
                 text=self.app.t("focus_mode"),
                 fg_color=COLORS["primary_soft"],
                 text_color=COLORS["text"]
             )
+
+        self.update_current_task_progress()
 
     def start_timer(self):
         if self.is_paused:
@@ -318,6 +432,9 @@ class FocusPage(ctk.CTkFrame):
         self.timer_label.configure(text=self.format_time(self.remaining_seconds))
         self.away_warning_label.configure(text=self.app.t("break_ready"))
         self.start_button.configure(text=self.app.t("start_break"))
+        self.task_progress.set(0)
+        self.task_progress_label.configure(text="0%")
+        
         self.update_mode_ui()
 
         auto_start_break = self.app.app_data.get("settings", {}).get("auto_start_break", False)
@@ -331,6 +448,9 @@ class FocusPage(ctk.CTkFrame):
         self.timer_label.configure(text=self.format_time(self.remaining_seconds))
         self.away_warning_label.configure(text=self.app.t("focus_ready"))
         self.start_button.configure(text=self.app.t("start_focus"))
+        self.task_progress.set(0)
+        self.task_progress_label.configure(text="0%")
+
         self.update_mode_ui()
 
         auto_start_focus = self.app.app_data.get("settings", {}).get("auto_start_focus", False)
@@ -354,10 +474,12 @@ class FocusPage(ctk.CTkFrame):
     def count_down(self):
         if self.is_running and self.remaining_seconds > 0:
             self.timer_label.configure(text=self.format_time(self.remaining_seconds))
+            self.update_current_task_progress()
             self.remaining_seconds -= 1
             self.after(1000, self.count_down)
 
         elif self.is_running and self.remaining_seconds <= 0:
+            self.update_current_task_progress()
             self.is_running = False
             self.timer_label.configure(text="00:00")
 
@@ -414,7 +536,7 @@ class FocusPage(ctk.CTkFrame):
                             fg_color=COLORS["primary_soft"],
                             text_color=COLORS["text"]
                         )
-                        self.away_warning_label.configure(text=self.app.t("no_pending_tasks"))
+                        self.away_warning_label.configure(text=self.app.t("queue_completed"))
                 else:
                     self.switch_to_focus_ready()
                     
@@ -438,7 +560,8 @@ class FocusPage(ctk.CTkFrame):
         self.total_focus_value.configure(text=self.format_hours_minutes(total_seconds))
 
     def update_away_metric(self):
-        self.away_value.configure(text=self.format_time(self.away_seconds))
+        cumulative_away = self.get_cumulative_away_seconds_today()
+        self.away_value.configure(text=self.format_time(cumulative_away))
 
     def refresh_texts(self):
         self.subtitle_label.configure(text=self.app.t("focus_subtitle"))
@@ -446,6 +569,13 @@ class FocusPage(ctk.CTkFrame):
         self.active_task_heading.configure(text=self.app.t("active_task"))
         self.total_focus_title.configure(text=self.app.t("total_focus_today"))
         self.away_title.configure(text=self.app.t("away_time"))
+
+        self.queue_title.configure(text=self.app.t("study_queue"))
+        self.stop_plan_button.configure(text=self.app.t("stop_plan"))
+
+        if not self.app.get_active_task():
+            self.current_task_title.configure(text=self.app.t("no_active_task"))
+            self.current_task_detail.configure(text=self.app.t("no_task_selected"))
 
 
         if self.is_paused:
@@ -478,6 +608,8 @@ class FocusPage(ctk.CTkFrame):
         if not self.is_running and not self.is_paused:
             self.load_active_task()
 
+        self.update_queue_progress()
+        self.refresh_queue_progress_visibility()
         self.update_total_focus_label()
         self.update_away_metric()
 
@@ -495,3 +627,74 @@ class FocusPage(ctk.CTkFrame):
         }
 
         self.app.app_data.setdefault("sessions", []).append(session)
+
+    def stop_plan(self):
+        self.app.stop_task_queue()
+        self.away_warning_label.configure(text=self.app.t("plan_stopped"))
+
+    def get_queue_counts(self):
+        tasks = self.app.app_data.get("tasks", [])
+        total_tasks = len(tasks)
+        completed_tasks = len([
+            task for task in tasks
+            if task.get("status") == "completed"
+        ])
+        pending_tasks = total_tasks - completed_tasks
+        return total_tasks, completed_tasks, pending_tasks
+
+    def update_queue_progress(self):
+        total_tasks, completed_tasks, pending_tasks = self.get_queue_counts()
+
+        self.queue_value.configure(text=f"{completed_tasks} / {total_tasks}")
+        self.queue_detail.configure(
+            text=f"{pending_tasks} pending"
+        )
+
+        queue_active = self.app.app_data.get("queue_mode_active", False)
+
+        if queue_active:
+            self.stop_plan_button.configure(state="normal")
+        else:
+            self.stop_plan_button.configure(state="disabled")
+
+    def refresh_queue_progress_visibility(self):
+        show_queue = self.app.app_data.get("settings", {}).get("show_queue_progress", True)
+
+        if show_queue:
+            self.queue_card.grid()
+        else:
+            self.queue_card.grid_remove()
+
+    def update_current_task_progress(self):
+        total = self.get_current_mode_total_seconds()
+
+        if total <= 0:
+            progress = 0
+        else:
+            elapsed = max(total - self.remaining_seconds, 0)
+            progress = min(elapsed / total, 1)
+
+        self.task_progress.set(progress)
+        self.task_progress_label.configure(text=f"{int(progress * 100)}%")
+
+    def get_cumulative_away_seconds_today(self):
+        today_sessions = []
+
+        if hasattr(self.app, "statistics_page"):
+            today_sessions = self.app.statistics_page.get_today_sessions()
+        else:
+            from datetime import date
+            today_str = date.today().isoformat()
+            for session in self.app.app_data.get("sessions", []):
+                completed_at = session.get("completed_at", "")
+                if completed_at.startswith(today_str) and session.get("mode") == "focus":
+                    today_sessions.append(session)
+
+        completed_away = sum(
+            session.get("away_seconds", 0)
+            for session in today_sessions
+        )
+
+        current_away = self.away_seconds if self.is_paused else 0
+
+        return completed_away + current_away

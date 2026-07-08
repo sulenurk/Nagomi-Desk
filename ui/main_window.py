@@ -282,7 +282,17 @@ class FocusFlowApp(ctk.CTk):
 
     def stop_task_queue(self):
         self.app_data["queue_mode_active"] = False
+        self.app_data["active_task_id"] = None
         self.save_app_data()
+
+        if hasattr(self, "focus_page"):
+            self.focus_page.reset_timer()
+            self.focus_page.load_active_task()
+            self.focus_page.update_queue_progress()
+            self.focus_page.refresh_queue_progress_visibility()
+
+        if hasattr(self, "todo_page"):
+            self.todo_page.render_tasks()
 
     def move_to_next_queue_task(self):
         if not self.app_data.get("queue_mode_active", False):

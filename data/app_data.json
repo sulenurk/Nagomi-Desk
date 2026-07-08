@@ -1,6 +1,6 @@
 {
-  "language": "en",
-  "active_task_id": "task_6717cbb3",
+  "language": "tr",
+  "active_task_id": "task_6c564e24",
   "queue_mode_active": true,
   "settings": {
     "auto_start_break": true,
@@ -10,29 +10,11 @@
     "regular_focus_minutes": 1,
     "regular_short_break_minutes": 1,
     "regular_long_break_minutes": 2,
-    "regular_long_break_after": 2
+    "regular_long_break_after": 2,
+    "show_queue_progress": true
   },
-  "total_focus_seconds_today": 2400,
-  "tasks": [
-    {
-      "id": "task_ab311983",
-      "subject": "physics",
-      "title": "Study Session",
-      "focus_minutes": 1,
-      "break_minutes": 1,
-      "priority": "low",
-      "status": "completed"
-    },
-    {
-      "id": "task_6717cbb3",
-      "subject": "math",
-      "title": "Study Session",
-      "focus_minutes": 1,
-      "break_minutes": 2,
-      "priority": "medium",
-      "status": "completed"
-    }
-  ],
+  "total_focus_seconds_today": 2580,
+  "tasks": [],
   "sessions": [
     {
       "id": "session_c6cba399",
@@ -136,6 +118,15 @@
       "duration_seconds": 60,
       "away_seconds": 0,
       "completed_at": "2026-07-08T07:58:19"
+    },
+    {
+      "id": "session_23db43d6",
+      "task_id": "task_6908339e",
+      "task_title": "Study Session",
+      "mode": "focus",
+      "duration_seconds": 180,
+      "away_seconds": 0,
+      "completed_at": "2026-07-08T08:45:23"
     }
   ]
 }
