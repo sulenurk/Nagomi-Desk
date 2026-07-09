@@ -141,5 +141,10 @@
 "show_cumulative_away_time": "Toplam uzak kalma süresini göster",
 "show_cumulative_away_time_desc": "Focus Timer ekranında bugünkü toplam uzak kalma süresini göster.",
 "away_message_seconds": "{seconds} sn'dir uzaktasın.",
-"away_message_minutes": "{minutes} dk'dır uzaktasın."
+"away_message_minutes": "{minutes} dk'dır uzaktasın.",
+
+"pending_tasks": "Bekleyen",
+"active_tasks": "Aktif",
+"completed_tasks": "Tamamlanan",
+"total_focus": "Toplam Odak"
 }

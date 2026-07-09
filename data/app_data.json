@@ -1,8 +1,11 @@
 {
   "language": "en",
-  "active_task_id": null,
-  "queue_mode_active": false,
-  "queue_task_ids": [],
+  "active_task_id": "task_9a85fa77",
+  "queue_mode_active": true,
+  "queue_task_ids": [
+    "task_18dcd0c1",
+    "task_9a85fa77"
+  ],
   "settings": {
     "auto_start_break": true,
     "auto_start_focus": true,
@@ -34,7 +37,26 @@
       "focus_minutes": 1,
       "break_minutes": 2,
       "priority": "medium",
+      "status": "completed",
+      "hidden_from_plan": true
+    },
+    {
+      "id": "task_18dcd0c1",
+      "subject": "math",
+      "title": "Study Session",
+      "focus_minutes": 1,
+      "break_minutes": 1,
+      "priority": "medium",
       "status": "completed"
+    },
+    {
+      "id": "task_9a85fa77",
+      "subject": "math",
+      "title": "Study Session",
+      "focus_minutes": 1,
+      "break_minutes": 2,
+      "priority": "medium",
+      "status": "pending"
     }
   ],
   "sessions": [

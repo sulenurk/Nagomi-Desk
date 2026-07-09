@@ -12,8 +12,8 @@ from ui.components import (
     PriorityBadge,
     SubjectIcon,
     AppEntry,
+    MetricCard
 )
-
 
 SUBJECT_META = {
     "math": {"icon": "∑"},
@@ -49,13 +49,13 @@ class StudyPlanPage(ctk.CTkFrame):
         self.priority_options = ["low", "medium", "high"]
 
         self.grid_columnconfigure(0, weight=1)
-        self.grid_rowconfigure(2, weight=1)
+        self.grid_rowconfigure(4, weight=1)
 
         self.create_header()
+        self.create_summary_cards()
         self.create_filter_bar()
-        self.create_task_list()
         self.create_add_task_card()
-
+        self.create_task_list()
         self.render_tasks()
 
     def create_header(self):
@@ -77,16 +77,52 @@ class StudyPlanPage(ctk.CTkFrame):
         )
         self.start_plan_button.grid(row=0, column=1, rowspan=2, padx=(0, 12), sticky="e")
 
-        self.add_top_button = PrimaryButton(
+        """ self.add_top_button = PrimaryButton(
             self.header,
             text=f"+ {self.app.t('add_task')}",
             command=self.focus_task_name_entry,
             width=130
         )
-        self.add_top_button.grid(row=0, column=2, rowspan=2, sticky="e")
+        self.add_top_button.grid(row=0, column=2, rowspan=2, sticky="e") """
+    
+    def create_summary_cards(self):
+        self.summary_frame = ctk.CTkFrame(self, fg_color="transparent")
+        self.summary_frame.grid(row=1, column=0, padx=36, pady=(0, 8), sticky="ew")
+
+        for col in range(4):
+            self.summary_frame.grid_columnconfigure(col, weight=1, uniform="summary")
+
+        self.pending_card = MetricCard(
+            self.summary_frame,
+            title=self.app.t("pending_tasks"),
+            value="0"
+        )
+        self.pending_card.grid(row=0, column=0, padx=(0, 8), sticky="ew")
+
+        self.active_card = MetricCard(
+            self.summary_frame,
+            title=self.app.t("active_tasks"),
+            value="0"
+        )
+        self.active_card.grid(row=0, column=1, padx=8, sticky="ew")
+
+        self.completed_card = MetricCard(
+            self.summary_frame,
+            title=self.app.t("completed_tasks"),
+            value="0"
+        )
+        self.completed_card.grid(row=0, column=2, padx=8, sticky="ew")
+
+        self.total_focus_card = MetricCard(
+            self.summary_frame,
+            title=self.app.t("total_focus"),
+            value="0m"
+        )
+        self.total_focus_card.grid(row=0, column=3, padx=(8, 0), sticky="ew")
+    
     def create_filter_bar(self):
         self.filter_frame = ctk.CTkFrame(self, fg_color="transparent")
-        self.filter_frame.grid(row=1, column=0, padx=36, pady=(16, 12), sticky="w")
+        self.filter_frame.grid(row=2, column=0, padx=36, pady=(16, 12), sticky="w")
 
         self.filter_buttons = {}
 
@@ -110,7 +146,7 @@ class StudyPlanPage(ctk.CTkFrame):
             scrollbar_button_color=COLORS["card_soft"],
             scrollbar_button_hover_color=COLORS["primary"]
         )
-        self.task_scroll.grid(row=2, column=0, padx=36, pady=(0, 12), sticky="nsew")
+        self.task_scroll.grid(row=4, column=0, padx=36, pady=(0, 12), sticky="nsew")
         self.task_scroll.grid_columnconfigure(0, weight=1)
 
     def create_add_task_card(self):
@@ -406,6 +442,8 @@ class StudyPlanPage(ctk.CTkFrame):
         add_button.grid(row=3, column=0, pady=(0, 28))
 
     def render_tasks(self):
+        self.update_summary_cards()
+
         for widget in self.task_scroll.winfo_children():
             widget.destroy()
 
@@ -526,12 +564,22 @@ class StudyPlanPage(ctk.CTkFrame):
     def refresh_texts(self):
         self.title_label.configure(text=self.app.t("study_plan_title"))
         self.subtitle_label.configure(text=self.app.t("study_plan_subtitle"))
-        self.add_top_button.configure(text=f"+ {self.app.t('add_task')}")
+
         self.add_title.configure(text=self.app.t("add_new_task"))
         self.task_name_entry.configure(placeholder_text=self.app.t("task_name"))
         self.focus_entry.configure(placeholder_text=self.app.t("focus_minutes"))
         self.break_entry.configure(placeholder_text=self.app.t("break_minutes"))
         self.add_button.configure(text=self.app.t("add_task"))
+
+        self.pending_card.title_label.configure(text=self.app.t("pending_tasks"))
+        
+        self.active_card.title_label.configure(text=self.app.t("active_tasks"))
+        
+        self.completed_card.title_label.configure(text=self.app.t("completed_tasks"))
+        
+        self.total_focus_card.title_label.configure(text=self.app.t("total_focus"))
+       
+        self.update_summary_cards()
 
         for key, button in self.filter_buttons.items():
             button.configure(text=self.app.t(key))
@@ -643,6 +691,42 @@ class StudyPlanPage(ctk.CTkFrame):
         self.app.save_app_data()
         self.render_tasks()
 
+    def update_summary_cards(self):
+        tasks = self.app.app_data.get("tasks", [])
+        active_task_id = self.app.app_data.get("active_task_id")
+
+        visible_tasks = [
+            task for task in tasks
+            if not task.get("hidden_from_plan", False)
+        ]
+
+        completed_tasks = [
+            task for task in tasks
+            if task.get("status") == "completed"
+        ]
+
+        active_tasks = [
+            task for task in visible_tasks
+            if task.get("id") == active_task_id
+            and task.get("status") != "completed"
+        ]
+
+        pending_tasks = [
+            task for task in visible_tasks
+            if task.get("status") != "completed"
+            and task.get("id") != active_task_id
+        ]
+
+        total_focus_minutes = sum(
+            task.get("focus_minutes", 0)
+            for task in visible_tasks
+            if task.get("status") != "completed"
+        )
+
+        self.pending_card.value_label.configure(text=str(len(pending_tasks)))
+        self.active_card.value_label.configure(text=str(len(active_tasks)))
+        self.completed_card.value_label.configure(text=str(len(completed_tasks)))
+        self.total_focus_card.value_label.configure(text=f"{total_focus_minutes}m")
 
 class TaskCard(AppCard):
     def __init__(

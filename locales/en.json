@@ -140,5 +140,10 @@
 "show_cumulative_away_time": "Show cumulative away time",
 "show_cumulative_away_time_desc": "Show today's total away time on the Focus Timer screen.",
 "away_message_seconds": "You have been away for {seconds} sec.",
-"away_message_minutes": "You have been away for {minutes} min."
+"away_message_minutes": "You have been away for {minutes} min.",
+
+"pending_tasks": "Pending",
+"active_tasks": "Active",
+"completed_tasks": "Completed",
+"total_focus": "Total Focus"
 }
