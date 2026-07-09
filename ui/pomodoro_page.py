@@ -7,7 +7,7 @@ from ui.theme import COLORS
 from ui.components import AppCard, PageTitle, PageSubtitle, PrimaryButton, SecondaryButton, AppEntry
 
 class CircularTimer(ctk.CTkFrame):
-    def __init__(self, parent, size=320):
+    def __init__(self, parent, size=390):
         super().__init__(parent, fg_color="transparent")
 
         self.size = size
@@ -17,48 +17,52 @@ class CircularTimer(ctk.CTkFrame):
             self,
             width=size,
             height=size,
-            bg="#020617",
+            bg=COLORS["card"],
             highlightthickness=0,
             bd=0
         )
         self.canvas.pack()
 
-        self.center_x = size // 2
-        self.center_y = size // 2
-        self.radius = 120
+        self.center = size // 2
+        self.radius = 150
+        self.ring_width = 20
+        self.progress_color = COLORS["primary"]
 
-        self.draw_base()
+        self.draw()
 
-    def draw_base(self):
+    def draw(self):
         self.canvas.delete("all")
 
-        # background ring
         self.canvas.create_oval(
-            self.center_x - self.radius,
-            self.center_y - self.radius,
-            self.center_x + self.radius,
-            self.center_y + self.radius,
-            outline="#2A3554",
-            width=18
+            self.center - self.radius,
+            self.center - self.radius,
+            self.center + self.radius,
+            self.center + self.radius,
+            outline="#27314D",
+            width=self.ring_width
         )
 
-        # progress arc
         extent = self.progress * 360
+
         self.canvas.create_arc(
-            self.center_x - self.radius,
-            self.center_y - self.radius,
-            self.center_x + self.radius,
-            self.center_y + self.radius,
+            self.center - self.radius,
+            self.center - self.radius,
+            self.center + self.radius,
+            self.center + self.radius,
             start=90,
             extent=-extent,
             style="arc",
-            outline="#7C5CFF",
-            width=18
+            outline=self.progress_color,
+            width=self.ring_width
         )
 
     def set_progress(self, value):
         self.progress = max(0, min(1, value))
-        self.draw_base()
+        self.draw()
+
+    def set_progress_color(self, color):
+        self.progress_color = color
+        self.draw()
 
 class PomodoroPage(ctk.CTkFrame):
     def __init__(self, parent, app):
@@ -78,8 +82,19 @@ class PomodoroPage(ctk.CTkFrame):
 
         self.remaining_seconds = self.focus_seconds
 
+        # Main page grid
         self.grid_columnconfigure(0, weight=1)
-        self.grid_rowconfigure(1, weight=1)
+        self.grid_rowconfigure(0, weight=1)
+
+        # Scrollable page container
+        self.scroll = ctk.CTkScrollableFrame(
+            self,
+            fg_color=COLORS["bg"],
+            corner_radius=0
+        )
+        self.scroll.grid(row=0, column=0, sticky="nsew")
+        self.scroll.grid_columnconfigure(0, weight=1)
+        self.scroll.grid_rowconfigure(1, weight=1)
 
         self.load_pomodoro_settings()
 
@@ -91,7 +106,7 @@ class PomodoroPage(ctk.CTkFrame):
         self.update_cycle_labels()
 
     def create_header(self):
-        self.header = ctk.CTkFrame(self, fg_color="transparent")
+        self.header = ctk.CTkFrame(self.scroll, fg_color="transparent")
         self.header.grid(row=0, column=0, padx=36, pady=(30, 12), sticky="ew")
         self.header.grid_columnconfigure(0, weight=1)
 
@@ -105,458 +120,10 @@ class PomodoroPage(ctk.CTkFrame):
         self.subtitle_label.grid(row=1, column=0, pady=(4, 0), sticky="w")
 
     def create_content(self):
-        self.content = ctk.CTkFrame(self, fg_color="transparent")
+        self.content = ctk.CTkFrame(self.scroll, fg_color="transparent")
         self.content.grid(row=1, column=0, padx=36, pady=(4, 30), sticky="nsew")
-        self.content.grid_columnconfigure(0, weight=3)
-        self.content.grid_columnconfigure(1, weight=2)
-        self.content.grid_rowconfigure(0, weight=1)
-
-        self.create_timer_card()
-        self.create_settings_panel()
-
-    def create_timer_card(self):
-        self.timer_card = AppCard(self.content)
-        self.timer_card.grid(row=0, column=0, padx=(0, 16), sticky="nsew")
-        self.timer_card.grid_columnconfigure(0, weight=1)
-
-        self.mode_pill = ctk.CTkLabel(
-            self.timer_card,
-            text=self.app.t("focus_mode"),
-            fg_color=COLORS["primary_soft"],
-            text_color=COLORS["text"],
-            corner_radius=18,
-            padx=18,
-            pady=8,
-            font=ctk.CTkFont(size=13, weight="bold")
-        )
-        self.mode_pill.grid(row=0, column=0, pady=(34, 18))
-
-        self.timer_label = ctk.CTkLabel(
-            self.timer_card,
-            text="25:00",
-            text_color=COLORS["text"],
-            font=ctk.CTkFont(size=92, weight="bold")
-        )
-        self.timer_label.grid(row=1, column=0, pady=(8, 4))
-
-        self.cycle_label = ctk.CTkLabel(
-            self.timer_card,
-            text="",
-            text_color=COLORS["muted"],
-            font=ctk.CTkFont(size=15, weight="bold")
-        )
-        self.cycle_label.grid(row=2, column=0, pady=(0, 8))
-
-        self.hint_label = ctk.CTkLabel(
-            self.timer_card,
-            text="",
-            text_color=COLORS["muted"],
-            font=ctk.CTkFont(size=13)
-        )
-        self.hint_label.grid(row=3, column=0, pady=(0, 24))
-
-        self.button_frame = ctk.CTkFrame(self.timer_card, fg_color="transparent")
-        self.button_frame.grid(row=4, column=0, pady=(8, 34))
-
-        self.start_button = PrimaryButton(
-            self.button_frame,
-            text=self.app.t("start"),
-            command=self.start_timer,
-            width=140
-        )
-        self.start_button.grid(row=0, column=0, padx=8)
-
-        self.pause_button = SecondaryButton(
-            self.button_frame,
-            text=self.app.t("pause"),
-            command=self.pause_timer,
-            width=130
-        )
-        self.pause_button.grid(row=0, column=1, padx=8)
-
-        self.reset_button = SecondaryButton(
-            self.button_frame,
-            text=self.app.t("reset"),
-            command=self.reset_timer,
-            width=130
-        )
-        self.reset_button.grid(row=0, column=2, padx=8)
-
-        self.message_label = ctk.CTkLabel(
-            self.timer_card,
-            text="",
-            text_color=COLORS["orange"],
-            font=ctk.CTkFont(size=16, weight="bold")
-        )
-        self.message_label.grid(row=5, column=0, pady=(0, 30))
-
-    def create_settings_panel(self):
-        self.side_panel = ctk.CTkFrame(self.content, fg_color="transparent")
-        self.side_panel.grid(row=0, column=1, sticky="nsew")
-        self.side_panel.grid_columnconfigure(0, weight=1)
-
-        self.summary_card = AppCard(self.side_panel)
-        self.summary_card.grid(row=0, column=0, sticky="ew", pady=(0, 16))
-        self.summary_card.grid_columnconfigure(0, weight=1)
-
-        self.summary_title = ctk.CTkLabel(
-            self.summary_card,
-            text=self.app.t("current_cycle"),
-            text_color=COLORS["muted"],
-            font=ctk.CTkFont(size=13, weight="bold")
-        )
-        self.summary_title.grid(row=0, column=0, padx=20, pady=(18, 4), sticky="w")
-
-        self.summary_value = ctk.CTkLabel(
-            self.summary_card,
-            text="0 / 4",
-            text_color=COLORS["primary"],
-            font=ctk.CTkFont(size=30, weight="bold")
-        )
-        self.summary_value.grid(row=1, column=0, padx=20, pady=(0, 18), sticky="w")
-
-        self.settings_card = AppCard(self.side_panel)
-        self.settings_card.grid(row=1, column=0, sticky="ew")
-        self.settings_card.grid_columnconfigure(1, weight=1)
-
-        self.settings_title = ctk.CTkLabel(
-            self.settings_card,
-            text=self.app.t("pomodoro_settings"),
-            text_color=COLORS["text"],
-            font=ctk.CTkFont(size=18, weight="bold")
-        )
-        self.settings_title.grid(row=0, column=0, columnspan=2, padx=20, pady=(20, 12), sticky="w")
-
-        self.focus_label = self.create_form_label(self.settings_card, "focus_duration", row=1)
-        self.focus_entry = AppEntry(self.settings_card, width=90)
-        self.focus_entry.grid(row=1, column=1, padx=20, pady=8, sticky="e")
-
-        self.short_break_label = self.create_form_label(self.settings_card, "short_break", row=2)
-        self.short_break_entry = AppEntry(self.settings_card, width=90)
-        self.short_break_entry.grid(row=2, column=1, padx=20, pady=8, sticky="e")
-
-        self.long_break_label = self.create_form_label(self.settings_card, "long_break", row=3)
-        self.long_break_entry = AppEntry(self.settings_card, width=90)
-        self.long_break_entry.grid(row=3, column=1, padx=20, pady=8, sticky="e")
-
-        self.long_after_label = self.create_form_label(self.settings_card, "long_break_after", row=4)
-        self.long_after_entry = AppEntry(self.settings_card, width=90)
-        self.long_after_entry.grid(row=4, column=1, padx=20, pady=8, sticky="e")
-
-        self.save_button = PrimaryButton(
-            self.settings_card,
-            text=self.app.t("save_pomodoro_settings"),
-            command=self.save_pomodoro_settings,
-            width=220
-        )
-        self.save_button.grid(row=5, column=0, columnspan=2, padx=20, pady=(18, 8), sticky="ew")
-
-        self.save_status_label = ctk.CTkLabel(
-            self.settings_card,
-            text="",
-            text_color=COLORS["green"],
-            font=ctk.CTkFont(size=13, weight="bold")
-        )
-        self.save_status_label.grid(row=6, column=0, columnspan=2, padx=20, pady=(0, 18), sticky="w")
-
-        self.populate_settings_entries()
-
-    def create_form_label(self, parent, key, row):
-        label = ctk.CTkLabel(
-            parent,
-            text=self.app.t(key),
-            text_color=COLORS["muted"],
-            font=ctk.CTkFont(size=13, weight="bold")
-        )
-        label.grid(row=row, column=0, padx=20, pady=8, sticky="w")
-        return label
-
-    def load_pomodoro_settings(self):
-        settings = self.app.app_data.setdefault("settings", {})
-
-        self.focus_seconds = settings.get("regular_focus_minutes", 25) * 60
-        self.short_break_seconds = settings.get("regular_short_break_minutes", 5) * 60
-        self.long_break_seconds = settings.get("regular_long_break_minutes", 15) * 60
-        self.long_break_after = settings.get("regular_long_break_after", 4)
-
-        self.remaining_seconds = self.focus_seconds
-
-    def populate_settings_entries(self):
-        self.focus_entry.delete(0, "end")
-        self.focus_entry.insert(0, str(self.focus_seconds // 60))
-
-        self.short_break_entry.delete(0, "end")
-        self.short_break_entry.insert(0, str(self.short_break_seconds // 60))
-
-        self.long_break_entry.delete(0, "end")
-        self.long_break_entry.insert(0, str(self.long_break_seconds // 60))
-
-        self.long_after_entry.delete(0, "end")
-        self.long_after_entry.insert(0, str(self.long_break_after))
-
-    def save_pomodoro_settings(self):
-        try:
-            focus_minutes = int(self.focus_entry.get().strip())
-            short_break_minutes = int(self.short_break_entry.get().strip())
-            long_break_minutes = int(self.long_break_entry.get().strip())
-            long_break_after = int(self.long_after_entry.get().strip())
-        except ValueError:
-            return
-
-        if (
-            focus_minutes <= 0
-            or short_break_minutes <= 0
-            or long_break_minutes <= 0
-            or long_break_after <= 0
-        ):
-            return
-
-        settings = self.app.app_data.setdefault("settings", {})
-        settings["regular_focus_minutes"] = focus_minutes
-        settings["regular_short_break_minutes"] = short_break_minutes
-        settings["regular_long_break_minutes"] = long_break_minutes
-        settings["regular_long_break_after"] = long_break_after
-
-        self.focus_seconds = focus_minutes * 60
-        self.short_break_seconds = short_break_minutes * 60
-        self.long_break_seconds = long_break_minutes * 60
-        self.long_break_after = long_break_after
-
-        if not self.is_running and not self.is_paused:
-            self.current_mode = "focus"
-            self.remaining_seconds = self.focus_seconds
-            self.update_timer_label()
-            self.update_mode_ui()
-            self.update_cycle_labels()
-
-        self.app.save_app_data()
-        self.save_status_label.configure(text=self.app.t("pomodoro_settings_saved"))
-        self.after(2000, lambda: self.save_status_label.configure(text=""))
-
-    def format_time(self, seconds):
-        minutes = seconds // 60
-        secs = seconds % 60
-        return f"{minutes:02d}:{secs:02d}"
-
-    def update_timer_label(self):
-        self.timer_label.configure(text=self.format_time(self.remaining_seconds))
-
-    def update_cycle_labels(self):
-        self.summary_value.configure(
-            text=f"{self.completed_focus_count} / {self.long_break_after}"
-        )
-
-        self.cycle_label.configure(
-            text=f"{self.app.t('pomodoro_count')}: {self.completed_focus_count}"
-        )
-
-    def update_mode_ui(self):
-        if self.current_mode == "focus":
-            self.mode_pill.configure(
-                text=self.app.t("focus_mode"),
-                fg_color=COLORS["primary_soft"],
-                text_color=COLORS["text"]
-            )
-            self.hint_label.configure(text=self.app.t("regular_mode"))
-
-        elif self.current_mode == "short_break":
-            self.mode_pill.configure(
-                text=self.app.t("short_break_mode"),
-                fg_color="#065F46",
-                text_color="#D1FAE5"
-            )
-            self.hint_label.configure(text=self.app.t("break_mode"))
-
-        else:
-            self.mode_pill.configure(
-                text=self.app.t("long_break_mode"),
-                fg_color="#7C2D12",
-                text_color="#FFEDD5"
-            )
-            self.hint_label.configure(text=self.app.t("break_mode"))
-
-    def start_timer(self):
-        if self.is_paused:
-            self.is_paused = False
-            self.start_button.configure(text=self.app.t("start"))
-            self.update_mode_ui()
-
-        if not self.is_running:
-            self.is_running = True
-            self.message_label.configure(text="")
-            self.count_down()
-
-    def pause_timer(self):
-        if self.is_running:
-            self.is_running = False
-            self.is_paused = True
-            self.start_button.configure(text=self.app.t("resume"))
-            self.mode_pill.configure(
-                text=self.app.t("paused"),
-                fg_color="#92400E",
-                text_color="#FEF3C7"
-            )
-
-    def reset_timer(self):
-        self.is_running = False
-        self.is_paused = False
-        self.current_mode = "focus"
-        self.completed_focus_count = 0
-        self.remaining_seconds = self.focus_seconds
-        self.message_label.configure(text="")
-        self.start_button.configure(text=self.app.t("start"))
-
-        self.update_timer_label()
-        self.update_mode_ui()
-        self.update_cycle_labels()
-
-    def count_down(self):
-        if self.is_running and self.remaining_seconds > 0:
-            self.update_timer_label()
-            self.remaining_seconds -= 1
-            self.after(1000, self.count_down)
-
-        elif self.is_running and self.remaining_seconds <= 0:
-            self.is_running = False
-            self.timer_label.configure(text="00:00")
-
-            if self.current_mode == "focus":
-                self.completed_focus_count += 1
-                self.log_regular_focus_session()
-
-                self.app.app_data["total_focus_seconds_today"] = (
-                    self.app.app_data.get("total_focus_seconds_today", 0)
-                    + self.focus_seconds
-                )
-                self.app.save_app_data()
-
-                if hasattr(self.app, "statistics_page"):
-                    self.app.statistics_page.refresh_stats()
-
-                should_long_break = (
-                    self.completed_focus_count % self.long_break_after == 0
-                )
-
-                if should_long_break:
-                    self.current_mode = "long_break"
-                    self.remaining_seconds = self.long_break_seconds
-                    self.message_label.configure(text=self.app.t("break_ready"))
-                else:
-                    self.current_mode = "short_break"
-                    self.remaining_seconds = self.short_break_seconds
-                    self.message_label.configure(text=self.app.t("break_ready"))
-
-                self.update_timer_label()
-                self.update_mode_ui()
-                self.update_cycle_labels()
-
-                auto_start_break = self.app.app_data.get("settings", {}).get("auto_start_break", False)
-                if auto_start_break:
-                    self.start_timer()
-                else:
-                    self.start_button.configure(text=self.app.t("start_break"))
-
-            else:
-                self.current_mode = "focus"
-                self.remaining_seconds = self.focus_seconds
-                self.message_label.configure(text=self.app.t("focus_ready"))
-                self.update_timer_label()
-                self.update_mode_ui()
-                self.update_cycle_labels()
-
-                auto_start_focus = self.app.app_data.get("settings", {}).get("auto_start_focus", False)
-                if auto_start_focus:
-                    self.start_timer()
-                else:
-                    self.start_button.configure(text=self.app.t("start_focus"))
-
-    def log_regular_focus_session(self):
-        session = {
-            "id": f"session_{uuid.uuid4().hex[:8]}",
-            "task_id": None,
-            "task_title": "Regular Pomodoro",
-            "mode": "focus",
-            "source": "regular_pomodoro",
-            "duration_seconds": self.focus_seconds,
-            "away_seconds": 0,
-            "completed_at": datetime.now().isoformat(timespec="seconds")
-        }
-
-        self.app.app_data.setdefault("sessions", []).append(session)
-
-    def refresh_texts(self):
-        self.title_label.configure(text=self.app.t("regular_pomodoro"))
-        self.subtitle_label.configure(text=self.app.t("pomodoro_subtitle"))
-
-        self.summary_title.configure(text=self.app.t("current_cycle"))
-        self.settings_title.configure(text=self.app.t("pomodoro_settings"))
-
-        self.focus_label.configure(text=self.app.t("focus_duration"))
-        self.short_break_label.configure(text=self.app.t("short_break"))
-        self.long_break_label.configure(text=self.app.t("long_break"))
-        self.long_after_label.configure(text=self.app.t("long_break_after"))
-
-        self.save_button.configure(text=self.app.t("save_pomodoro_settings"))
-        self.pause_button.configure(text=self.app.t("pause"))
-        self.reset_button.configure(text=self.app.t("reset"))
-
-        if self.is_paused:
-            self.start_button.configure(text=self.app.t("resume"))
-            self.mode_pill.configure(text=self.app.t("paused"))
-        else:
-            self.update_mode_ui()
-
-        self.update_cycle_labels()
-
-class PomodoroPage(ctk.CTkFrame):
-    def __init__(self, parent, app):
-        super().__init__(parent, fg_color=COLORS["bg"])
-        self.app = app
-
-        self.is_running = False
-        self.is_paused = False
-
-        self.current_mode = "focus"  # focus, short_break, long_break
-        self.completed_focus_count = 0
-
-        self.focus_seconds = 25 * 60
-        self.short_break_seconds = 5 * 60
-        self.long_break_seconds = 15 * 60
-        self.long_break_after = 4
-
-        self.remaining_seconds = self.focus_seconds
-
-        self.grid_columnconfigure(0, weight=1)
-        self.grid_rowconfigure(1, weight=1)
-
-        self.load_pomodoro_settings()
-
-        self.create_header()
-        self.create_content()
-
-        self.update_timer_label()
-        self.update_mode_ui()
-        self.update_cycle_labels()
-
-    def create_header(self):
-        self.header = ctk.CTkFrame(self, fg_color="transparent")
-        self.header.grid(row=0, column=0, padx=36, pady=(30, 12), sticky="ew")
-        self.header.grid_columnconfigure(0, weight=1)
-
-        self.title_label = PageTitle(self.header, self.app.t("regular_pomodoro"))
-        self.title_label.grid(row=0, column=0, sticky="w")
-
-        self.subtitle_label = PageSubtitle(
-            self.header,
-            self.app.t("pomodoro_subtitle")
-        )
-        self.subtitle_label.grid(row=1, column=0, pady=(4, 0), sticky="w")
-
-    def create_content(self):
-        self.content = ctk.CTkFrame(self, fg_color="transparent")
-        self.content.grid(row=1, column=0, padx=36, pady=(4, 30), sticky="nsew")
-        self.content.grid_columnconfigure(0, weight=3)
-        self.content.grid_columnconfigure(1, weight=2)
+        self.content.grid_columnconfigure(0, weight=1)
+        self.content.grid_columnconfigure(1, weight=0, minsize=330)
         self.content.grid_rowconfigure(0, weight=1)
 
         self.create_timer_card()
@@ -571,13 +138,13 @@ class PomodoroPage(ctk.CTkFrame):
         self.ring_frame = ctk.CTkFrame(
             self.timer_card,
             fg_color=COLORS["card"],
-            width=340,
-            height=340
+            width=420,
+            height=420
         )
         self.ring_frame.grid(row=0, column=0, pady=(34, 8))
         self.ring_frame.grid_propagate(False)
 
-        self.circular_timer = CircularTimer(self.ring_frame, size=330)
+        self.circular_timer = CircularTimer(self.ring_frame, size=390)
         self.circular_timer.place(relx=0.5, rely=0.5, anchor="center")
 
         self.mode_pill = ctk.CTkLabel(
@@ -586,13 +153,13 @@ class PomodoroPage(ctk.CTkFrame):
             text_color=COLORS["text"],
             font=ctk.CTkFont(size=16, weight="bold")
         )
-        self.mode_pill.place(relx=0.5, rely=0.32, anchor="center")
+        self.mode_pill.place(relx=0.5, rely=0.34, anchor="center")
 
         self.timer_label = ctk.CTkLabel(
             self.ring_frame,
             text="25:00",
             text_color=COLORS["white"],
-            font=ctk.CTkFont(size=54, weight="bold")
+            font=ctk.CTkFont(size=50, weight="bold")
         )
         self.timer_label.place(relx=0.5, rely=0.50, anchor="center")
 
@@ -602,7 +169,7 @@ class PomodoroPage(ctk.CTkFrame):
             text_color=COLORS["muted"],
             font=ctk.CTkFont(size=17, weight="bold")
         )
-        self.cycle_label.place(relx=0.5, rely=0.66, anchor="center")
+        self.cycle_label.place(relx=0.5, rely=0.68, anchor="center")
 
         self.button_frame = ctk.CTkFrame(self.timer_card, fg_color="transparent")
         self.button_frame.grid(row=1, column=0, pady=(8, 22))
@@ -617,35 +184,35 @@ class PomodoroPage(ctk.CTkFrame):
             fg_color=COLORS["primary"],
             hover_color=COLORS["primary_hover"],
             text_color=COLORS["white"],
-            font=ctk.CTkFont(size=28, weight="bold")
+            font=ctk.CTkFont(size=22, weight="bold")
         )
         self.start_button.grid(row=0, column=0, padx=10)
 
         self.reset_button = ctk.CTkButton(
             self.button_frame,
-            text="■",
+            text="↺",
             command=self.reset_timer,
-            width=64,
-            height=64,
-            corner_radius=32,
+            width=72,
+            height=72,
+            corner_radius=36,
             fg_color="#27314D",
             hover_color="#334155",
             text_color=COLORS["text"],
-            font=ctk.CTkFont(size=22, weight="bold")
+            font=ctk.CTkFont(size=24, weight="bold")
         )
         self.reset_button.grid(row=0, column=1, padx=10)
 
         self.skip_button = ctk.CTkButton(
             self.button_frame,
-            text="⏭",
+            text="»",
             command=self.skip_session,
-            width=64,
-            height=64,
-            corner_radius=32,
+            width=72,
+            height=72,
+            corner_radius=36,
             fg_color="#27314D",
             hover_color="#334155",
             text_color=COLORS["text"],
-            font=ctk.CTkFont(size=20, weight="bold")
+            font=ctk.CTkFont(size=26, weight="bold")
         )
         self.skip_button.grid(row=0, column=2, padx=10)
 
@@ -658,7 +225,11 @@ class PomodoroPage(ctk.CTkFrame):
         self.message_label.grid(row=2, column=0, pady=(0, 26))
 
     def create_settings_panel(self):
-        self.side_panel = ctk.CTkFrame(self.content, fg_color="transparent")
+        self.side_panel = ctk.CTkFrame(
+            self.content,
+            fg_color="transparent",
+            width=330
+        )
         self.side_panel.grid(row=0, column=1, sticky="nsew")
         self.side_panel.grid_columnconfigure(0, weight=1)
 
@@ -716,10 +287,11 @@ class PomodoroPage(ctk.CTkFrame):
         self.auto_card = AppCard(self.side_panel)
         self.auto_card.grid(row=1, column=0, sticky="ew", pady=(0, 16))
         self.auto_card.grid_columnconfigure(0, weight=1)
+        self.auto_card.grid_columnconfigure(1, weight=0, minsize=70)
 
         self.auto_title = ctk.CTkLabel(
             self.auto_card,
-            text="Auto Start",
+            text=self.app.t("auto_start"),
             text_color=COLORS["text"],
             font=ctk.CTkFont(size=15, weight="bold")
         )
@@ -730,9 +302,28 @@ class PomodoroPage(ctk.CTkFrame):
             text="",
             text_color=COLORS["muted"],
             font=ctk.CTkFont(size=12),
-            justify="left"
+            justify="left",
+            anchor="w",
+            wraplength=210
         )
-        self.auto_desc.grid(row=1, column=0, padx=20, pady=(0, 18), sticky="w")
+        self.auto_desc.grid(row=1, column=0, padx=(20, 8), pady=(0, 18), sticky="ew")
+        
+        self.auto_switch = ctk.CTkSwitch(
+            self.auto_card,
+            text="",
+            progress_color=COLORS["primary"],
+            button_color=COLORS["text"],
+            button_hover_color=COLORS["soft"],
+            command=self.toggle_auto_start
+        )
+        self.auto_switch.grid(
+            row=0,
+            column=1,
+            rowspan=2,
+            padx=(8, 20),
+            pady=18,
+            sticky="e"
+        )
 
         self.settings_card = AppCard(self.side_panel)
         self.settings_card.grid(row=2, column=0, sticky="ew")
@@ -744,23 +335,48 @@ class PomodoroPage(ctk.CTkFrame):
             text_color=COLORS["text"],
             font=ctk.CTkFont(size=18, weight="bold")
         )
-        self.settings_title.grid(row=0, column=0, columnspan=2, padx=20, pady=(20, 12), sticky="w")
+        self.settings_title.grid(
+            row=0,
+            column=0,
+            columnspan=2,
+            padx=20,
+            pady=(20, 8),
+            sticky="w"
+        )
 
-        self.focus_label = self.create_form_label(self.settings_card, "focus_duration", row=1)
+        self.save_status_label = ctk.CTkLabel(
+            self.settings_card,
+            text=" ",
+            text_color=COLORS["muted"],
+            font=ctk.CTkFont(size=13, weight="bold"),
+            wraplength=300,
+            justify="left",
+            anchor="w"
+        )
+        self.save_status_label.grid(
+            row=1,
+            column=0,
+            columnspan=2,
+            padx=20,
+            pady=(0, 10),
+            sticky="ew"
+        )
+
+        self.focus_label = self.create_form_label(self.settings_card, "focus_duration", row=2)
         self.focus_entry = AppEntry(self.settings_card, width=90)
-        self.focus_entry.grid(row=1, column=1, padx=20, pady=8, sticky="e")
+        self.focus_entry.grid(row=2, column=1, padx=20, pady=8, sticky="e")
 
-        self.short_break_label = self.create_form_label(self.settings_card, "short_break", row=2)
+        self.short_break_label = self.create_form_label(self.settings_card, "short_break", row=3)
         self.short_break_entry = AppEntry(self.settings_card, width=90)
-        self.short_break_entry.grid(row=2, column=1, padx=20, pady=8, sticky="e")
+        self.short_break_entry.grid(row=3, column=1, padx=20, pady=8, sticky="e")
 
-        self.long_break_label = self.create_form_label(self.settings_card, "long_break", row=3)
+        self.long_break_label = self.create_form_label(self.settings_card, "long_break", row=4)
         self.long_break_entry = AppEntry(self.settings_card, width=90)
-        self.long_break_entry.grid(row=3, column=1, padx=20, pady=8, sticky="e")
+        self.long_break_entry.grid(row=4, column=1, padx=20, pady=8, sticky="e")
 
-        self.long_after_label = self.create_form_label(self.settings_card, "long_break_after", row=4)
+        self.long_after_label = self.create_form_label(self.settings_card, "long_break_after", row=5)
         self.long_after_entry = AppEntry(self.settings_card, width=90)
-        self.long_after_entry.grid(row=4, column=1, padx=20, pady=8, sticky="e")
+        self.long_after_entry.grid(row=5, column=1, padx=20, pady=8, sticky="e")
 
         self.save_button = PrimaryButton(
             self.settings_card,
@@ -768,16 +384,14 @@ class PomodoroPage(ctk.CTkFrame):
             command=self.save_pomodoro_settings,
             width=220
         )
-        self.save_button.grid(row=5, column=0, columnspan=2, padx=20, pady=(18, 8), sticky="ew")
-
-        self.save_status_label = ctk.CTkLabel(
-            self.settings_card,
-            text="",
-            text_color=COLORS["green"],
-            font=ctk.CTkFont(size=13, weight="bold")
+        self.save_button.grid(
+            row=6,
+            column=0,
+            columnspan=2,
+            padx=20,
+            pady=(18, 20),
+            sticky="ew"
         )
-        self.save_status_label.grid(row=6, column=0, columnspan=2, padx=20, pady=(0, 18), sticky="w")
-
         self.populate_settings_entries()
         self.update_auto_start_info()
 
@@ -812,6 +426,7 @@ class PomodoroPage(ctk.CTkFrame):
 
         return {
             "frame": frame,
+            "dot": dot,
             "label": label,
             "value": value_label
         }
@@ -855,7 +470,12 @@ class PomodoroPage(ctk.CTkFrame):
             short_break_minutes = int(self.short_break_entry.get().strip())
             long_break_minutes = int(self.long_break_entry.get().strip())
             long_break_after = int(self.long_after_entry.get().strip())
+
         except ValueError:
+            self.save_status_label.configure(
+                text=self.app.t("invalid_pomodoro_settings"),
+                text_color=COLORS["red"]
+            )
             return
 
         if (
@@ -864,6 +484,10 @@ class PomodoroPage(ctk.CTkFrame):
             or long_break_minutes <= 0
             or long_break_after <= 0
         ):
+            self.save_status_label.configure(
+                text=self.app.t("invalid_pomodoro_settings"),
+                text_color=COLORS["red"]
+            )
             return
 
         settings = self.app.app_data.setdefault("settings", {})
@@ -880,16 +504,22 @@ class PomodoroPage(ctk.CTkFrame):
         if not self.is_running and not self.is_paused:
             self.current_mode = "focus"
             self.remaining_seconds = self.focus_seconds
-            self.update_timer_label()
-            self.update_mode_ui()
-            self.update_cycle_labels()
-
-            self.update_session_info_values()
-            self.update_auto_start_info()
+            self.completed_focus_count = 0
 
         self.app.save_app_data()
-        self.save_status_label.configure(text=self.app.t("pomodoro_settings_saved"))
-        self.after(2000, lambda: self.save_status_label.configure(text=""))
+
+        self.update_timer_label()
+        self.update_mode_ui()
+        self.update_cycle_labels()
+        self.update_session_info_values()
+        self.update_auto_start_info()
+
+        self.save_status_label.configure(
+            text=self.app.t("pomodoro_settings_saved"),
+            text_color=COLORS["green"]
+        )
+
+        self.after(2500, lambda: self.save_status_label.configure(text=" "))
 
     def format_time(self, seconds):
         minutes = seconds // 60
@@ -928,16 +558,38 @@ class PomodoroPage(ctk.CTkFrame):
         auto_focus = settings.get("auto_start_focus", False)
 
         if auto_break and auto_focus:
-            text = "Break and focus sessions start automatically."
+            text = self.app.t("pomodoro_auto_start_all")
         elif auto_break:
-            text = "Break sessions start automatically."
+            text = self.app.t("pomodoro_auto_start_break")
         elif auto_focus:
-            text = "Focus sessions start automatically."
+            text = self.app.t("pomodoro_auto_start_focus")
         else:
-            text = "Next session will wait for manual start."
+            text = self.app.t("pomodoro_auto_start_off")
 
         self.auto_desc.configure(text=text)
 
+        if hasattr(self, "auto_switch"):
+            self.update_auto_start_switch()
+
+    def toggle_auto_start(self):
+        is_enabled = bool(self.auto_switch.get())
+
+        settings = self.app.app_data.setdefault("settings", {})
+        settings["auto_start_break"] = is_enabled
+        settings["auto_start_focus"] = is_enabled
+
+        self.app.save_app_data()
+        self.update_auto_start_info()
+
+    def update_auto_start_switch(self):
+        settings = self.app.app_data.get("settings", {})
+        auto_break = settings.get("auto_start_break", False)
+        auto_focus = settings.get("auto_start_focus", False)
+
+        if auto_break and auto_focus:
+            self.auto_switch.select()
+        else:
+            self.auto_switch.deselect()
 
     def update_session_info_values(self):
         self.focus_info["value"].configure(text=f"{self.focus_seconds // 60} min")
@@ -964,33 +616,45 @@ class PomodoroPage(ctk.CTkFrame):
     def update_mode_ui(self):
         if self.current_mode == "focus":
             self.mode_pill.configure(
-                text="🍅 " + self.app.t("focus_mode"),
-                text_color=COLORS["text"]
+                text=self.app.t("focus_mode"),
+                text_color=COLORS["primary"]
             )
+            self.circular_timer.set_progress_color(COLORS["primary"])
 
         elif self.current_mode == "short_break":
             self.mode_pill.configure(
-                text="🟢 " + self.app.t("short_break_mode"),
-                text_color="#D1FAE5"
+                text=self.app.t("short_break_mode"),
+                text_color="#22C55E"
             )
+            self.circular_timer.set_progress_color("#22C55E")
 
         else:
             self.mode_pill.configure(
-                text="🔵 " + self.app.t("long_break_mode"),
-                text_color="#DBEAFE"
+                text=self.app.t("long_break_mode"),
+                text_color="#3B82F6"
             )
+            self.circular_timer.set_progress_color("#3B82F6")
+
+        self.focus_info["dot"].configure(text_color="#EF4444")
+        self.short_break_info["dot"].configure(text_color="#22C55E")
+        self.long_break_info["dot"].configure(text_color="#3B82F6")
 
         self.update_progress_ring()
 
     def start_timer(self):
+        if self.is_running:
+            self.pause_timer()
+            return
+
         if self.is_paused:
             self.is_paused = False
-            self.start_button.configure(text=self.app.t("start"))
+            self.start_button.configure(text="Ⅱ")
             self.update_mode_ui()
 
         if not self.is_running:
             self.is_running = True
             self.message_label.configure(text="")
+            self.start_button.configure(text="Ⅱ")
             self.count_down()
 
     def pause_timer(self):
@@ -1111,6 +775,8 @@ class PomodoroPage(ctk.CTkFrame):
         self.focus_info["label"].configure(text=self.app.t("focus_mode"))
         self.short_break_info["label"].configure(text=self.app.t("short_break"))
         self.long_break_info["label"].configure(text=self.app.t("long_break"))
+
+        self.auto_title.configure(text=self.app.t("auto_start"))
 
         self.save_button.configure(text=self.app.t("save_pomodoro_settings"))
 

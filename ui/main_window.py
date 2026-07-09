@@ -212,6 +212,9 @@ class FocusFlowApp(ctk.CTk):
         self.update_sidebar_active_state()
         self.pomodoro_page.tkraise()
 
+        if hasattr(self, "pomodoro_page"):
+            self.pomodoro_page.update_auto_start_info()
+
     def show_statistics_page(self):
         self.active_page = "statistics"
         self.update_sidebar_active_state()

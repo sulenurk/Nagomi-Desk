@@ -150,5 +150,13 @@
 "clear_completed": "Clear Completed",
 "reset_all_tasks": "Reset All to Pending",
 "completed_tasks_cleared": "Completed tasks cleared.",
-"all_tasks_reset": "All tasks reset to pending."
+"all_tasks_reset": "All tasks reset to pending.",
+
+"invalid_pomodoro_settings": "All values must be positive numbers.",
+"pomodoro_auto_start_off": "Next session will wait for manual start.",
+"pomodoro_auto_start_break": "Break sessions start automatically.",
+"pomodoro_auto_start_focus": "Focus sessions start automatically.",
+"pomodoro_auto_start_all": "Focus and break sessions start automatically.",
+
+"auto_start": "Auto Start"
 }
