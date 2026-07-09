@@ -1,5 +1,5 @@
 {
-  "language": "tr",
+  "language": "en",
   "active_task_id": null,
   "queue_mode_active": false,
   "queue_task_ids": [],
@@ -15,7 +15,7 @@
     "show_queue_progress": true,
     "show_cumulative_away_time": true
   },
-  "total_focus_seconds_today": 2640,
+  "total_focus_seconds_today": 2760,
   "tasks": [
     {
       "id": "task_9a85fa77",
@@ -169,6 +169,26 @@
       "duration_seconds": 60,
       "away_seconds": 0,
       "completed_at": "2026-07-08T09:09:22"
+    },
+    {
+      "id": "session_0565e5c8",
+      "task_id": null,
+      "task_title": "Regular Pomodoro",
+      "mode": "focus",
+      "source": "regular_pomodoro",
+      "duration_seconds": 60,
+      "away_seconds": 0,
+      "completed_at": "2026-07-09T06:19:41"
+    },
+    {
+      "id": "session_5d1e0102",
+      "task_id": null,
+      "task_title": "Regular Pomodoro",
+      "mode": "focus",
+      "source": "regular_pomodoro",
+      "duration_seconds": 60,
+      "away_seconds": 0,
+      "completed_at": "2026-07-09T06:20:52"
     }
   ]
 }
