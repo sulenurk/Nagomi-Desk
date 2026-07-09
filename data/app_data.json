@@ -1,11 +1,8 @@
 {
-  "language": "en",
-  "active_task_id": "task_9a85fa77",
-  "queue_mode_active": true,
-  "queue_task_ids": [
-    "task_18dcd0c1",
-    "task_9a85fa77"
-  ],
+  "language": "tr",
+  "active_task_id": null,
+  "queue_mode_active": false,
+  "queue_task_ids": [],
   "settings": {
     "auto_start_break": true,
     "auto_start_focus": true,
@@ -21,42 +18,34 @@
   "total_focus_seconds_today": 2640,
   "tasks": [
     {
-      "id": "task_531f45c6",
-      "subject": "math",
-      "title": "Çalışma Seansı",
-      "focus_minutes": 1,
-      "break_minutes": 1,
-      "priority": "medium",
-      "status": "completed",
-      "hidden_from_plan": true
-    },
-    {
-      "id": "task_233c57e3",
-      "subject": "math",
-      "title": "Çalışma Seansı",
-      "focus_minutes": 1,
-      "break_minutes": 2,
-      "priority": "medium",
-      "status": "completed",
-      "hidden_from_plan": true
-    },
-    {
-      "id": "task_18dcd0c1",
-      "subject": "math",
-      "title": "Study Session",
-      "focus_minutes": 1,
-      "break_minutes": 1,
-      "priority": "medium",
-      "status": "completed"
-    },
-    {
       "id": "task_9a85fa77",
       "subject": "math",
       "title": "Study Session",
       "focus_minutes": 1,
       "break_minutes": 2,
       "priority": "medium",
-      "status": "pending"
+      "status": "pending",
+      "hidden_from_plan": false
+    },
+    {
+      "id": "task_552c3ab9",
+      "subject": "physics",
+      "title": "Study Session",
+      "focus_minutes": 25,
+      "break_minutes": 5,
+      "priority": "medium",
+      "status": "pending",
+      "hidden_from_plan": false
+    },
+    {
+      "id": "task_62b72cd0",
+      "subject": "biology",
+      "title": "Çalışma Seansı",
+      "focus_minutes": 25,
+      "break_minutes": 5,
+      "priority": "low",
+      "status": "pending",
+      "hidden_from_plan": false
     }
   ],
   "sessions": [

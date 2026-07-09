@@ -146,5 +146,10 @@
 "pending_tasks": "Bekleyen",
 "active_tasks": "Aktif",
 "completed_tasks": "Tamamlanan",
-"total_focus": "Toplam Odak"
+"total_focus": "Toplam Odak",
+
+"clear_completed": "Tamamlananları Temizle",
+"reset_all_tasks": "Tümünü Bekleyene Al",
+"completed_tasks_cleared": "Tamamlanan görevler temizlendi.",
+"all_tasks_reset": "Tüm görevler bekleyen durumuna alındı."
 }

@@ -49,11 +49,12 @@ class StudyPlanPage(ctk.CTkFrame):
         self.priority_options = ["low", "medium", "high"]
 
         self.grid_columnconfigure(0, weight=1)
-        self.grid_rowconfigure(4, weight=1)
+        self.grid_rowconfigure(5, weight=1)
 
         self.create_header()
         self.create_summary_cards()
         self.create_filter_bar()
+        self.create_action_bar()
         self.create_add_task_card()
         self.create_task_list()
         self.render_tasks()
@@ -139,6 +140,27 @@ class StudyPlanPage(ctk.CTkFrame):
             button.grid(row=0, column=index, padx=(0, 10))
             self.filter_buttons[filter_key] = button
 
+    def create_action_bar(self):
+        self.action_frame = ctk.CTkFrame(self, fg_color="transparent")
+        self.action_frame.grid(row=3, column=0, padx=36, pady=(0, 12), sticky="ew")
+        self.action_frame.grid_columnconfigure(0, weight=1)
+
+        self.clear_completed_button = SecondaryButton(
+            self.action_frame,
+            text=self.app.t("clear_completed"),
+            command=self.clear_completed_tasks,
+            width=160
+        )
+        self.clear_completed_button.grid(row=0, column=1, padx=(8, 0), sticky="e")
+
+        self.reset_all_button = SecondaryButton(
+            self.action_frame,
+            text=self.app.t("reset_all_tasks"),
+            command=self.reset_all_tasks_to_pending,
+            width=180
+        )
+        self.reset_all_button.grid(row=0, column=2, padx=(8, 0), sticky="e")
+
     def create_task_list(self):
         self.task_scroll = ctk.CTkScrollableFrame(
             self,
@@ -146,12 +168,12 @@ class StudyPlanPage(ctk.CTkFrame):
             scrollbar_button_color=COLORS["card_soft"],
             scrollbar_button_hover_color=COLORS["primary"]
         )
-        self.task_scroll.grid(row=4, column=0, padx=36, pady=(0, 12), sticky="nsew")
+        self.task_scroll.grid(row=5, column=0, padx=36, pady=(0, 12), sticky="nsew")
         self.task_scroll.grid_columnconfigure(0, weight=1)
 
     def create_add_task_card(self):
         self.add_card = AppCard(self)
-        self.add_card.grid(row=3, column=0, padx=36, pady=(8, 30), sticky="ew")
+        self.add_card.grid(row=4, column=0, padx=36, pady=(8, 30), sticky="ew")
         self.add_card.grid_columnconfigure(1, weight=1)
 
         self.add_title = ctk.CTkLabel(
@@ -590,6 +612,8 @@ class StudyPlanPage(ctk.CTkFrame):
         self.render_tasks()
 
         self.start_plan_button.configure(text=f"▶ {self.app.t('start_plan')}")
+        self.clear_completed_button.configure(text=self.app.t("clear_completed"))
+        self.reset_all_button.configure(text=self.app.t("reset_all_tasks"))
         self.cancel_edit_button.configure(text=self.app.t("cancel_edit"))
 
         if self.editing_task_id:
@@ -727,6 +751,66 @@ class StudyPlanPage(ctk.CTkFrame):
         self.active_card.value_label.configure(text=str(len(active_tasks)))
         self.completed_card.value_label.configure(text=str(len(completed_tasks)))
         self.total_focus_card.value_label.configure(text=f"{total_focus_minutes}m")
+
+    def clear_completed_tasks(self):
+        self.app.app_data["tasks"] = [
+            task for task in self.app.app_data.get("tasks", [])
+            if task.get("status") != "completed"
+        ]
+
+        existing_task_ids = {
+            task.get("id")
+            for task in self.app.app_data.get("tasks", [])
+        }
+
+        self.app.app_data["queue_task_ids"] = [
+            task_id for task_id in self.app.app_data.get("queue_task_ids", [])
+            if task_id in existing_task_ids
+        ]
+
+        active_task_id = self.app.app_data.get("active_task_id")
+
+        if active_task_id not in existing_task_ids:
+            self.app.app_data["active_task_id"] = None
+            self.app.app_data["queue_mode_active"] = False
+            self.app.app_data["queue_task_ids"] = []
+
+        self.app.save_app_data()
+
+        if hasattr(self.app, "focus_page"):
+            self.app.focus_page.load_active_task()
+            self.app.focus_page.update_queue_progress()
+
+        self.form_status_label.configure(
+            text=self.app.t("completed_tasks_cleared"),
+            text_color=COLORS["green"]
+        )
+
+        self.render_tasks()
+
+    def reset_all_tasks_to_pending(self):
+        for task in self.app.app_data.get("tasks", []):
+            task["status"] = "pending"
+            task["hidden_from_plan"] = False
+
+        self.app.app_data["active_task_id"] = None
+        self.app.app_data["queue_mode_active"] = False
+        self.app.app_data["queue_task_ids"] = []
+
+        self.app.save_app_data()
+
+        if hasattr(self.app, "focus_page"):
+            self.app.focus_page.reset_timer()
+            self.app.focus_page.load_active_task()
+            self.app.focus_page.update_queue_progress()
+
+        self.form_status_label.configure(
+            text=self.app.t("all_tasks_reset"),
+            text_color=COLORS["green"]
+        )
+
+        self.render_tasks()
+
 
 class TaskCard(AppCard):
     def __init__(
