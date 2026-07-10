@@ -467,7 +467,17 @@ class StudyPlanPage(ctk.CTkFrame):
         self.after(2000, lambda: self.form_status_label.configure(text=""))
         self.render_tasks()
 
+    def sync_task_sessions(self, task):
+        for session in self.app.app_data.get("sessions", []):
+            if session.get("task_id") == task.get("id"):
+                session["task_title"] = task.get("title", self.app.t("default_task_name"))
+                session["subject_id"] = task.get("subject_id", "subject_other")
+                session["subject_name"] = task.get("subject_name", self.app.t("other_subject"))
+                session["duration_seconds"] = task.get("focus_minutes", 0) * 60
+
     def update_existing_task(self, task_id, subject, title, focus_minutes, break_minutes, priority):
+        updated_task = None
+
         for task in self.app.app_data.get("tasks", []):
             if task.get("id") == task_id:
                 task["subject_id"] = subject.get("id", "subject_other")
@@ -476,13 +486,20 @@ class StudyPlanPage(ctk.CTkFrame):
                 task["focus_minutes"] = focus_minutes
                 task["break_minutes"] = break_minutes
                 task["priority"] = priority
+                updated_task = task
                 break
+
+        if updated_task:
+            self.sync_task_sessions(updated_task)
 
         self.app.save_app_data()
 
         active_task_id = self.app.app_data.get("active_task_id")
         if active_task_id == task_id:
             self.app.focus_page.load_active_task()
+
+        if hasattr(self.app, "statistics_page"):
+            self.app.statistics_page.refresh_stats()
 
         self.cancel_edit()
 
@@ -664,16 +681,19 @@ class StudyPlanPage(ctk.CTkFrame):
         self.render_tasks()
 
     def log_manual_completion_session(self, task):
-        existing_sessions = self.app.app_data.get("sessions", [])
+        existing_sessions = self.app.app_data.setdefault("sessions", [])
 
-        already_logged = any(
-            session.get("task_id") == task.get("id")
-            and session.get("source") == "study_plan"
-            for session in existing_sessions
-        )
-
-        if already_logged:
-            return
+        for session in existing_sessions:
+            if (
+                session.get("task_id") == task.get("id")
+                and session.get("source") == "study_plan"
+            ):
+                session["task_title"] = task.get("title", self.app.t("default_task_name"))
+                session["subject_id"] = task.get("subject_id", "subject_other")
+                session["subject_name"] = task.get("subject_name", self.app.t("other_subject"))
+                session["duration_seconds"] = task.get("focus_minutes", 0) * 60
+                session["mode"] = "focus"
+                return
 
         session = {
             "id": f"session_{uuid.uuid4().hex[:8]}",
@@ -688,10 +708,11 @@ class StudyPlanPage(ctk.CTkFrame):
             "completed_at": datetime.now().isoformat(timespec="seconds")
         }
 
-        self.app.app_data.setdefault("sessions", []).append(session)
+        existing_sessions.append(session)
 
     def complete_task(self, task_id):
         completed_task = None
+        was_active_task = self.app.app_data.get("active_task_id") == task_id
 
         for task in self.app.app_data.get("tasks", []):
             if task.get("id") == task_id:
@@ -703,9 +724,18 @@ class StudyPlanPage(ctk.CTkFrame):
         if completed_task:
             self.log_manual_completion_session(completed_task)
 
+        if was_active_task:
+            moved_to_next = self.app.move_to_next_queue_task()
+
+            if not moved_to_next:
+                self.app.app_data["active_task_id"] = None
+                self.app.app_data["queue_mode_active"] = False
+                self.app.app_data["queue_task_ids"] = []
+
         self.app.save_app_data()
 
         if hasattr(self.app, "focus_page"):
+            self.app.focus_page.reset_timer()
             self.app.focus_page.load_active_task()
             self.app.focus_page.update_queue_progress()
             self.app.focus_page.refresh_queue_progress_visibility()
@@ -1097,6 +1127,13 @@ class TaskCard(AppCard):
             width=44
         )
         self.edit_button.grid(row=0, column=5, rowspan=2, padx=(0, 8), pady=20)
+
+        if self.is_active:
+            self.edit_button.configure(
+                state="disabled",
+                fg_color=COLORS["surface"],
+                text_color=COLORS["muted"]
+            )
 
         self.complete_button = SecondaryButton(
             self,

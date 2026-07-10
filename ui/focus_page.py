@@ -338,22 +338,27 @@ class FocusPage(ctk.CTkFrame):
 
             return
 
-        subject = self.app.t(task.get("subject", "other"))
+        subject = task.get("subject_name")
+
+        if not subject:
+            subject = self.app.t(task.get("subject", "other"))
+
         title = task.get("title", "")
         focus_minutes = task.get("focus_minutes", 25)
         break_minutes = task.get("break_minutes", 5)
 
-        self.active_task_label.configure(text=f"{subject} · {title}")
-        self.active_task_detail_label.configure(
-            text=f"{focus_minutes} {self.app.t('focus_minutes')} · "
-                 f"{break_minutes} {self.app.t('break_minutes')}"
+        task_title_text = f"{subject} · {title}"
+
+        detail_text = (
+            f"{focus_minutes}{self.app.t('minute_short')} {self.app.t('focus_label_short')} · "
+            f"{break_minutes}{self.app.t('minute_short')} {self.app.t('break_label_short')}"
         )
 
-        self.current_task_title.configure(text=f"{subject} · {title}")
-        self.current_task_detail.configure(
-            text=f"{focus_minutes} {self.app.t('focus_minutes')} · "
-                 f"{break_minutes} {self.app.t('break_minutes')}"
-        )
+        self.active_task_label.configure(text=task_title_text)
+        self.active_task_detail_label.configure(text=detail_text)
+
+        self.current_task_title.configure(text=task_title_text)
+        self.current_task_detail.configure(text=detail_text)
 
         self.focus_seconds = focus_minutes * 60
         self.break_seconds = break_minutes * 60
@@ -370,6 +375,9 @@ class FocusPage(ctk.CTkFrame):
             )
 
         self.update_current_task_progress()
+        self.update_total_focus_label()
+        self.update_queue_progress()
+        self.refresh_queue_progress_visibility()
 
     def start_timer(self):
         if self.is_paused:
@@ -667,6 +675,9 @@ class FocusPage(ctk.CTkFrame):
         }
 
         self.app.app_data.setdefault("sessions", []).append(session)
+    
+    def clear_status_message(self):
+        self.away_warning_label.configure(text="")
 
     def stop_plan(self):
         self.app.stop_task_queue()
@@ -787,31 +798,25 @@ class FocusPage(ctk.CTkFrame):
             self.current_task_detail.configure(text=self.app.t("no_task_selected"))
             return
 
-        subject = self.app.t(task.get("subject", "other"))
+        subject = task.get("subject_name")
+
+        if not subject:
+            subject = self.app.t(task.get("subject", "other"))
+
         title = task.get("title", "")
+        focus_minutes = task.get("focus_minutes", 25)
+        break_minutes = task.get("break_minutes", 5)
 
-        total = self.get_current_mode_total_seconds()
-        elapsed = max(total - self.remaining_seconds, 0)
+        self.current_task_title.configure(
+            text=f"{subject} · {title}"
+        )
 
-        elapsed_minutes = elapsed // 60
-        total_minutes = total // 60
-
-        if self.current_mode == "focus":
-            self.current_task_title.configure(
-                text=f"{subject} · {title}"
+        self.current_task_detail.configure(
+            text=(
+                f"{focus_minutes}{self.app.t('minute_short')} {self.app.t('focus_label_short')} · "
+                f"{break_minutes}{self.app.t('minute_short')} {self.app.t('break_label_short')}"
             )
-            self.current_task_detail.configure(
-                text=f"{elapsed_minutes} / {total_minutes} {self.app.t('minutes_short')} · "
-                     f"{self.app.t('focus_mode')}"
-            )
-        else:
-            self.current_task_title.configure(
-                text=f"{self.app.t('break_mode')} · {subject}"
-            )
-            self.current_task_detail.configure(
-                text=f"{elapsed_minutes} / {total_minutes} {self.app.t('minutes_short')} · "
-                     f"{self.app.t('break_mode')}"
-            )
+        )
 
     def refresh_away_card_visibility(self):
         show_away = self.app.app_data.get("settings", {}).get(

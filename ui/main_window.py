@@ -224,6 +224,13 @@ class FocusFlowApp(ctk.CTk):
     def show_todo_page(self):
         self.active_page = "study"
         self.update_sidebar_active_state()
+
+        if hasattr(self.todo_page, "refresh_subject_menu"):
+            self.todo_page.refresh_subject_menu()
+
+        if hasattr(self.todo_page, "render_tasks"):
+            self.todo_page.render_tasks()
+
         self.todo_page.tkraise()
 
     def show_pomodoro_page(self):
@@ -299,7 +306,17 @@ class FocusFlowApp(ctk.CTk):
         self.app_data["active_task_id"] = task_id
         self.save_app_data()
 
-        self.focus_page.load_active_task()
+        if hasattr(self, "focus_page"):
+            self.focus_page.load_active_task()
+            self.focus_page.update_queue_progress()
+            self.focus_page.refresh_queue_progress_visibility()
+
+            if hasattr(self.focus_page, "clear_status_message"):
+                self.focus_page.clear_status_message()
+
+        if hasattr(self, "todo_page"):
+            self.todo_page.render_tasks()
+
         self.show_focus_page()
 
     def update_sidebar_active_state(self):
@@ -345,9 +362,17 @@ class FocusFlowApp(ctk.CTk):
         self.app_data["active_task_id"] = queue_task_ids[0]
         self.save_app_data()
 
-        self.focus_page.load_active_task()
-        self.focus_page.update_queue_progress()
-        self.focus_page.refresh_queue_progress_visibility()
+        if hasattr(self, "focus_page"):
+            self.focus_page.load_active_task()
+            self.focus_page.update_queue_progress()
+            self.focus_page.refresh_queue_progress_visibility()
+
+            if hasattr(self.focus_page, "clear_status_message"):
+                self.focus_page.clear_status_message()
+
+        if hasattr(self, "todo_page"):
+            self.todo_page.render_tasks()
+
         self.show_focus_page()
 
         return True
@@ -406,9 +431,12 @@ class FocusFlowApp(ctk.CTk):
                 if hasattr(self, "focus_page"):
                     self.focus_page.load_active_task()
                     self.focus_page.update_queue_progress()
+                    self.focus_page.refresh_queue_progress_visibility()
+
+                if hasattr(self, "todo_page"):
+                    self.todo_page.render_tasks()
 
                 return True
-
         self.app_data["queue_mode_active"] = False
         self.app_data["queue_task_ids"] = []
         self.app_data["active_task_id"] = None

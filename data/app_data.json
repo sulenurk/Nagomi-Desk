@@ -1,10 +1,13 @@
 {
-  "language": "en",
-  "active_task_id": "task_3c5b1397",
+  "language": "tr",
+  "active_task_id": "task_3b383518",
   "queue_mode_active": true,
   "queue_task_ids": [
+    "task_66d18fb7",
+    "task_3b383518",
     "task_3c5b1397",
-    "task_7ef742d8"
+    "task_7ef742d8",
+    "task_98f686f8"
   ],
   "settings": {
     "auto_start_break": true,
@@ -21,6 +24,18 @@
   "total_focus_seconds_today": 5040,
   "tasks": [
     {
+      "id": "task_66d18fb7",
+      "subject_id": "subject_other",
+      "subject_name": "Other",
+      "title": "Study Session",
+      "focus_minutes": 3,
+      "break_minutes": 5,
+      "priority": "medium",
+      "status": "completed",
+      "hidden_from_plan": false,
+      "completed_at": "2026-07-10T03:37:01"
+    },
+    {
       "id": "task_3b383518",
       "subject_id": "subject_d166b1f2",
       "subject_name": "Music",
@@ -28,20 +43,8 @@
       "focus_minutes": 25,
       "break_minutes": 5,
       "priority": "medium",
-      "status": "completed",
-      "hidden_from_plan": true,
-      "completed_at": "2026-07-10T01:51:16"
-    },
-    {
-      "id": "task_66d18fb7",
-      "subject_id": "subject_f06c973b",
-      "subject_name": "Chemistry",
-      "title": "Study Session",
-      "focus_minutes": 25,
-      "break_minutes": 5,
-      "priority": "medium",
-      "status": "completed",
-      "hidden_from_plan": true,
+      "status": "pending",
+      "hidden_from_plan": false,
       "completed_at": "2026-07-10T01:51:16"
     },
     {
@@ -52,7 +55,8 @@
       "focus_minutes": 25,
       "break_minutes": 5,
       "priority": "medium",
-      "status": "pending"
+      "status": "pending",
+      "hidden_from_plan": false
     },
     {
       "id": "task_7ef742d8",
@@ -62,7 +66,19 @@
       "focus_minutes": 25,
       "break_minutes": 5,
       "priority": "low",
-      "status": "pending"
+      "status": "pending",
+      "hidden_from_plan": false
+    },
+    {
+      "id": "task_98f686f8",
+      "subject_id": "subject_3f437392",
+      "subject_name": "Chemistry",
+      "title": "Study Session",
+      "focus_minutes": 25,
+      "break_minutes": 5,
+      "priority": "medium",
+      "status": "pending",
+      "hidden_from_plan": false
     }
   ],
   "sessions": [
@@ -82,11 +98,11 @@
       "id": "session_d7c15a39",
       "task_id": "task_66d18fb7",
       "task_title": "Study Session",
-      "subject_id": "subject_f06c973b",
-      "subject_name": "Chemistry",
+      "subject_id": "subject_other",
+      "subject_name": "Other",
       "mode": "focus",
       "source": "study_plan",
-      "duration_seconds": 1500,
+      "duration_seconds": 180,
       "away_seconds": 0,
       "completed_at": "2026-07-10T01:51:16"
     }
