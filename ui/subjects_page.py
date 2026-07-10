@@ -134,6 +134,9 @@ class SubjectsPage(ctk.CTkFrame):
         if hasattr(self.app, "todo_page"):
             self.app.todo_page.refresh_subject_menu()
 
+        if hasattr(self.app, "statistics_page"):
+            self.app.statistics_page.refresh_subject_filter_menu()
+
     def delete_subject(self, subject_id):
         subjects = self.app.app_data.get("subjects", [])
 
@@ -161,6 +164,9 @@ class SubjectsPage(ctk.CTkFrame):
 
         if hasattr(self.app, "todo_page"):
             self.app.todo_page.refresh_subject_menu()
+
+        if hasattr(self.app, "statistics_page"):
+            self.app.statistics_page.refresh_subject_filter_menu()
 
     def reassign_deleted_subject_tasks(self, deleted_subject_id):
         for task in self.app.app_data.get("tasks", []):

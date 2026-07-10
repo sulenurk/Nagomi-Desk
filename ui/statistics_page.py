@@ -11,8 +11,8 @@ class WeeklyLineChart(ctk.CTkFrame):
 
         self.width = width
         self.height = height
-        self.data = []
         self.labels = []
+        self.values = []
 
         self.canvas = tk.Canvas(
             self,
@@ -25,44 +25,32 @@ class WeeklyLineChart(ctk.CTkFrame):
 
     def set_data(self, labels, values):
         self.labels = labels
-        self.data = values
+        self.values = values
         self.draw()
 
     def draw(self):
         self.canvas.delete("all")
 
-        if not self.data:
+        if not self.values:
             return
 
         padding_left = 48
         padding_right = 24
-        padding_top = 28
+        padding_top = 34
         padding_bottom = 42
 
         chart_width = self.width - padding_left - padding_right
         chart_height = self.height - padding_top - padding_bottom
 
-        max_value = max(self.data)
+        max_value = max(self.values)
 
         if max_value <= 0:
             max_value = 1
 
-        points = []
-
-        for index, value in enumerate(self.data):
-            if len(self.data) == 1:
-                x = padding_left + chart_width / 2
-            else:
-                x = padding_left + (chart_width / (len(self.data) - 1)) * index
-
-            ratio = value / max_value
-            y = padding_top + chart_height - (chart_height * ratio)
-
-            points.append((x, y, value))
-
-        # Grid lines
+        # grid lines
         for i in range(4):
             y = padding_top + (chart_height / 3) * i
+
             self.canvas.create_line(
                 padding_left,
                 y,
@@ -72,7 +60,16 @@ class WeeklyLineChart(ctk.CTkFrame):
                 width=1
             )
 
-        # Line
+        points = []
+
+        for index, value in enumerate(self.values):
+            x = padding_left + (chart_width / 6) * index
+            ratio = value / max_value
+            y = padding_top + chart_height - (chart_height * ratio)
+
+            points.append((x, y, value))
+
+        # line
         for index in range(len(points) - 1):
             x1, y1, _ = points[index]
             x2, y2, _ = points[index + 1]
@@ -87,7 +84,7 @@ class WeeklyLineChart(ctk.CTkFrame):
                 smooth=True
             )
 
-        # Points + labels
+        # points and labels
         for index, (x, y, value) in enumerate(points):
             self.canvas.create_oval(
                 x - 6,
@@ -102,7 +99,7 @@ class WeeklyLineChart(ctk.CTkFrame):
             self.canvas.create_text(
                 x,
                 y - 18,
-                text=str(value),
+                text=f"{value}",
                 fill=COLORS["text"],
                 font=("Arial", 10, "bold")
             )
@@ -119,6 +116,7 @@ class StatisticsPage(ctk.CTkFrame):
     def __init__(self, parent, app):
         super().__init__(parent, fg_color=COLORS["bg"])
         self.app = app
+        self.selected_subject_id = "all"
 
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
@@ -136,6 +134,7 @@ class StatisticsPage(ctk.CTkFrame):
         self.create_metric_grid()
         self.create_breakdown_card()
         self.create_goal_card()
+        self.create_subject_filter_card()
         self.create_subject_distribution_card()
         self.create_weekly_card()
         self.create_recent_sessions_card()
@@ -324,9 +323,49 @@ class StatisticsPage(ctk.CTkFrame):
         )
         self.subject_distribution_frame.grid_columnconfigure(0, weight=1)
 
+    def create_subject_filter_card(self):
+        self.subject_filter_card = AppCard(self.scroll)
+        self.subject_filter_card.grid(row=5, column=0, padx=36, pady=(8, 12), sticky="ew")
+        self.subject_filter_card.grid_columnconfigure(0, weight=1)
+
+        self.subject_filter_title = ctk.CTkLabel(
+            self.subject_filter_card,
+            text=self.app.t("subject_filter"),
+            text_color=COLORS["text"],
+            font=ctk.CTkFont(size=18, weight="bold")
+        )
+        self.subject_filter_title.grid(row=0, column=0, padx=22, pady=(20, 6), sticky="w")
+
+        self.subject_filter_subtitle = ctk.CTkLabel(
+            self.subject_filter_card,
+            text=self.app.t("subject_filter_subtitle"),
+            text_color=COLORS["muted"],
+            font=ctk.CTkFont(size=13)
+        )
+        self.subject_filter_subtitle.grid(row=1, column=0, padx=22, pady=(0, 12), sticky="w")
+
+        self.subject_filter_menu = ctk.CTkOptionMenu(
+            self.subject_filter_card,
+            values=[
+                option["name"]
+                for option in self.get_subject_filter_options()
+            ],
+            width=260,
+            height=42,
+            fg_color=COLORS["input"],
+            button_color=COLORS["primary"],
+            button_hover_color=COLORS["primary_hover"],
+            text_color=COLORS["input_text"],
+            dropdown_fg_color=COLORS["surface"],
+            dropdown_text_color=COLORS["text"],
+            command=self.change_subject_filter
+        )
+        self.subject_filter_menu.set(self.app.t("all_subjects"))
+        self.subject_filter_menu.grid(row=2, column=0, padx=22, pady=(0, 22), sticky="w")
+
     def create_weekly_card(self):
         self.weekly_card = AppCard(self.scroll)
-        self.weekly_card.grid(row=5, column=0, padx=36, pady=(8, 30), sticky="nsew")
+        self.weekly_card.grid(row=6, column=0, padx=36, pady=(8, 30), sticky="nsew")
         self.weekly_card.grid_columnconfigure(0, weight=1)
 
         self.weekly_title = ctk.CTkLabel(
@@ -351,10 +390,10 @@ class StatisticsPage(ctk.CTkFrame):
             height=260
         )
         self.weekly_line_chart.grid(row=2, column=0, padx=22, pady=(0, 22), sticky="ew")
-
+        
     def create_recent_sessions_card(self):
         self.recent_card = AppCard(self.scroll)
-        self.recent_card.grid(row=6, column=0, padx=36, pady=(8, 30), sticky="ew")
+        self.recent_card.grid(row=7, column=0, padx=36, pady=(8, 30), sticky="ew")
         self.recent_card.grid_columnconfigure(0, weight=1)
 
         self.recent_title = ctk.CTkLabel(
@@ -371,6 +410,45 @@ class StatisticsPage(ctk.CTkFrame):
         )
         self.recent_list_frame.grid(row=1, column=0, padx=22, pady=(0, 22), sticky="ew")
         self.recent_list_frame.grid_columnconfigure(0, weight=1)
+
+    def get_subject_filter_options(self):
+        subjects = self.app.app_data.get("subjects", [])
+
+        options = [
+            {
+                "id": "all",
+                "name": self.app.t("all_subjects")
+            }
+        ]
+
+        for subject in subjects:
+            options.append({
+                "id": subject.get("id", "subject_other"),
+                "name": subject.get("name", self.app.t("other_subject"))
+            })
+
+        return options
+    
+    def change_subject_filter(self, selected_name):
+        selected_id = "all"
+
+        for option in self.get_subject_filter_options():
+            if option["name"] == selected_name:
+                selected_id = option["id"]
+                break
+
+        self.selected_subject_id = selected_id
+        self.refresh_stats()
+
+    def get_subject_name_by_id(self, subject_id):
+        if subject_id == "all":
+            return self.app.t("all_subjects")
+
+        for subject in self.app.app_data.get("subjects", []):
+            if subject.get("id") == subject_id:
+                return subject.get("name", self.app.t("other_subject"))
+
+        return self.app.t("other_subject")
 
     def get_today_sessions(self):
         today_str = date.today().isoformat()
@@ -403,7 +481,7 @@ class StatisticsPage(ctk.CTkFrame):
 
         return totals
 
-    def get_weekly_focus_seconds(self):
+    def get_weekly_focus_seconds(self, subject_id="all"):
         sessions = self.app.app_data.get("sessions", [])
         today = date.today()
         start_of_week = today - timedelta(days=today.weekday())
@@ -416,6 +494,9 @@ class StatisticsPage(ctk.CTkFrame):
 
         for session in sessions:
             if session.get("mode") != "focus":
+                continue
+
+            if subject_id != "all" and session.get("subject_id", "subject_other") != subject_id:
                 continue
 
             completed_at = session.get("completed_at", "")
@@ -474,6 +555,7 @@ class StatisticsPage(ctk.CTkFrame):
         return f"{hours:02d}:{minutes:02d}"
 
     def refresh_stats(self):
+        self.refresh_subject_filter_menu()
         today_sessions = self.get_today_sessions()
 
         total_focus_seconds = sum(
@@ -546,7 +628,7 @@ class StatisticsPage(ctk.CTkFrame):
         self.render_recent_sessions()
 
     def refresh_weekly_overview(self):
-        daily_totals = self.get_weekly_focus_seconds()
+        daily_totals = self.get_weekly_focus_seconds(self.selected_subject_id)
 
         day_names = [
             self.app.t("day_mon_short"),
@@ -565,11 +647,34 @@ class StatisticsPage(ctk.CTkFrame):
 
         weekly_total_minutes = sum(values)
 
+        selected_subject_name = self.get_subject_name_by_id(self.selected_subject_id)
+
         self.weekly_subtitle.configure(
-            text=f"{self.app.t('weekly_total')}: {weekly_total_minutes}{self.app.t('minute_short')}"
+            text=(
+                f"{self.app.t('weekly_total')}: "
+                f"{weekly_total_minutes}{self.app.t('minute_short')} · "
+                f"{selected_subject_name}"
+            )
         )
 
         self.weekly_line_chart.set_data(day_names, values)
+
+    def refresh_subject_filter_menu(self):
+        if not hasattr(self, "subject_filter_menu"):
+            return
+
+        options = self.get_subject_filter_options()
+        values = [option["name"] for option in options]
+
+        current_name = self.get_subject_name_by_id(self.selected_subject_id)
+
+        self.subject_filter_menu.configure(values=values)
+
+        if current_name in values:
+            self.subject_filter_menu.set(current_name)
+        else:
+            self.selected_subject_id = "all"
+            self.subject_filter_menu.set(self.app.t("all_subjects"))
 
     def render_subject_distribution(self):
         for widget in self.subject_distribution_frame.winfo_children():
@@ -650,6 +755,9 @@ class StatisticsPage(ctk.CTkFrame):
         self.subtitle_label.configure(text=self.app.t("statistics_subtitle"))
         self.breakdown_title.configure(text=self.app.t("focus_breakdown"))
         self.goal_title.configure(text=self.app.t("goal_progress"))
+        self.subject_filter_title.configure(text=self.app.t("subject_filter"))
+        self.subject_filter_subtitle.configure(text=self.app.t("subject_filter_subtitle"))
+        self.refresh_subject_filter_menu()
         self.subject_distribution_title.configure(text=self.app.t("weekly_subject_distribution"))
         self.weekly_title.configure(text=self.app.t("weekly_overview"))
         self.recent_title.configure(text=self.app.t("recent_sessions"))

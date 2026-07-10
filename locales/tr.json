@@ -193,5 +193,9 @@
   "no_subject_stats": "Bu hafta henüz ders bazlı çalışma kaydı yok.",
 
   "weekly_overview": "Haftalık Çalışma Trendi",
-  "pending_label_short": "bekleyen"
+  "pending_label_short": "bekleyen",
+
+  "subject_filter": "Ders Filtresi",
+  "subject_filter_subtitle": "İstatistikleri belirli bir derse göre filtrele.",
+  "all_subjects": "Tüm Dersler"
 }
