@@ -1,6 +1,6 @@
 {
   "language": "en",
-  "active_task_id": "task_3b383518",
+  "active_task_id": "task_7ef742d8",
   "queue_mode_active": true,
   "queue_task_ids": [
     "task_66d18fb7",
@@ -44,9 +44,9 @@
       "focus_minutes": 25,
       "break_minutes": 5,
       "priority": "medium",
-      "status": "pending",
+      "status": "completed",
       "hidden_from_plan": false,
-      "completed_at": "2026-07-10T01:51:16"
+      "completed_at": "2026-07-10T09:08:28"
     },
     {
       "id": "task_3c5b1397",
@@ -56,8 +56,9 @@
       "focus_minutes": 25,
       "break_minutes": 5,
       "priority": "medium",
-      "status": "pending",
-      "hidden_from_plan": false
+      "status": "completed",
+      "hidden_from_plan": false,
+      "completed_at": "2026-07-10T09:08:27"
     },
     {
       "id": "task_7ef742d8",
@@ -106,6 +107,18 @@
       "duration_seconds": 180,
       "away_seconds": 0,
       "completed_at": "2026-07-10T01:51:16"
+    },
+    {
+      "id": "session_d5f9442e",
+      "task_id": "task_3c5b1397",
+      "task_title": "Study Session",
+      "subject_id": "subject_54037810",
+      "subject_name": "Language",
+      "mode": "focus",
+      "source": "study_plan",
+      "duration_seconds": 1500,
+      "away_seconds": 0,
+      "completed_at": "2026-07-10T09:08:27"
     }
   ],
   "subjects": [

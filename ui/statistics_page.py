@@ -1,4 +1,5 @@
 from datetime import datetime, date, timedelta
+import math
 import tkinter as tk
 import customtkinter as ctk
 
@@ -111,7 +112,132 @@ class WeeklyLineChart(ctk.CTkFrame):
                 fill=COLORS["muted"],
                 font=("Arial", 10)
             )
+            
+class SubjectDonutChart(ctk.CTkFrame):
+    def __init__(self, parent, width=260, height=220):
+        super().__init__(parent, fg_color=COLORS["surface"], corner_radius=18)
 
+        self.width = width
+        self.height = height
+        self.data = []
+        self.total_minutes = 0
+        self.center_text = ""
+
+        self.canvas = tk.Canvas(
+            self,
+            width=self.width,
+            height=self.height,
+            bg=COLORS["surface"],
+            highlightthickness=0
+        )
+        self.canvas.pack(fill="both", expand=True, padx=8, pady=8)
+
+    def set_data(self, data, total_minutes, center_text):
+        self.data = data
+        self.total_minutes = total_minutes
+        self.center_text = center_text
+        self.draw()
+
+    def draw(self):
+        self.canvas.delete("all")
+
+        cx = self.width / 2
+        cy = self.height / 2
+        outer_radius = 78
+        inner_radius = 48
+
+        x1 = cx - outer_radius
+        y1 = cy - outer_radius
+        x2 = cx + outer_radius
+        y2 = cy + outer_radius
+
+        if self.total_minutes <= 0 or not self.data:
+            self.canvas.create_oval(
+                x1,
+                y1,
+                x2,
+                y2,
+                fill=COLORS.get("card_soft", COLORS["surface"]),
+                outline=COLORS.get("card_soft", COLORS["surface"])
+            )
+
+            self.canvas.create_oval(
+                cx - inner_radius,
+                cy - inner_radius,
+                cx + inner_radius,
+                cy + inner_radius,
+                fill=COLORS["surface"],
+                outline=COLORS["surface"]
+            )
+
+            self.canvas.create_text(
+                cx,
+                cy - 8,
+                text="0",
+                fill=COLORS["text"],
+                font=("Arial", 22, "bold")
+            )
+
+            self.canvas.create_text(
+                cx,
+                cy + 18,
+                text=self.center_text,
+                fill=COLORS["muted"],
+                font=("Arial", 11)
+            )
+
+            return
+
+        start_angle = 90
+
+        for index, item in enumerate(self.data):
+            value = item.get("minutes", 0)
+            color = item.get("color", COLORS.get("primary", "#8B5CF6"))
+
+            if value <= 0:
+                continue
+
+            extent = -360 * (value / self.total_minutes)
+
+            self.canvas.create_arc(
+                x1,
+                y1,
+                x2,
+                y2,
+                start=start_angle,
+                extent=extent,
+                fill=color,
+                outline=COLORS["surface"],
+                width=2
+            )
+
+            start_angle += extent
+
+        self.canvas.create_oval(
+            cx - inner_radius,
+            cy - inner_radius,
+            cx + inner_radius,
+            cy + inner_radius,
+            fill=COLORS["surface"],
+            outline=COLORS["surface"]
+        )
+
+        self.canvas.create_text(
+            cx,
+            cy - 8,
+            text=str(self.total_minutes),
+            fill=COLORS["text"],
+            font=("Arial", 22, "bold")
+        )
+
+        self.canvas.create_text(
+            cx,
+            cy + 18,
+            text=self.center_text,
+            fill=COLORS["muted"],
+            font=("Arial", 11)
+        )
+        
 class StatisticsPage(ctk.CTkFrame):
     def __init__(self, parent, app):
         super().__init__(parent, fg_color=COLORS["bg"])
@@ -246,6 +372,7 @@ class StatisticsPage(ctk.CTkFrame):
             padx=(10, 22),
             sticky="ew"
         )
+
     def create_goal_card(self):
         self.goal_card = AppCard(self.scroll)
         self.goal_card.grid(row=3, column=0, padx=36, pady=(8, 12), sticky="ew")
@@ -310,18 +437,120 @@ class StatisticsPage(ctk.CTkFrame):
             sticky="w"
         )
 
-        self.subject_distribution_frame = ctk.CTkFrame(
+        self.subject_distribution_content = ctk.CTkFrame(
             self.subject_distribution_card,
             fg_color="transparent"
         )
-        self.subject_distribution_frame.grid(
+        self.subject_distribution_content.grid(
             row=2,
             column=0,
             padx=22,
             pady=(0, 22),
             sticky="ew"
         )
+
+        self.subject_distribution_content.grid_columnconfigure(0, weight=0)
+        self.subject_distribution_content.grid_columnconfigure(1, weight=1)
+
+        self.subject_donut_chart = SubjectDonutChart(
+            self.subject_distribution_content,
+            width=260,
+            height=220
+        )
+        self.subject_donut_chart.grid(
+            row=0,
+            column=0,
+            padx=(0, 24),
+            pady=(0, 0),
+            sticky="nw"
+        )
+
+        self.subject_distribution_frame = ctk.CTkFrame(
+            self.subject_distribution_content,
+            fg_color="transparent"
+        )
+        self.subject_distribution_frame.grid(
+            row=0,
+            column=1,
+            sticky="nsew"
+        )
         self.subject_distribution_frame.grid_columnconfigure(0, weight=1)
+    
+    def get_weekly_subject_minutes_for_donut(self):
+        sessions = self.app.app_data.get("sessions", [])
+        start_of_week = self.get_week_start_date()
+        end_of_week = start_of_week + timedelta(days=7)
+
+        subject_totals = {}
+
+        for session in sessions:
+            if session.get("mode") != "focus":
+                continue
+
+            completed_at = session.get("completed_at", "")
+
+            try:
+                session_date = datetime.fromisoformat(completed_at).date()
+            except ValueError:
+                continue
+
+            if not (start_of_week <= session_date < end_of_week):
+                continue
+
+            subject_name = session.get("subject_name", self.app.t("other_subject"))
+            duration_minutes = session.get("duration_seconds", 0) // 60
+
+            subject_totals[subject_name] = subject_totals.get(subject_name, 0) + duration_minutes
+
+        donut_data = [
+            {
+                "subject_name": subject_name,
+                "minutes": minutes
+            }
+            for subject_name, minutes in subject_totals.items()
+            if minutes > 0
+        ]
+
+        donut_data.sort(key=lambda item: item["minutes"], reverse=True)
+
+        subject_names = [item["subject_name"] for item in donut_data]
+        color_map = self.get_subject_chart_colors(subject_names)
+
+        for item in donut_data:
+            item["color"] = color_map[item["subject_name"]]
+
+        return donut_data
+    
+    def get_subject_chart_colors(self, subject_names):
+        palette = [
+            "#8B5CF6",  # violet
+            "#6366F1",  # indigo
+            "#3B82F6",  # blue
+            "#06B6D4",  # cyan
+            "#14B8A6",  # teal
+            "#F59E0B",  # amber
+            "#EC4899",  # pink
+        ]
+
+        color_map = {}
+
+        for index, subject_name in enumerate(subject_names):
+            color_map[subject_name] = palette[index % len(palette)]
+
+        return color_map
+    
+    def refresh_subject_donut_chart(self):
+        if not hasattr(self, "subject_donut_chart"):
+            return
+
+        donut_data = self.get_weekly_subject_minutes_for_donut()
+        total_minutes = sum(item.get("minutes", 0) for item in donut_data)
+
+        self.subject_donut_chart.set_data(
+            data=donut_data,
+            total_minutes=total_minutes,
+            center_text=self.app.t("minute_short")
+        )
 
     def create_subject_filter_card(self):
         self.subject_filter_card = AppCard(self.scroll)
@@ -633,7 +862,8 @@ class StatisticsPage(ctk.CTkFrame):
         self.goal_detail.configure(
             text=f"{percent}% · {total_focus_text} / {goal_text}"
         )
-
+        
+        self.refresh_subject_donut_chart()
         self.render_subject_distribution()
         self.refresh_weekly_overview()
         self.render_recent_sessions()
@@ -731,6 +961,14 @@ class StatisticsPage(ctk.CTkFrame):
                 font=ctk.CTkFont(size=14)
             )
             empty_label.grid(row=0, column=0, padx=4, pady=12, sticky="w")
+
+            if hasattr(self, "subject_donut_chart"):
+                self.subject_donut_chart.set_data(
+                    data=[],
+                    total_minutes=0,
+                    center_text=self.app.t("minute_short")
+                )
+
             return
 
         sorted_subjects = sorted(
@@ -739,11 +977,29 @@ class StatisticsPage(ctk.CTkFrame):
             reverse=True
         )
 
+        subject_names = [
+            item.get("name", self.app.t("other_subject"))
+            for item in sorted_subjects
+        ]
+
+        color_map = self.get_subject_chart_colors(subject_names)
+
+        donut_data = []
+
         for row_index, item in enumerate(sorted_subjects):
+            subject_name = item.get("name", self.app.t("other_subject"))
+            subject_color = color_map.get(subject_name, "#A78BFA")
+
             seconds = item.get("seconds", 0)
             minutes = seconds // 60
             ratio = seconds / total_seconds if total_seconds else 0
             percent = int(round(ratio * 100))
+
+            donut_data.append({
+                "subject_name": subject_name,
+                "minutes": minutes,
+                "color": subject_color
+            })
 
             row = ctk.CTkFrame(
                 self.subject_distribution_frame,
@@ -751,16 +1007,36 @@ class StatisticsPage(ctk.CTkFrame):
                 corner_radius=14
             )
             row.grid(row=row_index, column=0, pady=6, sticky="ew")
-            row.grid_columnconfigure(1, weight=1)
+            row.grid_columnconfigure(2, weight=1)
+
+            color_dot = ctk.CTkLabel(
+                row,
+                text="●",
+                text_color=subject_color,
+                font=ctk.CTkFont(size=15)
+            )
+            color_dot.grid(
+                row=0,
+                column=0,
+                padx=(16, 8),
+                pady=(12, 4),
+                sticky="w"
+            )
 
             name_label = ctk.CTkLabel(
                 row,
-                text=item.get("name", self.app.t("other_subject")),
+                text=subject_name,
                 text_color=COLORS["text"],
                 font=ctk.CTkFont(size=14, weight="bold"),
                 anchor="w"
             )
-            name_label.grid(row=0, column=0, padx=(16, 12), pady=(12, 4), sticky="w")
+            name_label.grid(
+                row=0,
+                column=1,
+                padx=(0, 12),
+                pady=(12, 4),
+                sticky="w"
+            )
 
             value_label = ctk.CTkLabel(
                 row,
@@ -768,17 +1044,37 @@ class StatisticsPage(ctk.CTkFrame):
                 text_color=COLORS["muted"],
                 font=ctk.CTkFont(size=13)
             )
-            value_label.grid(row=0, column=2, padx=(12, 16), pady=(12, 4), sticky="e")
+            value_label.grid(
+                row=0,
+                column=3,
+                padx=(12, 16),
+                pady=(12, 4),
+                sticky="e"
+            )
 
             progress = ctk.CTkProgressBar(
                 row,
                 height=10,
                 corner_radius=8,
-                progress_color=COLORS["primary"],
+                progress_color=subject_color,
                 fg_color=COLORS["card_soft"]
             )
-            progress.grid(row=1, column=0, columnspan=3, padx=16, pady=(0, 14), sticky="ew")
+            progress.grid(
+                row=1,
+                column=0,
+                columnspan=4,
+                padx=16,
+                pady=(0, 14),
+                sticky="ew"
+            )
             progress.set(ratio)
+
+        if hasattr(self, "subject_donut_chart"):
+            self.subject_donut_chart.set_data(
+                data=donut_data,
+                total_minutes=total_minutes,
+                center_text=self.app.t("minute_short")
+            )
 
     def refresh_texts(self):
         self.title_label.configure(text=self.app.t("statistics"))
