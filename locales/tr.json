@@ -82,7 +82,6 @@
   "daily_goal": "Günlük Hedef",
   "goal_progress": "Hedef İlerlemesi",
   "no_sessions_yet": "Henüz tamamlanan seans yok.",
-  "weekly_overview": "Haftalık Görünüm",
 
   "pomodoro_subtitle": "Klasik Pomodoro döngüsüyle çalış: odaklan, mola ver, tekrar et.",
   "pomodoro_settings": "Pomodoro Ayarları",
@@ -191,5 +190,8 @@
 
   "weekly_subject_distribution": "Haftalık Ders Dağılımı",
   "weekly_total": "Haftalık toplam",
-  "no_subject_stats": "Bu hafta henüz ders bazlı çalışma kaydı yok."
+  "no_subject_stats": "Bu hafta henüz ders bazlı çalışma kaydı yok.",
+
+  "weekly_overview": "Haftalık Çalışma Trendi",
+  "pending_label_short": "bekleyen"
 }

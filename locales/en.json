@@ -82,7 +82,6 @@
   "daily_goal": "Daily Goal",
   "goal_progress": "Goal Progress",
   "no_sessions_yet": "No completed sessions yet.",
-  "weekly_overview": "Weekly Overview",
 
   "pomodoro_subtitle": "Use the classic Pomodoro cycle: focus, break, repeat.",
   "pomodoro_settings": "Pomodoro Settings",
@@ -190,5 +189,8 @@
 
   "weekly_subject_distribution": "Weekly Subject Distribution",
   "weekly_total": "Weekly total",
-  "no_subject_stats": "No subject-based study records yet this week."
+  "no_subject_stats": "No subject-based study records yet this week.",
+
+  "weekly_overview": "Weekly Study Trend",
+  "pending_label_short": "pending"
 }

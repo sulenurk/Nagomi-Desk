@@ -601,6 +601,7 @@ class FocusPage(ctk.CTkFrame):
         self.active_task_heading.configure(text=self.app.t("active_task"))
         self.total_focus_title.configure(text=self.app.t("total_focus_today"))
         self.away_title.configure(text=self.app.t("away_time"))
+        self.timer_hint_label.configure(text=self.app.t("one_session_at_a_time"))
 
         self.queue_title.configure(text=self.app.t("study_queue"))
         self.stop_plan_button.configure(text=self.app.t("stop_plan"))
@@ -717,7 +718,7 @@ class FocusPage(ctk.CTkFrame):
             self.queue_detail.configure(text=self.app.t("no_pending_tasks"))
         else:
             self.queue_detail.configure(
-                text=f"{pending_tasks} pending"
+                text=f"{pending_tasks} {self.app.t('pending_label_short')}"
             )
 
         queue_active = self.app.app_data.get("queue_mode_active", False)

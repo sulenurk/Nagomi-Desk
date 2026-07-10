@@ -1,8 +1,11 @@
 {
   "language": "en",
-  "active_task_id": null,
-  "queue_mode_active": false,
-  "queue_task_ids": [],
+  "active_task_id": "task_3c5b1397",
+  "queue_mode_active": true,
+  "queue_task_ids": [
+    "task_3c5b1397",
+    "task_7ef742d8"
+  ],
   "settings": {
     "auto_start_break": true,
     "auto_start_focus": true,
@@ -26,19 +29,8 @@
       "break_minutes": 5,
       "priority": "medium",
       "status": "completed",
-      "hidden_from_plan": false,
+      "hidden_from_plan": true,
       "completed_at": "2026-07-10T01:51:16"
-    },
-    {
-      "id": "task_908be5e6",
-      "subject_id": "subject_5c506390",
-      "subject_name": "Literature",
-      "title": "Study Session",
-      "focus_minutes": 25,
-      "break_minutes": 5,
-      "priority": "medium",
-      "status": "pending",
-      "hidden_from_plan": false
     },
     {
       "id": "task_66d18fb7",
@@ -49,8 +41,28 @@
       "break_minutes": 5,
       "priority": "medium",
       "status": "completed",
-      "hidden_from_plan": false,
+      "hidden_from_plan": true,
       "completed_at": "2026-07-10T01:51:16"
+    },
+    {
+      "id": "task_3c5b1397",
+      "subject_id": "subject_54037810",
+      "subject_name": "Language",
+      "title": "Study Session",
+      "focus_minutes": 25,
+      "break_minutes": 5,
+      "priority": "medium",
+      "status": "pending"
+    },
+    {
+      "id": "task_7ef742d8",
+      "subject_id": "subject_3f437392",
+      "subject_name": "Chemistry",
+      "title": "Study Session",
+      "focus_minutes": 25,
+      "break_minutes": 5,
+      "priority": "low",
+      "status": "pending"
     }
   ],
   "sessions": [
@@ -85,6 +97,30 @@
       "name": "Other",
       "color": "#6D5DF6",
       "is_default": true
+    },
+    {
+      "id": "subject_087c6b2f",
+      "name": "Litearture",
+      "color": "#6D5DF6",
+      "is_default": false
+    },
+    {
+      "id": "subject_613ac351",
+      "name": "Maths",
+      "color": "#6D5DF6",
+      "is_default": false
+    },
+    {
+      "id": "subject_54037810",
+      "name": "Language",
+      "color": "#6D5DF6",
+      "is_default": false
+    },
+    {
+      "id": "subject_3f437392",
+      "name": "Chemistry",
+      "color": "#6D5DF6",
+      "is_default": false
     }
   ]
 }

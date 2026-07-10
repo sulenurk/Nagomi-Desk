@@ -1,9 +1,119 @@
 from datetime import datetime, date, timedelta
+import tkinter as tk
 import customtkinter as ctk
 
 from ui.theme import COLORS
 from ui.components import AppCard, PageTitle, PageSubtitle, MetricCard
 
+class WeeklyLineChart(ctk.CTkFrame):
+    def __init__(self, parent, width=760, height=260):
+        super().__init__(parent, fg_color=COLORS["surface"], corner_radius=18)
+
+        self.width = width
+        self.height = height
+        self.data = []
+        self.labels = []
+
+        self.canvas = tk.Canvas(
+            self,
+            width=self.width,
+            height=self.height,
+            bg=COLORS["surface"],
+            highlightthickness=0
+        )
+        self.canvas.pack(fill="both", expand=True, padx=8, pady=8)
+
+    def set_data(self, labels, values):
+        self.labels = labels
+        self.data = values
+        self.draw()
+
+    def draw(self):
+        self.canvas.delete("all")
+
+        if not self.data:
+            return
+
+        padding_left = 48
+        padding_right = 24
+        padding_top = 28
+        padding_bottom = 42
+
+        chart_width = self.width - padding_left - padding_right
+        chart_height = self.height - padding_top - padding_bottom
+
+        max_value = max(self.data)
+
+        if max_value <= 0:
+            max_value = 1
+
+        points = []
+
+        for index, value in enumerate(self.data):
+            if len(self.data) == 1:
+                x = padding_left + chart_width / 2
+            else:
+                x = padding_left + (chart_width / (len(self.data) - 1)) * index
+
+            ratio = value / max_value
+            y = padding_top + chart_height - (chart_height * ratio)
+
+            points.append((x, y, value))
+
+        # Grid lines
+        for i in range(4):
+            y = padding_top + (chart_height / 3) * i
+            self.canvas.create_line(
+                padding_left,
+                y,
+                self.width - padding_right,
+                y,
+                fill=COLORS["card_soft"],
+                width=1
+            )
+
+        # Line
+        for index in range(len(points) - 1):
+            x1, y1, _ = points[index]
+            x2, y2, _ = points[index + 1]
+
+            self.canvas.create_line(
+                x1,
+                y1,
+                x2,
+                y2,
+                fill=COLORS["primary"],
+                width=4,
+                smooth=True
+            )
+
+        # Points + labels
+        for index, (x, y, value) in enumerate(points):
+            self.canvas.create_oval(
+                x - 6,
+                y - 6,
+                x + 6,
+                y + 6,
+                fill=COLORS["primary"],
+                outline=COLORS["white"],
+                width=2
+            )
+
+            self.canvas.create_text(
+                x,
+                y - 18,
+                text=str(value),
+                fill=COLORS["text"],
+                font=("Arial", 10, "bold")
+            )
+
+            self.canvas.create_text(
+                x,
+                self.height - 22,
+                text=self.labels[index],
+                fill=COLORS["muted"],
+                font=("Arial", 10)
+            )
 
 class StatisticsPage(ctk.CTkFrame):
     def __init__(self, parent, app):
@@ -225,41 +335,22 @@ class StatisticsPage(ctk.CTkFrame):
             text_color=COLORS["text"],
             font=ctk.CTkFont(size=18, weight="bold")
         )
-        self.weekly_title.grid(row=0, column=0, padx=22, pady=(20, 12), sticky="w")
+        self.weekly_title.grid(row=0, column=0, padx=22, pady=(20, 6), sticky="w")
 
-        self.weekly_bars_frame = ctk.CTkFrame(self.weekly_card, fg_color="transparent")
-        self.weekly_bars_frame.grid(row=1, column=0, padx=22, pady=(0, 22), sticky="ew")
+        self.weekly_subtitle = ctk.CTkLabel(
+            self.weekly_card,
+            text="",
+            text_color=COLORS["muted"],
+            font=ctk.CTkFont(size=13)
+        )
+        self.weekly_subtitle.grid(row=1, column=0, padx=22, pady=(0, 12), sticky="w")
 
-        for col in range(7):
-            self.weekly_bars_frame.grid_columnconfigure(col, weight=1)
-
-        self.weekly_day_widgets = []
-
-        for col in range(7):
-            day_frame = ctk.CTkFrame(
-                self.weekly_bars_frame,
-                fg_color=COLORS["surface"],
-                corner_radius=14
-            )
-            day_frame.grid(row=0, column=col, padx=5, sticky="ew")
-
-            value_label = ctk.CTkLabel(
-                day_frame,
-                text="0m",
-                text_color=COLORS["primary"],
-                font=ctk.CTkFont(size=16, weight="bold")
-            )
-            value_label.grid(row=0, column=0, padx=8, pady=(14, 2))
-
-            day_label = ctk.CTkLabel(
-                day_frame,
-                text="-",
-                text_color=COLORS["muted"],
-                font=ctk.CTkFont(size=12)
-            )
-            day_label.grid(row=1, column=0, padx=8, pady=(0, 14))
-
-            self.weekly_day_widgets.append((value_label, day_label))
+        self.weekly_line_chart = WeeklyLineChart(
+            self.weekly_card,
+            width=780,
+            height=260
+        )
+        self.weekly_line_chart.grid(row=2, column=0, padx=22, pady=(0, 22), sticky="ew")
 
     def create_recent_sessions_card(self):
         self.recent_card = AppCard(self.scroll)
@@ -467,12 +558,18 @@ class StatisticsPage(ctk.CTkFrame):
             self.app.t("day_sun_short"),
         ]
 
-        for index, (day_key, seconds) in enumerate(daily_totals.items()):
-            minutes = seconds // 60
+        values = [
+            seconds // 60
+            for seconds in daily_totals.values()
+        ]
 
-            value_label, day_label = self.weekly_day_widgets[index]
-            value_label.configure(text=f"{minutes}{self.app.t('minute_short')}")
-            day_label.configure(text=day_names[index])
+        weekly_total_minutes = sum(values)
+
+        self.weekly_subtitle.configure(
+            text=f"{self.app.t('weekly_total')}: {weekly_total_minutes}{self.app.t('minute_short')}"
+        )
+
+        self.weekly_line_chart.set_data(day_names, values)
 
     def render_subject_distribution(self):
         for widget in self.subject_distribution_frame.winfo_children():
@@ -556,7 +653,6 @@ class StatisticsPage(ctk.CTkFrame):
         self.subject_distribution_title.configure(text=self.app.t("weekly_subject_distribution"))
         self.weekly_title.configure(text=self.app.t("weekly_overview"))
         self.recent_title.configure(text=self.app.t("recent_sessions"))
-        self.session_hint_label.configure(text=self.app.t("one_session_at_a_time"))
         self.refresh_stats()
 
     def get_recent_today_sessions(self, limit=5):
