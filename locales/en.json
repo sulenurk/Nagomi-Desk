@@ -192,5 +192,9 @@
   "no_subject_stats": "No subject-based study records yet this week.",
 
   "weekly_overview": "Weekly Study Trend",
-  "pending_label_short": "pending"
+  "pending_label_short": "pending",
+
+  "subject_filter": "Subject Filter",
+  "subject_filter_subtitle": "Filter statistics by a specific subject.",
+  "all_subjects": "All Subjects"
 }

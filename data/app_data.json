@@ -1,5 +1,5 @@
 {
-  "language": "tr",
+  "language": "en",
   "active_task_id": "task_3b383518",
   "queue_mode_active": true,
   "queue_task_ids": [
@@ -115,12 +115,6 @@
       "is_default": true
     },
     {
-      "id": "subject_087c6b2f",
-      "name": "Litearture",
-      "color": "#6D5DF6",
-      "is_default": false
-    },
-    {
       "id": "subject_613ac351",
       "name": "Maths",
       "color": "#6D5DF6",
@@ -135,6 +129,12 @@
     {
       "id": "subject_3f437392",
       "name": "Chemistry",
+      "color": "#6D5DF6",
+      "is_default": false
+    },
+    {
+      "id": "subject_8b8edc37",
+      "name": "History",
       "color": "#6D5DF6",
       "is_default": false
     }
