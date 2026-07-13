@@ -156,6 +156,23 @@ class FocusFlowApp(ctk.CTk):
             return self.t(subject.get("name_key", "other_subject"))
 
         return subject.get("name", self.t("other_subject"))
+    
+    def get_language_options(self):
+        return {
+            "tr": "Türkçe",
+            "en": "English"
+        }
+
+    def get_language_display_name(self, language_code):
+        return self.get_language_options().get(language_code, language_code)
+
+
+    def get_language_code_from_display_name(self, display_name):
+        for code, name in self.get_language_options().items():
+            if name == display_name:
+                return code
+
+        return self.language
 
     def create_sidebar(self):
         self.sidebar = ctk.CTkFrame(
@@ -165,7 +182,7 @@ class FocusFlowApp(ctk.CTk):
             fg_color="#030712"
         )
         self.sidebar.grid(row=0, column=0, sticky="nsew")
-        self.sidebar.grid_rowconfigure(6, weight=1)
+        self.sidebar.grid_rowconfigure(7, weight=1)
 
         self.logo_label = ctk.CTkLabel(
             self.sidebar,
@@ -246,21 +263,17 @@ class FocusFlowApp(ctk.CTk):
         )
         self.settings_button.grid(row=6, column=0, padx=20, pady=10, sticky="ew")
 
-        self.language_label = ctk.CTkLabel(
-            self.sidebar,
-            text=self.t("language")
-        )
-        self.language_label.grid(row=7, column=0, padx=20, pady=(20, 5))
+        language_options = self.get_language_options()
 
         self.language_menu = ctk.CTkOptionMenu(
             self.sidebar,
-            values=["tr", "en"],
+            values=list(language_options.values()),
             fg_color="#1E293B",
             button_color="#334155",
             button_hover_color="#475569",
             command=self.change_language
         )
-        self.language_menu.set(self.language)
+        self.language_menu.set(self.get_language_display_name(self.language))
         self.language_menu.grid(row=8, column=0, padx=20, pady=(0, 30), sticky="ew")
 
     def create_pages(self):
@@ -335,8 +348,10 @@ class FocusFlowApp(ctk.CTk):
         self.settings_page.tkraise()
 
     def change_language(self, selected_language):
-        self.language = selected_language
-        self.app_data["language"] = selected_language
+        language_code = self.get_language_code_from_display_name(selected_language)
+
+        self.language = language_code
+        self.app_data["language"] = language_code
         self.save_app_data()
 
         self.translations = self.load_translations()
@@ -352,8 +367,11 @@ class FocusFlowApp(ctk.CTk):
         self.subjects_button.configure(text=self.t("subjects"))
         self.statistics_button.configure(text=self.t("statistics"))
         self.settings_button.configure(text=self.t("settings"))
-        self.language_label.configure(text=self.t("language"))
 
+        if hasattr(self, "language_menu"):
+            self.language_menu.configure(values=list(self.get_language_options().values()))
+            self.language_menu.set(self.get_language_display_name(self.language))
+            
         self.focus_page.refresh_texts()
         self.todo_page.refresh_texts()
         self.pomodoro_page.refresh_texts()

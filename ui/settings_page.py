@@ -279,7 +279,7 @@ class SettingsPage(ctk.CTkFrame):
             fg_color=COLORS["surface"],
             corner_radius=18
         )
-        self.goal_frame.grid(row=6, column=0, padx=20, pady=(8, 20), sticky="ew")
+        self.goal_frame.grid(row=6, column=0, padx=20, pady=(8, 8), sticky="ew")
         self.goal_frame.grid_columnconfigure(0, weight=1)
         self.goal_frame.grid_columnconfigure(1, weight=0)
         self.goal_frame.grid_columnconfigure(2, weight=0)
