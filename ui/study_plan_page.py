@@ -12,7 +12,8 @@ from ui.components import (
     PriorityBadge,
     SubjectIcon,
     AppEntry,
-    MetricCard
+    MetricCard,
+    Tooltip
 )
 
 SUBJECT_META = {
@@ -1228,6 +1229,25 @@ class TaskCard(AppCard):
             cursor="hand2"
         )
         self.drag_handle.grid(row=0, column=9, rowspan=2, padx=(0, 18), pady=20)
+
+        Tooltip(self.start_button, self.app.t("tooltip_start_task"))
+
+        if self.is_completed:
+            Tooltip(self.secondary_action_button, self.app.t("tooltip_move_to_pending"))
+        else:
+            Tooltip(self.secondary_action_button, self.app.t("tooltip_duplicate_task"))
+
+        Tooltip(self.edit_button, self.app.t("tooltip_edit_task"))
+        Tooltip(self.complete_button, self.app.t("tooltip_complete_task"))
+
+        delete_tooltip_text = (
+            self.app.t("tooltip_remove_completed_task")
+            if self.is_completed
+            else self.app.t("tooltip_delete_task")
+        )
+
+        Tooltip(self.delete_button, delete_tooltip_text)
+        Tooltip(self.drag_handle, self.app.t("tooltip_drag_task"))
 
         if self.on_drag_start:
             self.drag_handle.bind(

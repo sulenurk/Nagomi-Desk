@@ -184,3 +184,55 @@ class MetricCard(AppCard):
 
         if value is not None:
             self.value_label.configure(text=value)
+
+class Tooltip:
+    def __init__(self, widget, text, delay=500):
+        self.widget = widget
+        self.text = text
+        self.delay = delay
+        self.tooltip_window = None
+        self.after_id = None
+
+        self.widget.bind("<Enter>", self.schedule_show, add="+")
+        self.widget.bind("<Leave>", self.hide, add="+")
+        self.widget.bind("<ButtonPress>", self.hide, add="+")
+
+    def schedule_show(self, event=None):
+        self.cancel_scheduled_show()
+        self.after_id = self.widget.after(self.delay, self.show)
+
+    def cancel_scheduled_show(self):
+        if self.after_id:
+            self.widget.after_cancel(self.after_id)
+            self.after_id = None
+
+    def show(self):
+        if self.tooltip_window or not self.text:
+            return
+
+        x = self.widget.winfo_rootx() + 10
+        y = self.widget.winfo_rooty() + self.widget.winfo_height() + 8
+
+        self.tooltip_window = ctk.CTkToplevel(self.widget)
+        self.tooltip_window.wm_overrideredirect(True)
+        self.tooltip_window.wm_geometry(f"+{x}+{y}")
+        self.tooltip_window.attributes("-topmost", True)
+
+        label = ctk.CTkLabel(
+            self.tooltip_window,
+            text=self.text,
+            fg_color=COLORS["card"],
+            text_color=COLORS["text"],
+            corner_radius=8,
+            padx=10,
+            pady=6,
+            font=ctk.CTkFont(size=12)
+        )
+        label.pack()
+
+    def hide(self, event=None):
+        self.cancel_scheduled_show()
+
+        if self.tooltip_window:
+            self.tooltip_window.destroy()
+            self.tooltip_window = None

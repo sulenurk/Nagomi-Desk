@@ -20,6 +20,19 @@
   "total_focus_seconds_today": 5400,
   "tasks": [
     {
+      "id": "task_67a913a1",
+      "subject_id": "subject_613ac351",
+      "subject_name": "Maths",
+      "title": "Study Session",
+      "focus_minutes": 25,
+      "break_minutes": 5,
+      "priority": "medium",
+      "status": "pending",
+      "completed_at": "2026-07-13T11:28:44",
+      "hidden_from_plan": false,
+      "hidden_from_completed": false
+    },
+    {
       "id": "task_fd7f8af6",
       "subject_id": "subject_613ac351",
       "subject_name": "Maths",
@@ -27,23 +40,10 @@
       "focus_minutes": 25,
       "break_minutes": 5,
       "priority": "medium",
-      "status": "completed",
+      "status": "pending",
       "completed_at": "2026-07-13T11:24:28",
-      "hidden_from_plan": true,
-      "hidden_from_completed": true
-    },
-    {
-      "id": "task_67a913a1",
-      "subject_id": "subject_54037810",
-      "subject_name": "Language",
-      "title": "Study Session",
-      "focus_minutes": 25,
-      "break_minutes": 5,
-      "priority": "medium",
-      "status": "completed",
-      "completed_at": "2026-07-13T11:28:44",
       "hidden_from_plan": false,
-      "hidden_from_completed": false
+      "hidden_from_completed": true
     },
     {
       "id": "task_144aa923",
@@ -53,7 +53,7 @@
       "focus_minutes": 25,
       "break_minutes": 5,
       "priority": "medium",
-      "status": "completed",
+      "status": "pending",
       "hidden_from_plan": false,
       "completed_at": "2026-07-13T11:28:46",
       "hidden_from_completed": false
@@ -136,8 +136,8 @@
       "id": "session_f33e1b27",
       "task_id": "task_67a913a1",
       "task_title": "Study Session",
-      "subject_id": "subject_54037810",
-      "subject_name": "Language",
+      "subject_id": "subject_613ac351",
+      "subject_name": "Maths",
       "mode": "focus",
       "source": "study_plan",
       "duration_seconds": 1500,
