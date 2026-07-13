@@ -242,5 +242,7 @@
   "import_data": "Veriyi İçe Aktar",
   "data_imported": "Veriler başarıyla içe aktarıldı.",
   "data_import_failed": "Veriler içe aktarılamadı. Dosya geçerli bir FocusFlow yedeği olmayabilir.",
-  "select_backup_file": "FocusFlow yedek dosyasını seç"
+  "select_backup_file": "FocusFlow yedek dosyasını seç",
+
+  "confirm_import_data": "Bu işlem mevcut verileri değiştirecek. İçe aktarmak için tekrar bas."
 }

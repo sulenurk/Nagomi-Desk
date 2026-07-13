@@ -12,6 +12,7 @@ class SettingsPage(ctk.CTkFrame):
         super().__init__(parent, fg_color=COLORS["bg"])
         self.app = app
         self.pending_reset_action = None
+        self.pending_import_file_path = None
 
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
@@ -52,6 +53,12 @@ class SettingsPage(ctk.CTkFrame):
         self.subtitle_label.grid(row=1, column=0, pady=(6, 0), sticky="w")
 
     def import_app_data(self):
+        self.pending_reset_action = None
+
+        if self.pending_import_file_path:
+            self.confirm_import_app_data()
+            return
+
         file_path = filedialog.askopenfilename(
             title=self.app.t("select_backup_file"),
             filetypes=[("JSON files", "*.json")]
@@ -64,26 +71,58 @@ class SettingsPage(ctk.CTkFrame):
             with open(file_path, "r", encoding="utf-8") as file:
                 imported_data = json.load(file)
 
-            if not isinstance(imported_data, dict):
-                raise ValueError("Invalid data format")
+            self.validate_imported_data(imported_data)
 
-            required_keys = ["settings", "tasks", "subjects", "sessions"]
+            self.pending_import_file_path = file_path
 
-            for key in required_keys:
-                if key not in imported_data:
-                    raise ValueError("Missing FocusFlow data keys")
+            self.status_label.configure(
+                text=self.app.t("confirm_import_data"),
+                text_color=COLORS["orange"]
+            )
 
-            if not isinstance(imported_data.get("settings"), dict):
-                raise ValueError("Invalid settings format")
+            self.after(7000, self.clear_pending_import)
 
-            if not isinstance(imported_data.get("tasks"), list):
-                raise ValueError("Invalid tasks format")
+        except Exception:
+            self.pending_import_file_path = None
+            self.status_label.configure(
+                text=self.app.t("data_import_failed"),
+                text_color=COLORS["red"]
+            )
+            self.after(3000, lambda: self.status_label.configure(text=""))
 
-            if not isinstance(imported_data.get("subjects"), list):
-                raise ValueError("Invalid subjects format")
+    def validate_imported_data(self, imported_data):
+        if not isinstance(imported_data, dict):
+            raise ValueError("Invalid data format")
 
-            if not isinstance(imported_data.get("sessions"), list):
-                raise ValueError("Invalid sessions format")
+        required_keys = ["settings", "tasks", "subjects", "sessions"]
+
+        for key in required_keys:
+            if key not in imported_data:
+                raise ValueError("Missing FocusFlow data keys")
+
+        if not isinstance(imported_data.get("settings"), dict):
+            raise ValueError("Invalid settings format")
+
+        if not isinstance(imported_data.get("tasks"), list):
+            raise ValueError("Invalid tasks format")
+
+        if not isinstance(imported_data.get("subjects"), list):
+            raise ValueError("Invalid subjects format")
+
+        if not isinstance(imported_data.get("sessions"), list):
+            raise ValueError("Invalid sessions format")
+        
+    def confirm_import_app_data(self):
+        file_path = self.pending_import_file_path
+
+        if not file_path:
+            return
+
+        try:
+            with open(file_path, "r", encoding="utf-8") as file:
+                imported_data = json.load(file)
+
+            self.validate_imported_data(imported_data)
 
             self.app.app_data.clear()
             self.app.app_data.update(imported_data)
@@ -93,6 +132,7 @@ class SettingsPage(ctk.CTkFrame):
             else:
                 self.app.save_app_data()
 
+            self.pending_import_file_path = None
             self.refresh_after_import()
 
             self.status_label.configure(
@@ -101,12 +141,19 @@ class SettingsPage(ctk.CTkFrame):
             )
 
         except Exception:
+            self.pending_import_file_path = None
             self.status_label.configure(
                 text=self.app.t("data_import_failed"),
                 text_color=COLORS["red"]
             )
 
         self.after(3000, lambda: self.status_label.configure(text=""))
+
+    def clear_pending_import(self):
+        self.pending_import_file_path = None
+
+        if self.pending_reset_action is None:
+            self.status_label.configure(text="")
     
     def refresh_after_import(self):
         self.load_settings()

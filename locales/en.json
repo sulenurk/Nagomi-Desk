@@ -241,5 +241,7 @@
   "import_data": "Import Data",
   "data_imported": "Data imported successfully.",
   "data_import_failed": "Data could not be imported. The file may not be a valid FocusFlow backup.",
-  "select_backup_file": "Select FocusFlow backup file"
+  "select_backup_file": "Select FocusFlow backup file",
+
+  "confirm_import_data": "This will replace current data. Press again to import."
 }
