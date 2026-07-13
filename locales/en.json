@@ -213,5 +213,15 @@
   "regular_focus_count_desc": "Set how many focus sessions should run in regular Pomodoro. 0 = unlimited.",
   "focus_count_placeholder": "0 = unlimited",
   "pomodoro_cycle_completed": "Pomodoro completed",
-  "pomodoro_cycle_completed_desc": "The selected number of focus sessions has been reached."
+  "pomodoro_cycle_completed_desc": "The selected number of focus sessions has been reached.",
+
+  "tooltip_start_task": "Start",
+  "tooltip_duplicate_task": "Duplicate",
+  "tooltip_move_to_pending": "Move back to pending",
+  "tooltip_edit_task": "Edit",
+  "tooltip_complete_task": "Mark as completed",
+  "tooltip_remove_task": "Remove from page",
+  "tooltip_drag_task": "Drag to reorder",
+  "tooltip_delete_task": "Delete",
+  "tooltip_remove_completed_task": "Remove from this page"
 }

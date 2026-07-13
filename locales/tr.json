@@ -216,10 +216,13 @@
   "pomodoro_cycle_completed": "Pomodoro tamamlandı",
   "pomodoro_cycle_completed_desc": "Belirlenen focus sayısına ulaşıldı.",
 
-  "regular_focus_count": "Focus sayısı",
-  "regular_focus_count_desc": "Klasik Pomodoro sayfasında kaç focus oturumu çalışılacağını belirler. 0 = sınırsız.",
-  "focus_count_placeholder": "0 = sınırsız",
-  "unlimited": "Sınırsız",
-  "pomodoro_cycle_completed": "Pomodoro tamamlandı",
-  "pomodoro_cycle_completed_desc": "Belirlenen focus sayısına ulaşıldı."
+  "tooltip_start_task": "Başlat",
+  "tooltip_duplicate_task": "Kopyala",
+  "tooltip_move_to_pending": "Tekrar bekleyenlere al",
+  "tooltip_edit_task": "Düzenle",
+  "tooltip_complete_task": "Tamamlandı olarak işaretle",
+  "tooltip_remove_task": "Kaldır",
+  "tooltip_drag_task": "Sıralamak için sürükle",
+  "tooltip_delete_task": "Görevi sil",
+  "tooltip_remove_completed_task": "Sadece bu sayfadan kaldır"
 }
