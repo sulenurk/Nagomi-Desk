@@ -201,5 +201,11 @@
   "week_start_day": "Week starts on",
   "week_start_monday": "Monday",
   "week_start_sunday": "Sunday",
-  "week_start_day_desc": "Choose which day weekly statistics should start from."
+  "week_start_day_desc": "Choose which day weekly statistics should start from.",
+
+  "plan_completed": "Plan completed",
+  "plan_completed_desc": "No tasks left in the queue. You can start a new plan.",
+  "empty_study_plan_desc": "There are no pending tasks in your study plan.",
+  "select_or_start_task_desc": "Select a task or start your study plan.",
+  "waiting_status": "Waiting"
 }

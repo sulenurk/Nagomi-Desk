@@ -19,77 +19,43 @@
   "total_focus_seconds_today": 5040,
   "tasks": [
     {
-      "id": "task_0b34d643",
-      "subject_id": "subject_3f437392",
-      "subject_name": "Chemistry",
+      "id": "task_fd7f8af6",
+      "subject_id": "subject_613ac351",
+      "subject_name": "Maths",
       "title": "Study Session",
       "focus_minutes": 25,
       "break_minutes": 5,
       "priority": "medium",
-      "status": "pending",
-      "hidden_from_plan": false,
-      "hidden_from_completed": false,
-      "completed_at": "2026-07-13T10:08:02"
+      "status": "completed",
+      "completed_at": "2026-07-13T11:24:28",
+      "hidden_from_plan": true,
+      "hidden_from_completed": true
     },
     {
-      "id": "task_66d18fb7",
-      "subject_id": "subject_other",
-      "subject_name": "Other",
-      "title": "Study Session",
-      "focus_minutes": 3,
-      "break_minutes": 5,
-      "priority": "medium",
-      "status": "pending",
-      "hidden_from_plan": false,
-      "completed_at": "2026-07-10T03:37:01"
-    },
-    {
-      "id": "task_3b383518",
-      "subject_id": "subject_d166b1f2",
-      "subject_name": "Music",
-      "title": "Study Session",
-      "focus_minutes": 25,
-      "break_minutes": 5,
-      "priority": "medium",
-      "status": "pending",
-      "hidden_from_plan": false,
-      "completed_at": "2026-07-10T09:08:28"
-    },
-    {
-      "id": "task_3c5b1397",
+      "id": "task_67a913a1",
       "subject_id": "subject_54037810",
       "subject_name": "Language",
       "title": "Study Session",
       "focus_minutes": 25,
       "break_minutes": 5,
       "priority": "medium",
-      "status": "pending",
+      "status": "completed",
+      "completed_at": "2026-07-13T11:28:44",
       "hidden_from_plan": false,
-      "completed_at": "2026-07-10T09:08:27"
+      "hidden_from_completed": false
     },
     {
-      "id": "task_98f686f8",
-      "subject_id": "subject_3f437392",
-      "subject_name": "Chemistry",
+      "id": "task_144aa923",
+      "subject_id": "subject_8b8edc37",
+      "subject_name": "History",
       "title": "Study Session",
       "focus_minutes": 25,
       "break_minutes": 5,
       "priority": "medium",
-      "status": "pending",
+      "status": "completed",
       "hidden_from_plan": false,
-      "completed_at": "2026-07-13T09:56:34",
-      "hidden_from_completed": true
-    },
-    {
-      "id": "task_7ef742d8",
-      "subject_id": "subject_3f437392",
-      "subject_name": "Chemistry",
-      "title": "Study Session",
-      "focus_minutes": 25,
-      "break_minutes": 5,
-      "priority": "low",
-      "status": "pending",
-      "hidden_from_plan": false
+      "completed_at": "2026-07-13T11:28:46",
+      "hidden_from_completed": false
     }
   ],
   "sessions": [
@@ -152,6 +118,42 @@
       "duration_seconds": 1500,
       "away_seconds": 0,
       "completed_at": "2026-07-13T10:08:02"
+    },
+    {
+      "id": "session_4824d9dc",
+      "task_id": "task_fd7f8af6",
+      "task_title": "Study Session",
+      "subject_id": "subject_613ac351",
+      "subject_name": "Maths",
+      "mode": "focus",
+      "source": "study_plan",
+      "duration_seconds": 1500,
+      "away_seconds": 0,
+      "completed_at": "2026-07-13T11:23:20"
+    },
+    {
+      "id": "session_f33e1b27",
+      "task_id": "task_67a913a1",
+      "task_title": "Study Session",
+      "subject_id": "subject_54037810",
+      "subject_name": "Language",
+      "mode": "focus",
+      "source": "study_plan",
+      "duration_seconds": 1500,
+      "away_seconds": 0,
+      "completed_at": "2026-07-13T11:23:28"
+    },
+    {
+      "id": "session_fa9921bf",
+      "task_id": "task_144aa923",
+      "task_title": "Study Session",
+      "subject_id": "subject_8b8edc37",
+      "subject_name": "History",
+      "mode": "focus",
+      "source": "study_plan",
+      "duration_seconds": 1500,
+      "away_seconds": 0,
+      "completed_at": "2026-07-13T11:28:46"
     }
   ],
   "subjects": [
@@ -185,5 +187,6 @@
       "color": "#6D5DF6",
       "is_default": false
     }
-  ]
+  ],
+  "last_queue_state": "completed"
 }
