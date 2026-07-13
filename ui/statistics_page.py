@@ -138,6 +138,46 @@ class SubjectDonutChart(ctk.CTkFrame):
         self.center_text = center_text
         self.draw()
 
+    def draw_empty_donut(self, cx, cy, x1, y1, x2, y2, inner_radius):
+        empty_ring_color = COLORS.get("card_soft", COLORS["surface"])
+        border_color = COLORS.get("card_border", COLORS["muted"])
+
+        self.canvas.create_oval(
+            x1,
+            y1,
+            x2,
+            y2,
+            fill=empty_ring_color,
+            outline=border_color,
+            width=1
+        )
+
+        self.canvas.create_oval(
+            cx - inner_radius,
+            cy - inner_radius,
+            cx + inner_radius,
+            cy + inner_radius,
+            fill=COLORS["surface"],
+            outline=border_color,
+            width=1
+        )
+
+        self.canvas.create_text(
+            cx,
+            cy - 8,
+            text="0",
+            fill=COLORS["muted"],
+            font=("Arial", 22, "bold")
+        )
+
+        self.canvas.create_text(
+            cx,
+            cy + 18,
+            text=self.center_text,
+            fill=COLORS["muted"],
+            font=("Arial", 11)
+        )
+
     def draw(self):
         self.canvas.delete("all")
 
@@ -152,40 +192,7 @@ class SubjectDonutChart(ctk.CTkFrame):
         y2 = cy + outer_radius
 
         if self.total_minutes <= 0 or not self.data:
-            self.canvas.create_oval(
-                x1,
-                y1,
-                x2,
-                y2,
-                fill=COLORS.get("card_soft", COLORS["surface"]),
-                outline=COLORS.get("card_soft", COLORS["surface"])
-            )
-
-            self.canvas.create_oval(
-                cx - inner_radius,
-                cy - inner_radius,
-                cx + inner_radius,
-                cy + inner_radius,
-                fill=COLORS["surface"],
-                outline=COLORS["surface"]
-            )
-
-            self.canvas.create_text(
-                cx,
-                cy - 8,
-                text="0",
-                fill=COLORS["text"],
-                font=("Arial", 22, "bold")
-            )
-
-            self.canvas.create_text(
-                cx,
-                cy + 18,
-                text=self.center_text,
-                fill=COLORS["muted"],
-                font=("Arial", 11)
-            )
-
+            self.draw_empty_donut(cx, cy, x1, y1, x2, y2, inner_radius)
             return
 
         start_angle = 90

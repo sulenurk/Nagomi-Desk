@@ -21,9 +21,9 @@
   "subjects": [
     {
       "id": "subject_other",
-      "name": "Diğer",
       "color": "#A78BFA",
-      "is_default": true
+      "is_default": true,
+      "name_key": "other_subject"
     }
   ],
   "tasks": [],
