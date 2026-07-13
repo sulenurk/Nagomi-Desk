@@ -312,29 +312,75 @@ class FocusPage(ctk.CTkFrame):
         hours = total_minutes // 60
         minutes = total_minutes % 60
         return f"{hours:02d}:{minutes:02d}"
+    
+    def get_focus_empty_state_texts(self):
+        last_queue_state = self.app.app_data.get("last_queue_state")
+        pending_tasks = self.app.get_pending_tasks() if hasattr(self.app, "get_pending_tasks") else []
+
+        if last_queue_state == "completed":
+            return (
+                self.app.t("plan_completed"),
+                self.app.t("plan_completed_desc")
+            )
+
+        if not pending_tasks:
+            return (
+                self.app.t("no_active_task"),
+                self.app.t("empty_study_plan_desc")
+            )
+
+        return (
+            self.app.t("no_active_task"),
+            self.app.t("select_or_start_task_desc")
+        )
 
     def load_active_task(self):
         task = self.app.get_active_task()
 
         if not task:
-            self.active_task_label.configure(text=self.app.t("no_active_task"))
-            self.active_task_detail_label.configure(text="")
+            empty_title, empty_detail = self.get_focus_empty_state_texts()
 
-            self.current_task_title.configure(text=self.app.t("no_active_task"))
-            self.current_task_detail.configure(text=self.app.t("no_task_selected"))
+            self.active_task_label.configure(text=empty_title)
+            self.active_task_detail_label.configure(text=empty_detail)
 
-            self.focus_seconds = 25 * 60
-            self.break_seconds = 5 * 60
+            self.current_task_title.configure(text=empty_title)
+            self.current_task_detail.configure(text=empty_detail)
+
+            last_queue_state = self.app.app_data.get("last_queue_state")
+
+            if last_queue_state == "completed":
+                self.focus_seconds = 0
+                self.break_seconds = 0
+            else:
+                self.focus_seconds = 25 * 60
+                self.break_seconds = 5 * 60
 
             if not self.is_running and not self.is_paused:
                 self.current_mode = "focus"
-                self.remaining_seconds = self.focus_seconds
+
+                if last_queue_state == "completed":
+                    self.remaining_seconds = 0
+                else:
+                    self.remaining_seconds = self.focus_seconds
+
                 self.away_seconds = 0
                 self.session_away_seconds = 0
+
                 self.timer_label.configure(text=self.format_time(self.remaining_seconds))
                 self.start_button.configure(state="disabled")
+
+                self.status_pill.configure(
+                    text=self.app.t("waiting_status"),
+                    fg_color=COLORS["card_soft"],
+                    text_color=COLORS["muted"]
+                )
+
                 self.task_progress.set(0)
                 self.task_progress_label.configure(text="0%")
+
+            self.update_total_focus_label()
+            self.update_queue_progress()
+            self.refresh_queue_progress_visibility()
 
             return
 

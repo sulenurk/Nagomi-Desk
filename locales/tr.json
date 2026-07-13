@@ -202,5 +202,11 @@
   "week_start_day": "Hafta başlangıcı",
   "week_start_monday": "Pazartesi",
   "week_start_sunday": "Pazar",
-  "week_start_day_desc": "Haftalık istatistiklerin hangi günden başlayacağını seç."
+  "week_start_day_desc": "Haftalık istatistiklerin hangi günden başlayacağını seç.",
+
+  "plan_completed": "Plan tamamlandı",
+  "plan_completed_desc": "Sıradaki görev kalmadı. Yeni bir plan başlatabilirsin.",
+  "empty_study_plan_desc": "Çalışma planında bekleyen görev yok.",
+  "select_or_start_task_desc": "Bir görev seç veya çalışma planını başlat.",
+  "waiting_status": "Beklemede"
 }

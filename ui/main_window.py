@@ -304,6 +304,7 @@ class FocusFlowApp(ctk.CTk):
 
     def set_active_task(self, task_id):
         self.app_data["active_task_id"] = task_id
+        self.app_data["last_queue_state"] = None
         self.save_app_data()
 
         if hasattr(self, "focus_page"):
@@ -360,6 +361,7 @@ class FocusFlowApp(ctk.CTk):
         self.app_data["queue_mode_active"] = True
         self.app_data["queue_task_ids"] = queue_task_ids
         self.app_data["active_task_id"] = queue_task_ids[0]
+        self.app_data["last_queue_state"] = None
         self.save_app_data()
 
         if hasattr(self, "focus_page"):
@@ -372,6 +374,11 @@ class FocusFlowApp(ctk.CTk):
 
         if hasattr(self, "todo_page"):
             self.todo_page.render_tasks()
+
+        if hasattr(self, "focus_page"):
+            self.focus_page.load_active_task()
+            self.focus_page.update_queue_progress()
+            self.focus_page.refresh_queue_progress_visibility()
 
         self.show_focus_page()
 
@@ -440,6 +447,7 @@ class FocusFlowApp(ctk.CTk):
         self.app_data["queue_mode_active"] = False
         self.app_data["queue_task_ids"] = []
         self.app_data["active_task_id"] = None
+        self.app_data["last_queue_state"] = "completed"
         self.save_app_data()
 
         if hasattr(self, "focus_page"):
