@@ -232,5 +232,10 @@
   "reset_statistics": "İstatistikleri Sıfırla",
   "data_exported": "Veriler başarıyla dışa aktarıldı.",
   "data_export_failed": "Veriler dışa aktarılamadı.",
-  "statistics_reset_done": "İstatistik geçmişi sıfırlandı."
+  "statistics_reset_done": "İstatistik geçmişi sıfırlandı.",
+
+  "reset_application": "Uygulamayı Sıfırla",
+  "confirm_reset_statistics": "İstatistikleri sıfırlamak için tekrar bas.",
+  "confirm_reset_application": "Tüm uygulamayı sıfırlamak için tekrar bas. Bu işlem görevleri, dersleri ve istatistikleri siler.",
+  "application_reset_done": "Uygulama varsayılan ayarlara sıfırlandı."
 }

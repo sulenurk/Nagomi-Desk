@@ -19,7 +19,7 @@ class FocusFlowApp(ctk.CTk):
         self.language = self.app_data.get("language", "tr")
         self.translations = self.load_translations()
 
-        self.active_page = "focus"
+        self.active_page = "pomodoro"
 
         self.title(self.t("app_name"))
         self.geometry("1000x650")
@@ -35,7 +35,7 @@ class FocusFlowApp(ctk.CTk):
         self.create_sidebar()
         self.create_pages()
 
-        self.show_focus_page()
+        self.show_pomodoro_page()
 
     def load_app_data(self):
         with open(self.data_path, "r", encoding="utf-8") as file:
@@ -85,14 +85,23 @@ class FocusFlowApp(ctk.CTk):
                 return text
 
         return text
+    
+    def get_subject_display_name(self, subject):
+        if not subject:
+            return self.t("other_subject")
+
+        if subject.get("is_default") or subject.get("id") == "subject_other":
+            return self.t(subject.get("name_key", "other_subject"))
+
+        return subject.get("name", self.t("other_subject"))
 
     def create_sidebar(self):
         self.sidebar = ctk.CTkFrame(
-    self,
-    width=230,
-    corner_radius=0,
-    fg_color="#030712"
-)
+            self,
+            width=230,
+            corner_radius=0,
+            fg_color="#030712"
+        )
         self.sidebar.grid(row=0, column=0, sticky="nsew")
         self.sidebar.grid_rowconfigure(6, weight=1)
 
@@ -102,31 +111,7 @@ class FocusFlowApp(ctk.CTk):
             font=ctk.CTkFont(size=24, weight="bold")
         )
         self.logo_label.grid(row=0, column=0, padx=20, pady=(30, 20))
-
-        self.focus_button = ctk.CTkButton(
-    self.sidebar,
-    text=self.t("focus_timer"),
-    height=42,
-    corner_radius=14,
-    fg_color="#1E293B",
-    hover_color="#334155",
-    anchor="w",
-    command=self.show_focus_page
-)
-        self.focus_button.grid(row=1, column=0, padx=20, pady=10, sticky="ew")
-
-        self.todo_button = ctk.CTkButton(
-    self.sidebar,
-    text=self.t("study_plan"),
-    height=42,
-    corner_radius=14,
-    fg_color="#1E293B",
-    hover_color="#334155",
-    anchor="w",
-    command=self.show_todo_page
-)
-        self.todo_button.grid(row=2, column=0, padx=20, pady=10, sticky="ew")
-
+        
         self.pomodoro_button = ctk.CTkButton(
             self.sidebar,
             text=self.t("regular_pomodoro"),
@@ -137,7 +122,31 @@ class FocusFlowApp(ctk.CTk):
             anchor="w",
             command=self.show_pomodoro_page
         )
-        self.pomodoro_button.grid(row=3, column=0, padx=20, pady=10, sticky="ew")
+        self.pomodoro_button.grid(row=1, column=0, padx=20, pady=10, sticky="ew")
+
+        self.todo_button = ctk.CTkButton(
+            self.sidebar,
+            text=self.t("study_plan"),
+            height=42,
+            corner_radius=14,
+            fg_color="#1E293B",
+            hover_color="#334155",
+            anchor="w",
+            command=self.show_todo_page
+        )
+        self.todo_button.grid(row=2, column=0, padx=20, pady=10, sticky="ew")
+
+        self.focus_button = ctk.CTkButton(
+            self.sidebar,
+            text=self.t("focus_timer"),
+            height=42,
+            corner_radius=14,
+            fg_color="#1E293B",
+            hover_color="#334155",
+            anchor="w",
+            command=self.show_focus_page
+        )
+        self.focus_button.grid(row=3, column=0, padx=20, pady=10, sticky="ew")
 
         self.subjects_button = ctk.CTkButton(
             self.sidebar,
@@ -182,13 +191,13 @@ class FocusFlowApp(ctk.CTk):
         self.language_label.grid(row=7, column=0, padx=20, pady=(20, 5))
 
         self.language_menu = ctk.CTkOptionMenu(
-    self.sidebar,
-    values=["tr", "en"],
-    fg_color="#1E293B",
-    button_color="#334155",
-    button_hover_color="#475569",
-    command=self.change_language
-)
+            self.sidebar,
+            values=["tr", "en"],
+            fg_color="#1E293B",
+            button_color="#334155",
+            button_hover_color="#475569",
+            command=self.change_language
+        )
         self.language_menu.set(self.language)
         self.language_menu.grid(row=8, column=0, padx=20, pady=(0, 30), sticky="ew")
 

@@ -11,6 +11,7 @@ class SettingsPage(ctk.CTkFrame):
     def __init__(self, parent, app):
         super().__init__(parent, fg_color=COLORS["bg"])
         self.app = app
+        self.pending_reset_action = None
 
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
@@ -233,6 +234,7 @@ class SettingsPage(ctk.CTkFrame):
         self.data_frame.grid(row=7, column=0, padx=20, pady=(8, 20), sticky="ew")
         self.data_frame.grid_columnconfigure(0, weight=1)
         self.data_frame.grid_columnconfigure(1, weight=1)
+        self.data_frame.grid_columnconfigure(2, weight=1)
 
         self.data_title = ctk.CTkLabel(
             self.data_frame,
@@ -256,18 +258,25 @@ class SettingsPage(ctk.CTkFrame):
             self.data_frame,
             text=self.app.t("export_data"),
             command=self.export_app_data,
-            width=140
+            width=120
         )
-        self.export_data_button.grid(row=2, column=0, padx=(18, 8), pady=(0, 18), sticky="ew")
+        self.export_data_button.grid(row=2, column=0, padx=(18, 6), pady=(0, 18), sticky="ew")
 
         self.reset_stats_button = PrimaryButton(
             self.data_frame,
             text=self.app.t("reset_statistics"),
-            command=self.reset_statistics,
-            width=140
+            command=self.confirm_reset_statistics,
+            width=120
         )
-        self.reset_stats_button.grid(row=2, column=1, padx=(8, 18), pady=(0, 18), sticky="ew")
+        self.reset_stats_button.grid(row=2, column=1, padx=6, pady=(0, 18), sticky="ew")
 
+        self.reset_app_button = PrimaryButton(
+            self.data_frame,
+            text=self.app.t("reset_application"),
+            command=self.confirm_reset_application,
+            width=120
+        )
+        self.reset_app_button.grid(row=2, column=2, padx=(6, 18), pady=(0, 18), sticky="ew")
         self.status_label = ctk.CTkLabel(
             self.settings_card,
             text="",
@@ -305,10 +314,119 @@ class SettingsPage(ctk.CTkFrame):
             )
 
         self.after(2500, lambda: self.status_label.configure(text=""))
+    
+    def reset_application(self):
+        current_language = self.app.app_data.get("language", "tr")
+
+        self.app.app_data.clear()
+
+        self.app.app_data.update({
+            "language": current_language,
+            "active_task_id": None,
+            "queue_mode_active": False,
+            "queue_task_ids": [],
+            "last_queue_state": None,
+            "settings": {
+                "auto_start_break": False,
+                "auto_start_focus": False,
+                "sound_enabled": True,
+                "daily_focus_goal_minutes": 300,
+                "regular_focus_minutes": 25,
+                "regular_short_break_minutes": 5,
+                "regular_long_break_minutes": 15,
+                "regular_long_break_after": 4,
+                "regular_focus_count": 4,
+                "show_queue_progress": True,
+                "show_cumulative_away_time": True,
+                "week_start_day": "monday"
+            },
+            "subjects": [
+                {
+                    "id": "subject_other",
+                    "name": self.app.t("other_subject"),
+                    "color": "#A78BFA",
+                    "is_default": True
+                }
+            ],
+            "tasks": [],
+            "sessions": []
+        })
+
+        self.app.save_app_data()
+        self.pending_reset_action = None
+
+        self.load_settings()
+
+        if hasattr(self.app, "todo_page"):
+            if hasattr(self.app.todo_page, "refresh_subject_menu"):
+                self.app.todo_page.refresh_subject_menu()
+            self.app.todo_page.render_tasks()
+
+        if hasattr(self.app, "focus_page"):
+            self.app.focus_page.load_active_task()
+            self.app.focus_page.update_queue_progress()
+            self.app.focus_page.refresh_queue_progress_visibility()
+
+        if hasattr(self.app, "pomodoro_page"):
+            self.app.pomodoro_page.load_pomodoro_settings()
+            self.app.pomodoro_page.populate_settings_entries()
+            self.app.pomodoro_page.update_timer_label()
+            self.app.pomodoro_page.update_mode_ui()
+            self.app.pomodoro_page.update_cycle_labels()
+            self.app.pomodoro_page.update_session_info_values()
+            self.app.pomodoro_page.update_auto_start_info()
+
+        if hasattr(self.app, "subjects_page"):
+            self.app.subjects_page.render_subjects()
+
+        if hasattr(self.app, "statistics_page"):
+            self.app.statistics_page.refresh_subject_filter_menu()
+            self.app.statistics_page.refresh_stats()
+
+        self.status_label.configure(
+            text=self.app.t("application_reset_done"),
+            text_color=COLORS["green"]
+        )
+
+        self.after(2500, lambda: self.status_label.configure(text=""))
+
+    def confirm_reset_application(self):
+        if self.pending_reset_action != "application":
+            self.pending_reset_action = "application"
+
+            self.status_label.configure(
+                text=self.app.t("confirm_reset_application"),
+                text_color=COLORS["red"]
+            )
+
+            self.after(5000, self.clear_pending_reset_action)
+            return
+
+        self.reset_application()
+
+    def confirm_reset_statistics(self):
+        if self.pending_reset_action != "statistics":
+            self.pending_reset_action = "statistics"
+
+            self.status_label.configure(
+                text=self.app.t("confirm_reset_statistics"),
+                text_color=COLORS["orange"]
+            )
+
+            self.after(4000, self.clear_pending_reset_action)
+            return
+
+        self.reset_statistics()
+    
+    def clear_pending_reset_action(self):
+        self.pending_reset_action = None
+        self.status_label.configure(text="")
 
     def reset_statistics(self):
         self.app.app_data["sessions"] = []
         self.app.save_app_data()
+
+        self.pending_reset_action = None
 
         if hasattr(self.app, "statistics_page"):
             self.app.statistics_page.refresh_stats()
@@ -478,4 +596,4 @@ class SettingsPage(ctk.CTkFrame):
         self.data_desc.configure(text=self.app.t("data_management_desc"))
         self.export_data_button.configure(text=self.app.t("export_data"))
         self.reset_stats_button.configure(text=self.app.t("reset_statistics"))
-    
+        self.reset_app_button.configure(text=self.app.t("reset_application"))
