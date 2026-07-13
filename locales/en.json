@@ -231,5 +231,10 @@
   "reset_statistics": "Reset Statistics",
   "data_exported": "Data exported successfully.",
   "data_export_failed": "Data could not be exported.",
-  "statistics_reset_done": "Statistics history has been reset."
+  "statistics_reset_done": "Statistics history has been reset.",
+
+  "reset_application": "Reset Application",
+  "confirm_reset_statistics": "Press again to reset statistics.",
+  "confirm_reset_application": "Press again to reset the entire app. This will delete tasks, subjects, and statistics.",
+  "application_reset_done": "Application has been reset to default settings."
 }

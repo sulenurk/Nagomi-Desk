@@ -1,133 +1,31 @@
 {
-  "language": "en",
+  "language": "tr",
   "active_task_id": null,
   "queue_mode_active": false,
   "queue_task_ids": [],
+  "last_queue_state": null,
   "settings": {
-    "auto_start_break": true,
-    "auto_start_focus": true,
+    "auto_start_break": false,
+    "auto_start_focus": false,
     "sound_enabled": true,
     "daily_focus_goal_minutes": 300,
-    "regular_focus_minutes": 1,
-    "regular_short_break_minutes": 1,
-    "regular_long_break_minutes": 1,
-    "regular_long_break_after": 1,
+    "regular_focus_minutes": 25,
+    "regular_short_break_minutes": 5,
+    "regular_long_break_minutes": 15,
+    "regular_long_break_after": 4,
+    "regular_focus_count": 4,
     "show_queue_progress": true,
     "show_cumulative_away_time": true,
-    "week_start_day": "sunday",
-    "regular_focus_count": 3
+    "week_start_day": "monday"
   },
-  "total_focus_seconds_today": 5400,
-  "tasks": [
-    {
-      "id": "task_67a913a1",
-      "subject_id": "subject_613ac351",
-      "subject_name": "Maths",
-      "title": "Study Session",
-      "focus_minutes": 25,
-      "break_minutes": 5,
-      "priority": "medium",
-      "status": "completed",
-      "completed_at": "2026-07-13T14:41:24",
-      "hidden_from_plan": false,
-      "hidden_from_completed": false
-    },
-    {
-      "id": "task_fd7f8af6",
-      "subject_id": "subject_613ac351",
-      "subject_name": "Maths",
-      "title": "Study Session",
-      "focus_minutes": 25,
-      "break_minutes": 5,
-      "priority": "medium",
-      "status": "completed",
-      "completed_at": "2026-07-13T14:41:22",
-      "hidden_from_plan": false,
-      "hidden_from_completed": false
-    },
-    {
-      "id": "task_144aa923",
-      "subject_id": "subject_8b8edc37",
-      "subject_name": "History",
-      "title": "Study Session",
-      "focus_minutes": 25,
-      "break_minutes": 5,
-      "priority": "medium",
-      "status": "completed",
-      "hidden_from_plan": false,
-      "completed_at": "2026-07-13T14:41:18",
-      "hidden_from_completed": false
-    }
-  ],
-  "sessions": [
-    {
-      "id": "session_e587c7e5",
-      "task_id": "task_144aa923",
-      "task_title": "Study Session",
-      "subject_id": "subject_8b8edc37",
-      "subject_name": "History",
-      "mode": "focus",
-      "source": "study_plan",
-      "duration_seconds": 1500,
-      "away_seconds": 0,
-      "completed_at": "2026-07-13T14:41:18"
-    },
-    {
-      "id": "session_60ab36e5",
-      "task_id": "task_fd7f8af6",
-      "task_title": "Study Session",
-      "subject_id": "subject_613ac351",
-      "subject_name": "Maths",
-      "mode": "focus",
-      "source": "study_plan",
-      "duration_seconds": 1500,
-      "away_seconds": 0,
-      "completed_at": "2026-07-13T14:41:22"
-    },
-    {
-      "id": "session_74c41656",
-      "task_id": "task_67a913a1",
-      "task_title": "Study Session",
-      "subject_id": "subject_613ac351",
-      "subject_name": "Maths",
-      "mode": "focus",
-      "source": "study_plan",
-      "duration_seconds": 1500,
-      "away_seconds": 0,
-      "completed_at": "2026-07-13T14:41:24"
-    }
-  ],
   "subjects": [
     {
       "id": "subject_other",
-      "name": "Other",
-      "color": "#6D5DF6",
+      "name": "Diğer",
+      "color": "#A78BFA",
       "is_default": true
-    },
-    {
-      "id": "subject_613ac351",
-      "name": "Maths",
-      "color": "#6D5DF6",
-      "is_default": false
-    },
-    {
-      "id": "subject_54037810",
-      "name": "Language",
-      "color": "#6D5DF6",
-      "is_default": false
-    },
-    {
-      "id": "subject_3f437392",
-      "name": "Chemistry",
-      "color": "#6D5DF6",
-      "is_default": false
-    },
-    {
-      "id": "subject_8b8edc37",
-      "name": "History",
-      "color": "#6D5DF6",
-      "is_default": false
     }
   ],
-  "last_queue_state": "completed"
+  "tasks": [],
+  "sessions": []
 }

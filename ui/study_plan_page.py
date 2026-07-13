@@ -81,17 +81,17 @@ class StudyPlanPage(ctk.CTkFrame):
 
     def get_subject_names(self):
         return [
-            subject.get("name", self.app.t("other_subject"))
+            self.app.get_subject_display_name(subject)
             for subject in self.get_subjects()
         ]
 
 
     def get_subject_by_name(self, subject_name):
-        for subject in self.get_subjects():
-            if subject.get("name") == subject_name:
+        for subject in self.app.app_data.get("subjects", []):
+            if self.app.get_subject_display_name(subject) == subject_name:
                 return subject
 
-        return self.get_subjects()[0]
+        return self.get_default_subject()
 
 
     def get_subject_by_id(self, subject_id):
@@ -231,7 +231,7 @@ class StudyPlanPage(ctk.CTkFrame):
 
     def get_subject_names(self):
         return [
-            subject.get("name", self.app.t("other_subject"))
+            self.app.get_subject_display_name(subject)
             for subject in self.get_subjects()
         ]
 
@@ -447,7 +447,7 @@ class StudyPlanPage(ctk.CTkFrame):
         new_task = {
             "id": f"task_{uuid.uuid4().hex[:8]}",
             "subject_id": subject.get("id", "subject_other"),
-            "subject_name": subject.get("name", self.app.t("other_subject")),
+            "subject_name": self.app.get_subject_display_name(subject),
             "title": title,
             "focus_minutes": focus_minutes,
             "break_minutes": break_minutes,
@@ -482,7 +482,7 @@ class StudyPlanPage(ctk.CTkFrame):
         for task in self.app.app_data.get("tasks", []):
             if task.get("id") == task_id:
                 task["subject_id"] = subject.get("id", "subject_other")
-                task["subject_name"] = subject.get("name", self.app.t("other_subject"))
+                task["subject_name"] = self.app.get_subject_display_name(subject),
                 task["title"] = title
                 task["focus_minutes"] = focus_minutes
                 task["break_minutes"] = break_minutes
@@ -841,7 +841,7 @@ class StudyPlanPage(ctk.CTkFrame):
             subject = self.get_subject_by_name(old_subject_name)
 
         self.subject_menu.configure(values=self.get_subject_names())
-        self.subject_menu.set(subject.get("name", self.app.t("other_subject")))
+        self.subject_menu.set(self.app.get_subject_display_name(subject))
 
         self.task_name_entry.delete(0, "end")
         self.task_name_entry.insert(0, task.get("title", ""))
