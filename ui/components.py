@@ -63,7 +63,7 @@ class SecondaryButton(ctk.CTkButton):
             corner_radius=14,
             fg_color=COLORS["card_soft"],
             hover_color="#334155",
-            text_color=COLORS["soft"],
+            text_color=COLORS["text"],
             font=ctk.CTkFont(size=13, weight="bold"),
             **kwargs
         )
@@ -99,7 +99,7 @@ class PillButton(ctk.CTkButton):
             corner_radius=14,
             fg_color=COLORS["primary_soft"] if active else COLORS["surface_light"],
             hover_color=COLORS["primary_soft"],
-            text_color=COLORS["text"] if active else COLORS["muted"],
+            text_color=COLORS["white"] if active else COLORS["muted"],
             font=ctk.CTkFont(size=12, weight="bold"),
             **kwargs
         )
@@ -123,8 +123,8 @@ class PriorityBadge(ctk.CTkLabel):
 
 
 class SubjectIcon(ctk.CTkLabel):
-    def __init__(self, parent, subject_key, icon_text):
-        color = SUBJECT_COLORS.get(subject_key, SUBJECT_COLORS["default"])
+    def __init__(self, parent, subject_key=None, icon_text="•", color=None):
+        color = color or SUBJECT_COLORS.get(subject_key, SUBJECT_COLORS["default"])
 
         super().__init__(
             parent,
@@ -148,7 +148,8 @@ class AppEntry(ctk.CTkEntry):
             fg_color=COLORS["input"],
             text_color=COLORS["input_text"],
             placeholder_text_color="#6B7280",
-            border_width=0,
+            border_width=1,
+            border_color=COLORS["card_border"],
             font=ctk.CTkFont(size=13),
             **kwargs
         )

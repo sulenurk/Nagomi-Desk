@@ -504,39 +504,34 @@ class StatisticsPage(ctk.CTkFrame):
             if not (start_of_week <= session_date < end_of_week):
                 continue
 
+            subject_id = session.get("subject_id", "subject_other")
             subject_name = session.get("subject_name", self.app.t("other_subject"))
             duration_minutes = session.get("duration_seconds", 0) // 60
 
-            subject_totals[subject_name] = subject_totals.get(subject_name, 0) + duration_minutes
+            if subject_id not in subject_totals:
+                subject_totals[subject_id] = {
+                    "subject_name": subject_name,
+                    "minutes": 0,
+                    "color": self.app.get_subject_color(subject_id)
+                }
+            subject_totals[subject_id]["minutes"] += duration_minutes
 
-        donut_data = [
-            {
-                "subject_name": subject_name,
-                "minutes": minutes
-            }
-            for subject_name, minutes in subject_totals.items()
-            if minutes > 0
-        ]
+        donut_data = [item for item in subject_totals.values() if item["minutes"] > 0]
 
         donut_data.sort(key=lambda item: item["minutes"], reverse=True)
-
-        subject_names = [item["subject_name"] for item in donut_data]
-        color_map = self.get_subject_chart_colors(subject_names)
-
-        for item in donut_data:
-            item["color"] = color_map[item["subject_name"]]
 
         return donut_data
     
     def get_subject_chart_colors(self, subject_names):
         palette = [
-            "#8B5CF6",  # violet
-            "#6366F1",  # indigo
-            "#3B82F6",  # blue
-            "#06B6D4",  # cyan
-            "#14B8A6",  # teal
-            "#F59E0B",  # amber
-            "#EC4899",  # pink
+            "#A78BFA",  # lavander,
+            "#86EFAC",  # mint green,
+            "#FCD34D",  # pastel yellow,
+            "#93C5FD",  # soft cloud blue,
+            "#99F6E4",  # light turquoise,
+            "#F9A8D4",  # pastel pink,
+            "#67E8F9",  # ice blue,
+            "#CBD5E1", # light smokde
         ]
 
         color_map = {}
@@ -787,6 +782,7 @@ class StatisticsPage(ctk.CTkFrame):
 
             if subject_id not in subject_totals:
                 subject_totals[subject_id] = {
+                    "id": subject_id,
                     "name": subject_name,
                     "seconds": 0
                 }
@@ -984,18 +980,11 @@ class StatisticsPage(ctk.CTkFrame):
             reverse=True
         )
 
-        subject_names = [
-            item.get("name", self.app.t("other_subject"))
-            for item in sorted_subjects
-        ]
-
-        color_map = self.get_subject_chart_colors(subject_names)
-
         donut_data = []
 
         for row_index, item in enumerate(sorted_subjects):
             subject_name = item.get("name", self.app.t("other_subject"))
-            subject_color = color_map.get(subject_name, "#A78BFA")
+            subject_color = self.app.get_subject_color(item.get("id", "subject_other"))
 
             seconds = item.get("seconds", 0)
             minutes = seconds // 60

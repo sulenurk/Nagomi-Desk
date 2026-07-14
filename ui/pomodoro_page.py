@@ -158,7 +158,7 @@ class PomodoroPage(ctk.CTkFrame):
         self.timer_label = ctk.CTkLabel(
             self.ring_frame,
             text="25:00",
-            text_color=COLORS["white"],
+            text_color=COLORS["text"],
             font=ctk.CTkFont(size=50, weight="bold")
         )
         self.timer_label.place(relx=0.5, rely=0.50, anchor="center")
@@ -195,8 +195,8 @@ class PomodoroPage(ctk.CTkFrame):
             width=72,
             height=72,
             corner_radius=36,
-            fg_color="#27314D",
-            hover_color="#334155",
+            fg_color=COLORS["card_soft"],
+            hover_color=COLORS["surface_light"],
             text_color=COLORS["text"],
             font=ctk.CTkFont(size=24, weight="bold")
         )
@@ -209,8 +209,8 @@ class PomodoroPage(ctk.CTkFrame):
             width=72,
             height=72,
             corner_radius=36,
-            fg_color="#27314D",
-            hover_color="#334155",
+            fg_color=COLORS["card_soft"],
+            hover_color=COLORS["surface_light"],
             text_color=COLORS["text"],
             font=ctk.CTkFont(size=26, weight="bold")
         )
@@ -730,7 +730,7 @@ class PomodoroPage(ctk.CTkFrame):
             self.start_button.configure(text="▶")
             self.mode_pill.configure(
                 text=self.app.t("paused"),
-                text_color="#FEF3C7"
+                text_color=COLORS["orange"]
             )
 
     def reset_timer(self):
@@ -779,6 +779,7 @@ class PomodoroPage(ctk.CTkFrame):
         elif self.is_running and self.remaining_seconds <= 0:
             self.is_running = False
             self.timer_label.configure(text="00:00")
+            self.app.play_alarm()
 
             if self.current_mode == "focus":
                 self.completed_focus_count += 1

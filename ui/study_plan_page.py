@@ -103,7 +103,7 @@ class StudyPlanPage(ctk.CTkFrame):
 
     def create_header(self):
         self.header = ctk.CTkFrame(self, fg_color="transparent")
-        self.header.grid(row=0, column=0, padx=36, pady=(30, 10), sticky="ew")
+        self.header.grid(row=0, column=0, padx=36, pady=(30,10), sticky="ew")
         self.header.grid_columnconfigure(0, weight=1)
 
         self.title_label = PageTitle(self.header, self.app.t("study_plan_title"))
@@ -118,7 +118,7 @@ class StudyPlanPage(ctk.CTkFrame):
             command=self.start_plan,
             width=140
         )
-        self.start_plan_button.grid(row=0, column=1, rowspan=2, padx=(0, 12), sticky="e")
+        self.start_plan_button.grid(row=0, column=1, rowspan=2, padx=(0, 150), sticky="e")
 
         """ self.add_top_button = PrimaryButton(
             self.header,
@@ -270,8 +270,8 @@ class StudyPlanPage(ctk.CTkFrame):
             width=135,
             height=42,
             fg_color=COLORS["input"],
-            button_color="#DDD6FE",
-            button_hover_color="#C4B5FD",
+            button_color=COLORS["primary"],
+            button_hover_color=COLORS["primary_hover"],
             text_color=COLORS["input_text"],
             dropdown_fg_color=COLORS["surface"],
             dropdown_text_color=COLORS["text"],
@@ -316,8 +316,8 @@ class StudyPlanPage(ctk.CTkFrame):
             width=110,
             height=42,
             fg_color=COLORS["input"],
-            button_color="#DDD6FE",
-            button_hover_color="#C4B5FD",
+            button_color=COLORS["primary"],
+            button_hover_color=COLORS["primary_hover"],
             text_color=COLORS["input_text"],
             dropdown_fg_color=COLORS["surface"],
             dropdown_text_color=COLORS["text"]
@@ -373,7 +373,7 @@ class StudyPlanPage(ctk.CTkFrame):
             is_active = key == filter_key
             button.configure(
                 fg_color=COLORS["primary_soft"] if is_active else COLORS["surface_light"],
-                text_color=COLORS["text"] if is_active else COLORS["muted"]
+                text_color=COLORS["white"] if is_active else COLORS["muted"]
             )
 
         self.render_tasks()
@@ -1114,11 +1114,13 @@ class TaskCard(AppCard):
 
         subject_key = task.get("subject", "other")
         subject_meta = SUBJECT_META.get(subject_key, SUBJECT_META["other"])
+        subject_color = self.app.get_subject_color(task.get("subject_id"))
 
         self.icon = SubjectIcon(
             self,
             subject_key=subject_key,
-            icon_text=subject_meta["icon"]
+            icon_text=subject_meta["icon"],
+            color=subject_color
         )
         self.icon.grid(row=0, column=0, rowspan=2, padx=(18, 14), pady=16)
 

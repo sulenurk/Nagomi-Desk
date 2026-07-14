@@ -3,7 +3,7 @@ import json
 import os
 from datetime import datetime
 from tkinter import filedialog
-from ui.theme import COLORS
+from ui.theme import COLORS, THEME_PALETTES
 from ui.components import AppCard, PageTitle, PageSubtitle, PrimaryButton, AppEntry
 
 
@@ -277,12 +277,40 @@ class SettingsPage(ctk.CTkFrame):
         )
         self.cumulative_away_switch.grid(row=0, column=1, rowspan=2, padx=20, pady=18)
 
+        self.palette_frame = ctk.CTkFrame(
+            self.settings_card,
+            fg_color=COLORS["surface"],
+            corner_radius=18
+        )
+        self.palette_frame.grid(row=5, column=0, padx=20, pady=(8, 8), sticky="ew")
+        self.palette_frame.grid_columnconfigure(0, weight=1)
+
+        self.palette_title = ctk.CTkLabel(
+            self.palette_frame, text=self.app.t("color_palette"), text_color=COLORS["text"],
+            font=ctk.CTkFont(size=15, weight="bold")
+        )
+        self.palette_title.grid(row=0, column=0, padx=18, pady=(16, 2), sticky="w")
+        self.palette_desc = ctk.CTkLabel(
+            self.palette_frame, text=self.app.t("color_palette_desc"), text_color=COLORS["muted"],
+            font=ctk.CTkFont(size=13), wraplength=520, justify="left"
+        )
+        self.palette_desc.grid(row=1, column=0, padx=18, pady=(0, 16), sticky="w")
+        self.palette_values = {data["name"]: key for key, data in THEME_PALETTES.items()}
+        self.palette_menu = ctk.CTkOptionMenu(
+            self.palette_frame, values=list(self.palette_values), width=160, height=40,
+            fg_color=COLORS["primary"], button_color=COLORS["primary"],
+            button_hover_color=COLORS["primary_hover"], text_color=COLORS["white"],
+            dropdown_fg_color=COLORS["surface"], dropdown_text_color=COLORS["text"],
+            command=self.change_color_palette
+        )
+        self.palette_menu.grid(row=0, column=1, rowspan=2, padx=20, pady=18, sticky="e")
+
         self.week_start_frame = ctk.CTkFrame(
             self.settings_card,
             fg_color=COLORS["surface"],
             corner_radius=18
         )
-        self.week_start_frame.grid(row=5, column=0, padx=20, pady=(8, 8), sticky="ew")
+        self.week_start_frame.grid(row=6, column=0, padx=20, pady=(8, 8), sticky="ew")
         self.week_start_frame.grid_columnconfigure(0, weight=1)
 
         self.week_start_label = ctk.CTkLabel(
@@ -326,7 +354,7 @@ class SettingsPage(ctk.CTkFrame):
             fg_color=COLORS["surface"],
             corner_radius=18
         )
-        self.goal_frame.grid(row=6, column=0, padx=20, pady=(8, 8), sticky="ew")
+        self.goal_frame.grid(row=7, column=0, padx=20, pady=(8, 8), sticky="ew")
         self.goal_frame.grid_columnconfigure(0, weight=1)
         self.goal_frame.grid_columnconfigure(1, weight=0)
         self.goal_frame.grid_columnconfigure(2, weight=0)
@@ -367,7 +395,7 @@ class SettingsPage(ctk.CTkFrame):
             fg_color=COLORS["surface"],
             corner_radius=18
         )
-        self.data_frame.grid(row=7, column=0, padx=20, pady=(8, 20), sticky="ew")
+        self.data_frame.grid(row=8, column=0, padx=20, pady=(8, 20), sticky="ew")
         self.data_frame.grid_columnconfigure(0, weight=1)
         self.data_frame.grid_columnconfigure(1, weight=1)
 
@@ -426,7 +454,7 @@ class SettingsPage(ctk.CTkFrame):
             text="",
             text_color=COLORS["green"],
             font=ctk.CTkFont(size=13, weight="bold"))
-        self.status_label.grid(row=8, column=0, padx=20, pady=(0, 18), sticky="w")
+        self.status_label.grid(row=9, column=0, padx=20, pady=(0, 18), sticky="w")
 
     def export_app_data(self):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -481,7 +509,9 @@ class SettingsPage(ctk.CTkFrame):
                 "regular_focus_count": 4,
                 "show_queue_progress": True,
                 "show_cumulative_away_time": True,
-                "week_start_day": "monday"
+                "week_start_day": "monday",
+                "appearance_mode": "dark",
+                "color_palette": "purple"
             },
             "subjects": [
                 {
@@ -646,6 +676,10 @@ class SettingsPage(ctk.CTkFrame):
         else:
             self.cumulative_away_switch.deselect()
 
+        palette_key = settings.get("color_palette", "purple")
+        palette_name = THEME_PALETTES.get(palette_key, THEME_PALETTES["purple"])["name"]
+        self.palette_menu.set(palette_name)
+
         settings = self.app.app_data.setdefault("settings", {})
         week_start_day = settings.get("week_start_day", "monday")
 
@@ -657,6 +691,10 @@ class SettingsPage(ctk.CTkFrame):
         goal = settings.get("daily_focus_goal_minutes", 300)
         self.goal_entry.delete(0, "end")
         self.goal_entry.insert(0, str(goal))
+
+    def change_color_palette(self, selected_name):
+        palette_key = self.palette_values.get(selected_name, "purple")
+        self.app.apply_theme(palette_key=palette_key)
 
     def change_week_start_day(self, selected_value):
         settings = self.app.app_data.setdefault("settings", {})
@@ -715,6 +753,8 @@ class SettingsPage(ctk.CTkFrame):
 
         self.week_start_label.configure(text=self.app.t("week_start_day"))
         self.week_start_desc.configure(text=self.app.t("week_start_day_desc"))
+        self.palette_title.configure(text=self.app.t("color_palette"))
+        self.palette_desc.configure(text=self.app.t("color_palette_desc"))
 
         settings = self.app.app_data.setdefault("settings", {})
         week_start_day = settings.get("week_start_day", "monday")

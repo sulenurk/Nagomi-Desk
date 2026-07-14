@@ -72,7 +72,7 @@ class FocusPage(ctk.CTkFrame):
             self.timer_card,
             text=self.app.t("focus_mode"),
             fg_color=COLORS["primary_soft"],
-            text_color=COLORS["text"],
+            text_color=COLORS["white"],
             corner_radius=18,
             padx=18,
             pady=8,
@@ -143,11 +143,11 @@ class FocusPage(ctk.CTkFrame):
 
         self.current_task_icon = ctk.CTkLabel(
             self.current_task_bar,
-            text="📘",
+            text="",
             width=42,
             height=42,
             fg_color=COLORS["primary_soft"],
-            text_color=COLORS["text"],
+            text_color=COLORS["white"],
             corner_radius=12,
             font=ctk.CTkFont(size=18, weight="bold")
         )
@@ -345,6 +345,8 @@ class FocusPage(ctk.CTkFrame):
 
             self.current_task_title.configure(text=empty_title)
             self.current_task_detail.configure(text=empty_detail)
+            self.current_task_icon.configure(fg_color=COLORS["primary_soft"])
+            self.task_progress.configure(progress_color=COLORS["primary"])
 
             last_queue_state = self.app.app_data.get("last_queue_state")
 
@@ -390,6 +392,7 @@ class FocusPage(ctk.CTkFrame):
             subject = self.app.t(task.get("subject", "other"))
 
         title = task.get("title", "")
+        subject_color = self.app.get_subject_color(task.get("subject_id"))
         focus_minutes = task.get("focus_minutes", 25)
         break_minutes = task.get("break_minutes", 5)
 
@@ -405,6 +408,8 @@ class FocusPage(ctk.CTkFrame):
 
         self.current_task_title.configure(text=task_title_text)
         self.current_task_detail.configure(text=detail_text)
+        self.current_task_icon.configure(fg_color=subject_color)
+        self.task_progress.configure(progress_color=subject_color)
 
         self.focus_seconds = focus_minutes * 60
         self.break_seconds = break_minutes * 60
@@ -417,7 +422,7 @@ class FocusPage(ctk.CTkFrame):
             self.status_pill.configure(
                 text=self.app.t("focus_mode"),
                 fg_color=COLORS["primary_soft"],
-                text_color=COLORS["text"]
+                text_color=COLORS["white"]
             )
 
         self.update_current_task_progress()
@@ -524,7 +529,7 @@ class FocusPage(ctk.CTkFrame):
             self.status_pill.configure(
                 text=self.app.t("focus_mode"),
                 fg_color=COLORS["primary_soft"],
-                text_color=COLORS["text"]
+                text_color=COLORS["white"]
             )
         else:
             self.status_pill.configure(
@@ -544,6 +549,7 @@ class FocusPage(ctk.CTkFrame):
             self.update_current_task_progress()
             self.is_running = False
             self.timer_label.configure(text="00:00")
+            self.app.play_alarm()
 
             if self.current_mode == "focus":
                 self.away_warning_label.configure(text=self.app.t("focus_completed"))
@@ -609,7 +615,7 @@ class FocusPage(ctk.CTkFrame):
                         self.status_pill.configure(
                             text=self.app.t("focus_mode"),
                             fg_color=COLORS["primary_soft"],
-                            text_color=COLORS["text"]
+                            text_color=COLORS["white"]
                         )
                         self.away_warning_label.configure(text=self.app.t("queue_completed"))
                 else:

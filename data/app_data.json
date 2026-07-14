@@ -1,31 +1,145 @@
 {
   "language": "en",
-  "active_task_id": null,
-  "queue_mode_active": false,
-  "queue_task_ids": [],
+  "active_task_id": "task_29055e5e",
+  "queue_mode_active": true,
+  "queue_task_ids": [
+    "task_29055e5e",
+    "task_591a758f",
+    "task_f8c2baaf"
+  ],
   "last_queue_state": null,
   "settings": {
     "auto_start_break": false,
     "auto_start_focus": false,
-    "sound_enabled": true,
+    "sound_enabled": false,
     "daily_focus_goal_minutes": 300,
-    "regular_focus_minutes": 25,
-    "regular_short_break_minutes": 5,
+    "regular_focus_minutes": 1,
+    "regular_short_break_minutes": 1,
     "regular_long_break_minutes": 15,
     "regular_long_break_after": 4,
     "regular_focus_count": 4,
     "show_queue_progress": true,
     "show_cumulative_away_time": true,
-    "week_start_day": "monday"
+    "week_start_day": "sunday",
+    "appearance_mode": "light",
+    "color_palette": "amber"
   },
   "subjects": [
     {
       "id": "subject_other",
-      "color": "#A78BFA",
+      "color": "#8B5CF6",
       "is_default": true,
       "name_key": "other_subject"
+    },
+    {
+      "id": "subject_f7dab8be",
+      "name": "lit",
+      "color": "#86EFAC",
+      "is_default": false
     }
   ],
-  "tasks": [],
-  "sessions": []
+  "tasks": [
+    {
+      "id": "task_d06c221a",
+      "subject_id": "subject_other",
+      "subject_name": "Other",
+      "title": "Study Session",
+      "focus_minutes": 25,
+      "break_minutes": 5,
+      "priority": "medium",
+      "status": "completed",
+      "completed_at": "2026-07-14T09:59:43",
+      "hidden_from_plan": false,
+      "hidden_from_completed": false
+    },
+    {
+      "id": "task_29055e5e",
+      "subject_id": "subject_other",
+      "subject_name": "Other",
+      "title": "Study Session",
+      "focus_minutes": 25,
+      "break_minutes": 5,
+      "priority": "medium",
+      "status": "pending",
+      "completed_at": "2026-07-14T08:51:41",
+      "hidden_from_plan": false,
+      "hidden_from_completed": false
+    },
+    {
+      "id": "task_591a758f",
+      "subject_id": "subject_05133af9",
+      "subject_name": "lit",
+      "title": "Study Session",
+      "focus_minutes": 25,
+      "break_minutes": 5,
+      "priority": "medium",
+      "status": "pending",
+      "completed_at": "2026-07-14T09:22:57",
+      "hidden_from_plan": false,
+      "hidden_from_completed": false
+    },
+    {
+      "id": "task_f8c2baaf",
+      "subject_id": "subject_bff2dec1",
+      "subject_name": "math",
+      "title": "Study Session",
+      "focus_minutes": 25,
+      "break_minutes": 5,
+      "priority": "medium",
+      "status": "pending",
+      "hidden_from_plan": false,
+      "hidden_from_completed": false
+    }
+  ],
+  "sessions": [
+    {
+      "id": "session_c0968cc1",
+      "task_id": "task_29055e5e",
+      "task_title": "Study Session",
+      "subject_id": "subject_other",
+      "subject_name": "Other",
+      "mode": "focus",
+      "source": "study_plan",
+      "duration_seconds": 1500,
+      "away_seconds": 0,
+      "completed_at": "2026-07-14T08:51:41"
+    },
+    {
+      "id": "session_babff8bd",
+      "task_id": "task_d06c221a",
+      "task_title": "Study Session",
+      "subject_id": "subject_other",
+      "subject_name": "Other",
+      "mode": "focus",
+      "source": "study_plan",
+      "duration_seconds": 1500,
+      "away_seconds": 0,
+      "completed_at": "2026-07-14T08:51:42"
+    },
+    {
+      "id": "session_fbfca394",
+      "task_id": "task_591a758f",
+      "task_title": "Study Session",
+      "subject_id": "subject_05133af9",
+      "subject_name": "lit",
+      "mode": "focus",
+      "source": "study_plan",
+      "duration_seconds": 1500,
+      "away_seconds": 0,
+      "completed_at": "2026-07-14T09:22:57"
+    },
+    {
+      "id": "session_88710887",
+      "task_id": null,
+      "task_title": "Regular Pomodoro",
+      "subject_id": "subject_other",
+      "subject_name": "Other",
+      "mode": "focus",
+      "source": "regular_pomodoro",
+      "duration_seconds": 60,
+      "away_seconds": 0,
+      "completed_at": "2026-07-14T10:02:51"
+    }
+  ],
+  "total_focus_seconds_today": 60
 }
