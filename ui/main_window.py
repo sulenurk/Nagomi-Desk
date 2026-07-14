@@ -421,6 +421,12 @@ class FocusFlowApp(ctk.CTk):
         # Dil menüsünün üst boşluğunu (pady) burada kontrol edebilirsin:
         self.language_menu.grid(row=1, column=0, sticky="ew", pady=(4, 0))
 
+    def hide_sidebar(self):
+        self.sidebar.grid_remove()
+
+    def show_sidebar(self):
+        self.sidebar.grid()
+
     def create_pages(self):
         self.page_container = ctk.CTkFrame(self, corner_radius=0, fg_color=COLORS["bg"])
         self.page_container.grid(row=0, column=1, sticky="nsew")

@@ -16,6 +16,12 @@ class FocusPage(ctk.CTkFrame):
 
         self.current_mode = "focus"  # focus or break
         self.is_waiting_for_next = False
+        
+        self.fullscreen_mode = False
+        self.fullscreen_frame = None
+        self.fullscreen_timer_label = None
+        self.fullscreen_task_label = None
+        self.fullscreen_subject_label = None
 
         self.focus_seconds = 25 * 60
         self.break_seconds = 5 * 60
@@ -38,10 +44,213 @@ class FocusPage(ctk.CTkFrame):
         self.update_queue_progress()
         self.refresh_queue_progress_visibility()
 
+    def toggle_fullscreen(self):
+
+        if self.fullscreen_mode:
+            self.exit_fullscreen()
+        else:
+            self.enter_fullscreen()
+
+    def enter_fullscreen(self):
+
+        self.fullscreen_mode = True
+
+        root = self.app
+
+        # eski pencere boyutunu sakla
+        self.previous_geometry = root.geometry()
+
+        # gerçek fullscreen
+        root.attributes("-fullscreen", True)
+
+        # mevcut arayüzü gizle
+        self.header.grid_remove()
+        self.content.grid_remove()
+        self.app.hide_sidebar()
+        
+
+        self.create_fullscreen_view() 
+        self.load_active_task()   
+
+        self.app.bind(
+            "<Escape>",
+            lambda e: self.exit_fullscreen()
+        )
+
+    def exit_fullscreen(self):
+
+        self.fullscreen_mode = False
+        self.app.unbind("<Escape>")
+
+        root = self.app
+        root.attributes("-fullscreen", False)
+
+        if self.previous_geometry:
+            root.geometry(self.previous_geometry)
+
+        if self.fullscreen_frame:
+            self.fullscreen_frame.destroy()
+            self.fullscreen_frame = None
+
+        self.fullscreen_timer_label = None
+        self.fullscreen_subject_label = None
+        self.fullscreen_task_label = None
+
+        self.header.grid()
+        self.content.grid()
+        self.app.show_sidebar()
+
+    def update_fullscreen_task_info(self):
+
+        if not self.fullscreen_task_label:
+            return
+
+        task = self.app.get_active_task()
+
+        if not task:
+
+            self.fullscreen_task_label.configure(
+                text=self.app.t("no_active_task")
+            )
+
+            return
+
+
+        subject = task.get("subject_name")
+
+        if not subject:
+            subject = self.app.t(
+                task.get("subject", "other")
+            )
+
+
+        title = task.get("task_name") or task.get("title", "")
+
+
+        self.fullscreen_task_label.configure(
+            text=f"{subject} · {title}"
+        )
+
+    def create_fullscreen_view(self):
+
+        self.fullscreen_frame = ctk.CTkFrame(
+            self,
+            fg_color=COLORS["bg"]
+        )
+
+        self.fullscreen_frame.place(
+            relx=0,
+            rely=0,
+            relwidth=1,
+            relheight=1
+        )
+
+
+        # STATUS
+        self.fullscreen_status_label = ctk.CTkLabel(
+            self.fullscreen_frame,
+            text=self.app.t("focus_mode"),
+            text_color=COLORS["primary"],
+            font=ctk.CTkFont(size=26, weight="bold")
+        )
+
+        self.fullscreen_status_label.pack(
+            pady=(80, 30)
+        )
+
+
+        # TIMER
+        self.fullscreen_timer_label = ctk.CTkLabel(
+            self.fullscreen_frame,
+            text=self.format_time(self.remaining_seconds),
+            text_color=COLORS["text"],
+            font=ctk.CTkFont(
+                size=150,
+                weight="bold"
+            )
+        )
+
+        self.fullscreen_timer_label.pack(
+            pady=(0,40)
+        )
+
+
+        # BUTTONS
+        self.fullscreen_button_frame = ctk.CTkFrame(
+            self.fullscreen_frame,
+            fg_color="transparent"
+        )
+
+        self.fullscreen_button_frame.pack(
+            pady=20
+        )
+
+
+        self.fullscreen_pause_button = SecondaryButton(
+            self.fullscreen_button_frame,
+            text=self.app.t("pause"),
+            command=self.pause_timer,
+            width=140
+        )
+
+        self.fullscreen_pause_button.grid(
+            row=0,
+            column=0,
+            padx=10
+        )
+
+
+        self.fullscreen_exit_button = SecondaryButton(
+            self.fullscreen_button_frame,
+            text="✕",
+            command=self.exit_fullscreen,
+            width=60
+        )
+
+        self.fullscreen_exit_button.grid(
+            row=0,
+            column=1,
+            padx=10
+        )
+
+
+        # TASK NAME
+        self.fullscreen_task_label = ctk.CTkLabel(
+            self.fullscreen_frame,
+            text="",
+            text_color=COLORS["muted"],
+            font=ctk.CTkFont(
+                size=20,
+                weight="bold"
+            )
+        )
+
+        self.fullscreen_task_label.pack(
+            pady=(50,0)
+        )
+
+
+        self.update_fullscreen_task_info()
+
     def create_header(self):
         self.header = ctk.CTkFrame(self, fg_color="transparent")
         self.header.grid(row=0, column=0, padx=36, pady=(30, 12), sticky="ew")
         self.header.grid_columnconfigure(0, weight=1)
+
+        self.fullscreen_button = SecondaryButton(
+            self.header,
+            text="⛶",
+            command=self.toggle_fullscreen,
+            width=50
+        )
+
+        self.fullscreen_button.grid(
+            row=0,
+            column=1,
+            rowspan=2,
+            padx=(20, 0),
+            sticky="e"
+        )
 
         self.title_label = PageTitle(self.header, self.app.t("focus_timer"))
         self.title_label.grid(row=0, column=0, sticky="w")
@@ -51,6 +260,21 @@ class FocusPage(ctk.CTkFrame):
             self.app.t("focus_subtitle")
         )
         self.subtitle_label.grid(row=1, column=0, pady=(4, 0), sticky="w")
+
+        self.fullscreen_button = SecondaryButton(
+            self.header,
+            text="↗",
+            command=self.toggle_fullscreen,
+            width=50
+        )
+
+        self.fullscreen_button.grid(
+            row=0,
+            column=1,
+            rowspan=2,
+            padx=(20, 0),
+            sticky="e"
+        )
 
     def create_content(self):
         self.content = ctk.CTkFrame(self, fg_color="transparent")
@@ -345,8 +569,14 @@ class FocusPage(ctk.CTkFrame):
 
             self.current_task_title.configure(text=empty_title)
             self.current_task_detail.configure(text=empty_detail)
-            self.current_task_icon.configure(fg_color=COLORS["primary_soft"])
-            self.task_progress.configure(progress_color=COLORS["primary"])
+
+            self.current_task_icon.configure(
+                fg_color=COLORS["primary_soft"]
+            )
+
+            self.task_progress.configure(
+                progress_color=COLORS["primary"]
+            )
 
             last_queue_state = self.app.app_data.get("last_queue_state")
 
@@ -368,8 +598,18 @@ class FocusPage(ctk.CTkFrame):
                 self.away_seconds = 0
                 self.session_away_seconds = 0
 
-                self.timer_label.configure(text=self.format_time(self.remaining_seconds))
-                self.start_button.configure(state="disabled")
+                self.timer_label.configure(
+                    text=self.format_time(self.remaining_seconds)
+                )
+
+                if self.fullscreen_timer_label:
+                    self.fullscreen_timer_label.configure(
+                        text=self.format_time(self.remaining_seconds)
+                    )
+
+                self.start_button.configure(
+                    state="disabled"
+                )
 
                 self.status_pill.configure(
                     text=self.app.t("waiting_status"),
@@ -378,7 +618,11 @@ class FocusPage(ctk.CTkFrame):
                 )
 
                 self.task_progress.set(0)
-                self.task_progress_label.configure(text="0%")
+                self.task_progress_label.configure(
+                    text="0%"
+                )
+
+            self.update_fullscreen_task_info()
 
             self.update_total_focus_label()
             self.update_queue_progress()
@@ -386,44 +630,106 @@ class FocusPage(ctk.CTkFrame):
 
             return
 
+
         subject = task.get("subject_name")
 
         if not subject:
-            subject = self.app.t(task.get("subject", "other"))
+            subject = self.app.t(
+                task.get("subject", "other")
+            )
 
-        title = task.get("title", "")
-        subject_color = self.app.get_subject_color(task.get("subject_id"))
-        focus_minutes = task.get("focus_minutes", 25)
-        break_minutes = task.get("break_minutes", 5)
+        title = task.get("task_name") or task.get("title", "")
+
+        subject_color = self.app.get_subject_color(
+            task.get("subject_id")
+        )
+
+        focus_minutes = task.get(
+            "focus_minutes",
+            25
+        )
+
+        break_minutes = task.get(
+            "break_minutes",
+            5
+        )
+
 
         task_title_text = f"{subject} · {title}"
 
+
         detail_text = (
-            f"{focus_minutes}{self.app.t('minute_short')} {self.app.t('focus_label_short')} · "
-            f"{break_minutes}{self.app.t('minute_short')} {self.app.t('break_label_short')}"
+            f"{focus_minutes}{self.app.t('minute_short')} "
+            f"{self.app.t('focus_label_short')} · "
+            f"{break_minutes}{self.app.t('minute_short')} "
+            f"{self.app.t('break_label_short')}"
         )
 
-        self.active_task_label.configure(text=task_title_text)
-        self.active_task_detail_label.configure(text=detail_text)
 
-        self.current_task_title.configure(text=task_title_text)
-        self.current_task_detail.configure(text=detail_text)
-        self.current_task_icon.configure(fg_color=subject_color)
-        self.task_progress.configure(progress_color=subject_color)
+        self.active_task_label.configure(
+            text=task_title_text
+        )
+
+        self.active_task_detail_label.configure(
+            text=detail_text
+        )
+
+
+        self.current_task_title.configure(
+            text=task_title_text
+        )
+
+        self.current_task_detail.configure(
+            text=detail_text
+        )
+
+
+        self.current_task_icon.configure(
+            fg_color=subject_color
+        )
+
+        self.task_progress.configure(
+            progress_color=subject_color
+        )
+
 
         self.focus_seconds = focus_minutes * 60
         self.break_seconds = break_minutes * 60
 
+
         if not self.is_running and not self.is_paused:
+
             self.current_mode = "focus"
+
             self.remaining_seconds = self.focus_seconds
-            self.timer_label.configure(text=self.format_time(self.remaining_seconds))
-            self.start_button.configure(state="normal")
+
+            self.timer_label.configure(
+                text=self.format_time(
+                    self.remaining_seconds
+                )
+            )
+
+            if self.fullscreen_timer_label:
+                self.fullscreen_timer_label.configure(
+                    text=self.format_time(
+                        self.remaining_seconds
+                    )
+                )
+
+
+            self.start_button.configure(
+                state="normal"
+            )
+
+
             self.status_pill.configure(
                 text=self.app.t("focus_mode"),
                 fg_color=COLORS["primary_soft"],
                 text_color=COLORS["white"]
             )
+
+
+        self.update_fullscreen_task_info()
 
         self.update_current_task_progress()
         self.update_total_focus_label()
@@ -438,6 +744,10 @@ class FocusPage(ctk.CTkFrame):
             self.update_away_metric()
 
             self.start_button.configure(text=self.app.t("start"))
+            if self.fullscreen_pause_button:
+                self.fullscreen_pause_button.configure(
+                    text=self.app.t("pause")
+                )
             self.update_mode_ui()
 
         if not self.is_running:
@@ -446,11 +756,46 @@ class FocusPage(ctk.CTkFrame):
             self.count_down()
 
     def pause_timer(self):
+
+        # RESUME
+        if self.is_paused:
+            self.is_paused = False
+            self.is_running = True
+
+            self.start_button.configure(
+                text=self.app.t("pause")
+            )
+
+            if self.fullscreen_pause_button:
+                self.fullscreen_pause_button.configure(
+                    text=self.app.t("pause")
+                )
+
+            self.status_pill.configure(
+                text=self.app.t("focus_mode"),
+                fg_color=COLORS["primary_soft"],
+                text_color=COLORS["white"]
+            )
+
+            self.count_down()
+
+            return
+
+
+        # PAUSE
         if self.is_running:
             self.is_running = False
             self.is_paused = True
 
-            self.start_button.configure(text=self.app.t("resume"))
+            self.start_button.configure(
+                text=self.app.t("resume")
+            )
+
+            if self.fullscreen_pause_button:
+                self.fullscreen_pause_button.configure(
+                    text=self.app.t("resume")
+                )
+
             self.status_pill.configure(
                 text=self.app.t("paused"),
                 fg_color="#92400E",
@@ -502,6 +847,11 @@ class FocusPage(ctk.CTkFrame):
         
         self.update_mode_ui()
 
+        if self.fullscreen_status_label:
+            self.fullscreen_status_label.configure(
+                text=self.app.t("break_mode")
+            )
+
         auto_start_break = self.app.app_data.get("settings", {}).get("auto_start_break", False)
         if auto_start_break:
             self.start_timer()
@@ -519,6 +869,11 @@ class FocusPage(ctk.CTkFrame):
         self.update_current_task_progress()
 
         self.update_mode_ui()
+
+        if self.fullscreen_status_label:
+            self.fullscreen_status_label.configure(
+                text=self.app.t("focus_mode")
+            )
 
         auto_start_focus = self.app.app_data.get("settings", {}).get("auto_start_focus", False)
         if auto_start_focus:
@@ -540,15 +895,32 @@ class FocusPage(ctk.CTkFrame):
 
     def count_down(self):
         if self.is_running and self.remaining_seconds > 0:
-            self.timer_label.configure(text=self.format_time(self.remaining_seconds))
+
+            time_text = self.format_time(self.remaining_seconds)
+
+            self.timer_label.configure(
+                text=time_text
+            )
+
+            if self.fullscreen_timer_label:
+                self.fullscreen_timer_label.configure(
+                    text=time_text
+                )
+
             self.update_current_task_progress()
+
             self.remaining_seconds -= 1
+
             self.after(1000, self.count_down)
 
         elif self.is_running and self.remaining_seconds <= 0:
             self.update_current_task_progress()
             self.is_running = False
             self.timer_label.configure(text="00:00")
+            if self.fullscreen_timer_label:
+                self.fullscreen_timer_label.configure(
+                    text="00:00"
+                )
             self.app.play_alarm()
 
             if self.current_mode == "focus":
