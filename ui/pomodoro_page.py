@@ -82,6 +82,15 @@ class PomodoroPage(ctk.CTkFrame):
 
         self.remaining_seconds = self.focus_seconds
 
+        self.fullscreen_mode = False
+        self.fullscreen_frame = None
+
+        self.fullscreen_timer_label = None
+        self.fullscreen_mode_label = None
+        self.fullscreen_cycle_label = None
+
+        self.previous_geometry = None
+
         # Main page grid
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
@@ -104,6 +113,197 @@ class PomodoroPage(ctk.CTkFrame):
         self.update_timer_label()
         self.update_mode_ui()
         self.update_cycle_labels()
+
+    def enter_fullscreen(self):
+
+        self.fullscreen_mode = True
+
+        root = self.app
+
+        self.previous_geometry = root.geometry()
+
+        root.attributes(
+            "-fullscreen",
+            True
+        )
+
+        self.scroll.grid_remove()
+
+        self.create_fullscreen_view()
+
+        self.update_mode_ui()
+        self.update_cycle_labels()
+        self.update_timer_label()
+
+    def exit_fullscreen(self):
+
+        self.fullscreen_mode = False
+
+        root = self.app
+
+        root.attributes(
+            "-fullscreen",
+            False
+        )
+
+        if self.previous_geometry:
+            root.geometry(self.previous_geometry)
+
+        if self.fullscreen_frame:
+            self.fullscreen_frame.destroy()
+            self.fullscreen_frame = None
+
+        self.scroll.grid()
+
+    def create_fullscreen_view(self):
+
+        self.fullscreen_frame = ctk.CTkFrame(
+            self,
+            fg_color=COLORS["bg"]
+        )
+
+        self.fullscreen_frame.place(
+            relx=0,
+            rely=0,
+            relwidth=1,
+            relheight=1
+        )
+
+
+        self.fullscreen_mode_label = ctk.CTkLabel(
+            self.fullscreen_frame,
+            text=self.app.t("focus_mode"),
+            text_color=COLORS["primary"],
+            font=ctk.CTkFont(
+                size=28,
+                weight="bold"
+            )
+        )
+
+        self.fullscreen_mode_label.pack(
+            pady=(100, 40)
+        )
+
+
+        self.fullscreen_timer_label = ctk.CTkLabel(
+            self.fullscreen_frame,
+            text=self.format_time(self.remaining_seconds),
+            text_color=COLORS["text"],
+            font=ctk.CTkFont(
+                size=150,
+                weight="bold"
+            )
+        )
+
+        self.fullscreen_timer_label.pack(
+            pady=(0, 50)
+        )
+
+
+        self.fullscreen_button_frame = ctk.CTkFrame(
+            self.fullscreen_frame,
+            fg_color="transparent"
+        )
+
+        self.fullscreen_button_frame.pack()
+
+
+        self.fullscreen_start_button = ctk.CTkButton(
+            self.fullscreen_button_frame,
+            text="▶",
+            command=self.start_timer,
+            width=75,
+            height=75,
+            corner_radius=40,
+            font=ctk.CTkFont(size=25)
+        )
+
+        self.fullscreen_start_button.grid(
+            row=0,
+            column=0,
+            padx=10
+        )
+
+
+        self.fullscreen_reset_button = ctk.CTkButton(
+            self.fullscreen_button_frame,
+            text="↺",
+            command=self.reset_timer,
+            width=75,
+            height=75,
+            corner_radius=40,
+            font=ctk.CTkFont(size=25)
+        )
+
+        self.fullscreen_reset_button.grid(
+            row=0,
+            column=1,
+            padx=10
+        )
+
+
+        self.fullscreen_skip_button = ctk.CTkButton(
+            self.fullscreen_button_frame,
+            text="»",
+            command=self.skip_session,
+            width=75,
+            height=75,
+            corner_radius=40,
+            font=ctk.CTkFont(size=25)
+        )
+
+        self.fullscreen_skip_button.grid(
+            row=0,
+            column=2,
+            padx=10
+        )
+
+
+        self.fullscreen_exit_button = ctk.CTkButton(
+            self.fullscreen_button_frame,
+            text="✕",
+            command=self.exit_fullscreen,
+            width=60,
+            height=75,
+            corner_radius=40,
+            font=ctk.CTkFont(size=22)
+        )
+
+        self.fullscreen_exit_button.grid(
+            row=0,
+            column=3,
+            padx=10
+        )
+
+
+        self.fullscreen_cycle_label = ctk.CTkLabel(
+            self.fullscreen_frame,
+            text="#1 / 4",
+            text_color=COLORS["muted"],
+            font=ctk.CTkFont(
+                size=22,
+                weight="bold"
+            )
+        )
+
+        self.fullscreen_cycle_label.pack(
+            pady=(50,0)
+        )
+
+    def update_timer_label(self):
+
+        text = self.format_time(self.remaining_seconds)
+
+        self.timer_label.configure(
+            text=text
+        )
+
+        if self.fullscreen_timer_label:
+            self.fullscreen_timer_label.configure(
+                text=text
+            )
+
+        self.update_progress_ring()
 
     def create_header(self):
         self.header = ctk.CTkFrame(self.scroll, fg_color="transparent")
@@ -171,7 +371,15 @@ class PomodoroPage(ctk.CTkFrame):
         )
         self.cycle_label.place(relx=0.5, rely=0.68, anchor="center")
 
-        self.button_frame = ctk.CTkFrame(self.timer_card, fg_color="transparent")
+        self.button_frame = ctk.CTkFrame(
+            self.timer_card,
+            fg_color="transparent"
+        )
+
+        self.button_frame.grid_columnconfigure(
+            (0,1,2,3),
+            weight=1
+        )
         self.button_frame.grid(row=1, column=0, pady=(8, 22))
 
         self.start_button = ctk.CTkButton(
@@ -215,6 +423,25 @@ class PomodoroPage(ctk.CTkFrame):
             font=ctk.CTkFont(size=26, weight="bold")
         )
         self.skip_button.grid(row=0, column=2, padx=10)
+
+        self.fullscreen_button = ctk.CTkButton(
+            self.button_frame,
+            text="⛶",
+            command=self.enter_fullscreen,
+            width=72,
+            height=72,
+            corner_radius=36,
+            fg_color=COLORS["card_soft"],
+            hover_color=COLORS["surface_light"],
+            text_color=COLORS["text"],
+            font=ctk.CTkFont(size=22, weight="bold")
+        )
+
+        self.fullscreen_button.grid(
+            row=0,
+            column=3,
+            padx=10
+        )
 
         self.message_label = ctk.CTkLabel(
             self.timer_card,
@@ -667,6 +894,11 @@ class PomodoroPage(ctk.CTkFrame):
                 dot.configure(
                     text_color=COLORS["primary"] if index < self.completed_focus_count else COLORS["muted"]
                 )
+
+        if self.fullscreen_cycle_label:
+            self.fullscreen_cycle_label.configure(
+                text=self.cycle_label.cget("text")
+            )
 
     def update_mode_ui(self):
         if self.current_mode == "focus":

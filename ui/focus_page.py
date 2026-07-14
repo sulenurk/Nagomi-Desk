@@ -263,7 +263,7 @@ class FocusPage(ctk.CTkFrame):
 
         self.fullscreen_button = SecondaryButton(
             self.header,
-            text="↗",
+            text="⛶",
             command=self.toggle_fullscreen,
             width=50
         )
