@@ -145,9 +145,15 @@ class PomodoroPage(ctk.CTkFrame):
         self.update_timer_label()
         self.app.hide_sidebar()
 
+        self.app.bind(
+            "<Escape>",
+            lambda e: self.exit_fullscreen()
+        )
+
     def exit_fullscreen(self):
 
         self.fullscreen_mode = False
+        self.app.unbind("<Escape>")
 
         root = self.app 
 
@@ -230,6 +236,12 @@ class PomodoroPage(ctk.CTkFrame):
             "Ⅱ" if self.is_running else "▶"
         )
 
+        tooltip_text_fullscreen_start_button = (
+            self.app.t("tooltip_pause")
+            if self.is_running
+            else self.app.t("tooltip_start")
+        )
+
         self.fullscreen_start_button = FullscreenPrimaryButton(
             self.fullscreen_button_frame,
             text=fullscreen_button_text,
@@ -240,6 +252,11 @@ class PomodoroPage(ctk.CTkFrame):
             row=0,
             column=0,
             padx=10
+        )
+
+        Tooltip(
+            self.fullscreen_start_button,
+            tooltip_text_fullscreen_start_button
         )
 
 
@@ -255,6 +272,11 @@ class PomodoroPage(ctk.CTkFrame):
             padx=10
         )
 
+        Tooltip(
+            self.fullscreen_reset_button,
+            self.app.t("tooltip_reset")
+        )
+
 
         self.fullscreen_skip_button = FullscreenSecondaryButton(
             self.fullscreen_button_frame,
@@ -268,6 +290,10 @@ class PomodoroPage(ctk.CTkFrame):
             padx=10
         )
 
+        Tooltip(
+            self.fullscreen_skip_button,
+            self.app.t("tooltip_skip")
+        )
 
         self.fullscreen_exit_button = FullscreenSecondaryButton(
             self.fullscreen_button_frame,

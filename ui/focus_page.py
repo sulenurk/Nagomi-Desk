@@ -146,7 +146,6 @@ class FocusPage(ctk.CTkFrame):
             relheight=1
         )
 
-
         # STATUS
         self.fullscreen_status_label = ctk.CTkLabel(
             self.fullscreen_frame,
@@ -197,11 +196,20 @@ class FocusPage(ctk.CTkFrame):
             if self.is_running
             else self.start_timer
         )
+        tooltip_text_fullscreen_start_button = (
+            self.app.t("tooltip_pause")
+            if self.is_running
+            else self.app.t("tooltip_start")
+        )
 
         self.fullscreen_start_button = FullscreenPrimaryButton(
             self.fullscreen_button_frame,
             text=fullscreen_text,
             command=fullscreen_command
+        )
+        Tooltip(
+            self.fullscreen_start_button,
+            tooltip_text_fullscreen_start_button
         )
 
         self.fullscreen_start_button.grid(
@@ -209,6 +217,7 @@ class FocusPage(ctk.CTkFrame):
             column=0,
             padx=10
         )
+        
 
         self.fullscreen_exit_button = FullscreenSecondaryButton(
             self.fullscreen_button_frame,
