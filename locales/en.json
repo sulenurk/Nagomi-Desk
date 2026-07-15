@@ -228,6 +228,13 @@
   "tooltip_delete_task": "Delete",
   "tooltip_remove_completed_task": "Remove from this page",
 
+  "tooltip_start": "Start timer",
+  "tooltip_pause": "Pause timer",
+  "tooltip_reset": "Reset timer",
+  "tooltip_skip": "Skip session",
+  "tooltip_exit_fullscreen": "Exit fullscreen",
+  "tooltip_fullscreen": "Fullscreen",
+
   "data_management": "Data Management",
   "data_management_desc": "Back up your app data or clear your statistics history.",
   "export_data": "Export Data",

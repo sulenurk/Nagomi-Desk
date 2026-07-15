@@ -88,6 +88,39 @@ class SidebarButton(ctk.CTkButton):
             **kwargs
         )
 
+class FullscreenPrimaryButton(ctk.CTkButton):
+    def __init__(self, parent, text, command=None, **kwargs):
+        super().__init__(
+            parent,
+            text=text,
+            command=command,
+            width=82,
+            height=82,
+            corner_radius=41,
+            fg_color=COLORS["primary"],
+            hover_color=COLORS["primary_hover"],
+            text_color=COLORS["white"],
+            font=ctk.CTkFont(size=28, weight="bold"),
+            **kwargs
+        )
+
+
+class FullscreenSecondaryButton(ctk.CTkButton):
+    def __init__(self, parent, text, command=None, **kwargs):
+        super().__init__(
+            parent,
+            text=text,
+            command=command,
+            width=82,
+            height=82,
+            corner_radius=41,
+            fg_color=COLORS["card_soft"],
+            hover_color=COLORS["primary_soft"],
+            text_color=COLORS["text"],
+            font=ctk.CTkFont(size=28, weight="bold"),
+            **kwargs
+        )
+
 
 class PillButton(ctk.CTkButton):
     def __init__(self, parent, text, command=None, active=False, **kwargs):

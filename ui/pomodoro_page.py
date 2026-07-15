@@ -4,7 +4,7 @@ import tkinter as tk
 import customtkinter as ctk
 
 from ui.theme import COLORS
-from ui.components import AppCard, PageTitle, PageSubtitle, PrimaryButton, SecondaryButton, AppEntry
+from ui.components import AppCard, PageTitle, PageSubtitle, PrimaryButton, SecondaryButton, AppEntry, Tooltip, FullscreenPrimaryButton, FullscreenSecondaryButton
 
 class CircularTimer(ctk.CTkFrame):
     def __init__(self, parent, size=390):
@@ -72,6 +72,15 @@ class PomodoroPage(ctk.CTkFrame):
         self.is_running = False
         self.is_paused = False
 
+        self.fullscreen_mode = False
+        self.fullscreen_reset_button = None
+        self.fullscreen_skip_button = None
+        self.fullscreen_exit_button = None
+        self.fullscreen_start_button = None
+        self.fullscreen_timer_label = None
+        self.fullscreen_cycle_label = None
+        self.fullscreen_frame = None
+
         self.current_mode = "focus"  # focus, short_break, long_break
         self.completed_focus_count = 0
 
@@ -134,12 +143,13 @@ class PomodoroPage(ctk.CTkFrame):
         self.update_mode_ui()
         self.update_cycle_labels()
         self.update_timer_label()
+        self.app.hide_sidebar()
 
     def exit_fullscreen(self):
 
         self.fullscreen_mode = False
 
-        root = self.app
+        root = self.app 
 
         root.attributes(
             "-fullscreen",
@@ -153,7 +163,16 @@ class PomodoroPage(ctk.CTkFrame):
             self.fullscreen_frame.destroy()
             self.fullscreen_frame = None
 
+        self.fullscreen_start_button = None
+        self.fullscreen_reset_button = None
+        self.fullscreen_skip_button = None
+        self.fullscreen_exit_button = None
+        self.fullscreen_timer_label = None
+        self.fullscreen_cycle_label = None
+        self.fullscreen_frame = None   
+
         self.scroll.grid()
+        self.app.show_sidebar()
 
     def create_fullscreen_view(self):
 
@@ -207,15 +226,14 @@ class PomodoroPage(ctk.CTkFrame):
 
         self.fullscreen_button_frame.pack()
 
+        fullscreen_button_text = (
+            "Ⅱ" if self.is_running else "▶"
+        )
 
-        self.fullscreen_start_button = ctk.CTkButton(
+        self.fullscreen_start_button = FullscreenPrimaryButton(
             self.fullscreen_button_frame,
-            text="▶",
-            command=self.start_timer,
-            width=75,
-            height=75,
-            corner_radius=40,
-            font=ctk.CTkFont(size=25)
+            text=fullscreen_button_text,
+            command=self.pause_timer if self.is_running else self.start_timer,
         )
 
         self.fullscreen_start_button.grid(
@@ -225,14 +243,10 @@ class PomodoroPage(ctk.CTkFrame):
         )
 
 
-        self.fullscreen_reset_button = ctk.CTkButton(
+        self.fullscreen_reset_button = FullscreenSecondaryButton(
             self.fullscreen_button_frame,
             text="↺",
-            command=self.reset_timer,
-            width=75,
-            height=75,
-            corner_radius=40,
-            font=ctk.CTkFont(size=25)
+            command=self.reset_timer
         )
 
         self.fullscreen_reset_button.grid(
@@ -242,14 +256,10 @@ class PomodoroPage(ctk.CTkFrame):
         )
 
 
-        self.fullscreen_skip_button = ctk.CTkButton(
+        self.fullscreen_skip_button = FullscreenSecondaryButton(
             self.fullscreen_button_frame,
             text="»",
-            command=self.skip_session,
-            width=75,
-            height=75,
-            corner_radius=40,
-            font=ctk.CTkFont(size=25)
+            command=self.skip_session
         )
 
         self.fullscreen_skip_button.grid(
@@ -259,20 +269,20 @@ class PomodoroPage(ctk.CTkFrame):
         )
 
 
-        self.fullscreen_exit_button = ctk.CTkButton(
+        self.fullscreen_exit_button = FullscreenSecondaryButton(
             self.fullscreen_button_frame,
             text="✕",
             command=self.exit_fullscreen,
-            width=60,
-            height=75,
-            corner_radius=40,
-            font=ctk.CTkFont(size=22)
         )
 
         self.fullscreen_exit_button.grid(
             row=0,
             column=3,
             padx=10
+        )
+        Tooltip(
+            self.fullscreen_exit_button,
+            self.app.t("tooltip_exit_fullscreen")
         )
 
 
@@ -395,6 +405,10 @@ class PomodoroPage(ctk.CTkFrame):
             font=ctk.CTkFont(size=22, weight="bold")
         )
         self.start_button.grid(row=0, column=0, padx=10)
+        Tooltip(
+            self.start_button,
+            self.app.t("tooltip_start")
+        )
 
         self.reset_button = ctk.CTkButton(
             self.button_frame,
@@ -409,6 +423,10 @@ class PomodoroPage(ctk.CTkFrame):
             font=ctk.CTkFont(size=24, weight="bold")
         )
         self.reset_button.grid(row=0, column=1, padx=10)
+        Tooltip(
+            self.reset_button,
+            self.app.t("tooltip_reset")
+        )
 
         self.skip_button = ctk.CTkButton(
             self.button_frame,
@@ -423,6 +441,10 @@ class PomodoroPage(ctk.CTkFrame):
             font=ctk.CTkFont(size=26, weight="bold")
         )
         self.skip_button.grid(row=0, column=2, padx=10)
+        Tooltip(
+            self.skip_button,
+            self.app.t("tooltip_skip")
+        )
 
         self.fullscreen_button = ctk.CTkButton(
             self.button_frame,
@@ -441,6 +463,10 @@ class PomodoroPage(ctk.CTkFrame):
             row=0,
             column=3,
             padx=10
+        )
+        Tooltip(
+            self.fullscreen_button,
+            self.app.t("tooltip_fullscreen")
         )
 
         self.message_label = ctk.CTkLabel(
@@ -770,7 +796,18 @@ class PomodoroPage(ctk.CTkFrame):
         return f"{minutes:02d}:{secs:02d}"
 
     def update_timer_label(self):
-        self.timer_label.configure(text=self.format_time(self.remaining_seconds))
+
+        time_text = self.format_time(self.remaining_seconds)
+
+        self.timer_label.configure(
+            text=time_text
+        )
+
+        if self.fullscreen_timer_label is not None:
+            self.fullscreen_timer_label.configure(
+                text=time_text
+            )
+
         self.update_progress_ring()
 
     def get_current_total_seconds(self):
@@ -947,19 +984,46 @@ class PomodoroPage(ctk.CTkFrame):
         if self.is_paused:
             self.is_paused = False
             self.start_button.configure(text="Ⅱ")
+
+            if getattr(self, "fullscreen_start_button", None):
+                self.fullscreen_start_button.configure(
+                    text="Ⅱ",
+                    command=self.pause_timer
+                )
+
             self.update_mode_ui()
 
         if not self.is_running:
             self.is_running = True
             self.message_label.configure(text="")
-            self.start_button.configure(text="Ⅱ")
+
+            self.start_button.configure(
+                text="Ⅱ"
+            )
+
+            if getattr(self, "fullscreen_start_button", None):
+                self.fullscreen_start_button.configure(
+                    text="Ⅱ",
+                    command=self.pause_timer
+                )
+
             self.count_down()
 
     def pause_timer(self):
         if self.is_running:
             self.is_running = False
             self.is_paused = True
-            self.start_button.configure(text="▶")
+
+            self.start_button.configure(
+                text="▶"
+            )
+
+            if getattr(self, "fullscreen_start_button", None):
+                self.fullscreen_start_button.configure(
+                    text="▶",
+                    command=self.start_timer
+                )
+
             self.mode_pill.configure(
                 text=self.app.t("paused"),
                 text_color=COLORS["orange"]
@@ -979,11 +1043,61 @@ class PomodoroPage(ctk.CTkFrame):
         self.update_cycle_labels()
 
     def skip_session(self):
+
         self.is_running = False
         self.is_paused = False
-        self.remaining_seconds = 0
-        self.start_button.configure(text="▶")
-        self.count_down()
+
+        if self.current_mode == "focus":
+
+            self.completed_focus_count += 1
+
+            should_long_break = (
+                self.completed_focus_count % self.long_break_after == 0
+            )
+
+            if should_long_break:
+                self.current_mode = "long_break"
+                self.remaining_seconds = self.long_break_seconds
+            else:
+                self.current_mode = "short_break"
+                self.remaining_seconds = self.short_break_seconds
+
+
+        else:
+            self.current_mode = "focus"
+            self.remaining_seconds = self.focus_seconds
+
+
+        # normal ekran
+        self.start_button.configure(
+            text="▶"
+        )
+
+
+        # fullscreen
+        if getattr(self, "fullscreen_start_button", None):
+            self.fullscreen_start_button.configure(
+                text="▶",
+                command=self.start_timer
+            )
+
+
+        self.update_timer_label()
+        self.update_mode_ui()
+        self.update_cycle_labels()
+
+
+        # fullscreen timer
+        if getattr(self, "fullscreen_timer_label", None):
+            self.fullscreen_timer_label.configure(
+                text=self.format_time(self.remaining_seconds)
+            )
+
+
+        if getattr(self, "fullscreen_cycle_label", None):
+            self.fullscreen_cycle_label.configure(
+                text=f"#{self.completed_focus_count} / {self.long_break_after}"
+            )
 
     def complete_pomodoro_cycle(self):
         self.is_running = False

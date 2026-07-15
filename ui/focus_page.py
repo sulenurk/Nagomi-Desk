@@ -3,7 +3,7 @@ import uuid
 import customtkinter as ctk
 
 from ui.theme import COLORS
-from ui.components import AppCard, PageTitle, PageSubtitle, PrimaryButton, SecondaryButton
+from ui.components import AppCard, PageTitle, PageSubtitle, PrimaryButton, SecondaryButton, Tooltip, FullscreenSecondaryButton, FullscreenPrimaryButton
 
 
 class FocusPage(ctk.CTkFrame):
@@ -92,8 +92,9 @@ class FocusPage(ctk.CTkFrame):
             self.fullscreen_frame.destroy()
             self.fullscreen_frame = None
 
+        self.fullscreen_start_button = None
         self.fullscreen_timer_label = None
-        self.fullscreen_subject_label = None
+        self.fullscreen_status_label = None
         self.fullscreen_task_label = None
 
         self.header.grid()
@@ -185,32 +186,44 @@ class FocusPage(ctk.CTkFrame):
             pady=20
         )
 
-
-        self.fullscreen_pause_button = SecondaryButton(
-            self.fullscreen_button_frame,
-            text=self.app.t("pause"),
-            command=self.pause_timer,
-            width=140
+        fullscreen_text = (
+            self.app.t("pause")
+            if self.is_running
+            else self.app.t("start")
         )
 
-        self.fullscreen_pause_button.grid(
+        fullscreen_command = (
+            self.pause_timer
+            if self.is_running
+            else self.start_timer
+        )
+
+        self.fullscreen_start_button = FullscreenPrimaryButton(
+            self.fullscreen_button_frame,
+            text=fullscreen_text,
+            command=fullscreen_command
+        )
+
+        self.fullscreen_start_button.grid(
             row=0,
             column=0,
             padx=10
         )
 
-
-        self.fullscreen_exit_button = SecondaryButton(
+        self.fullscreen_exit_button = FullscreenSecondaryButton(
             self.fullscreen_button_frame,
             text="✕",
-            command=self.exit_fullscreen,
-            width=60
+            command=self.exit_fullscreen
         )
 
         self.fullscreen_exit_button.grid(
             row=0,
             column=1,
             padx=10
+        )
+        Tooltip(
+            self.fullscreen_exit_button,
+            self.app.t("tooltip_exit_fullscreen")
         )
 
 
@@ -274,6 +287,11 @@ class FocusPage(ctk.CTkFrame):
             rowspan=2,
             padx=(20, 0),
             sticky="e"
+        )
+
+        Tooltip(
+            self.fullscreen_button,
+            self.app.t("tooltip_fullscreen")
         )
 
     def create_content(self):
@@ -737,22 +755,32 @@ class FocusPage(ctk.CTkFrame):
         self.refresh_queue_progress_visibility()
 
     def start_timer(self):
+
+        # RESUME
         if self.is_paused:
             self.is_paused = False
             self.away_seconds = 0
             self.away_warning_label.configure(text="")
             self.update_away_metric()
 
-            self.start_button.configure(text=self.app.t("start"))
-            if self.fullscreen_pause_button:
-                self.fullscreen_pause_button.configure(
-                    text=self.app.t("pause")
-                )
             self.update_mode_ui()
 
+        # START
         if not self.is_running:
             self.is_running = True
             self.is_waiting_for_next = False
+
+
+            # fullscreen butonu pause olmalı
+            if (
+                getattr(self, "fullscreen_start_button", None)
+                and self.fullscreen_start_button.winfo_exists()
+            ):
+                self.fullscreen_start_button.configure(
+                    text=self.app.t("pause"),
+                    command=self.pause_timer
+                )
+
             self.count_down()
 
     def pause_timer(self):
@@ -766,9 +794,13 @@ class FocusPage(ctk.CTkFrame):
                 text=self.app.t("pause")
             )
 
-            if self.fullscreen_pause_button:
-                self.fullscreen_pause_button.configure(
-                    text=self.app.t("pause")
+            if (
+                getattr(self, "fullscreen_start_button", None)
+                and self.fullscreen_start_button.winfo_exists()
+            ):
+                self.fullscreen_start_button.configure(
+                    text=self.app.t("start"),
+                    command=self.start_timer
                 )
 
             self.status_pill.configure(
@@ -781,19 +813,19 @@ class FocusPage(ctk.CTkFrame):
 
             return
 
-
         # PAUSE
         if self.is_running:
             self.is_running = False
             self.is_paused = True
 
             self.start_button.configure(
-                text=self.app.t("resume")
+                text=self.app.t("start")
             )
 
-            if self.fullscreen_pause_button:
-                self.fullscreen_pause_button.configure(
-                    text=self.app.t("resume")
+            if getattr(self, "fullscreen_start_button", None):
+                self.fullscreen_start_button.configure(
+                    text=self.app.t("start"),
+                    command=self.start_timer
                 )
 
             self.status_pill.configure(
@@ -825,6 +857,14 @@ class FocusPage(ctk.CTkFrame):
         self.timer_label.configure(text=self.format_time(self.remaining_seconds))
         self.away_warning_label.configure(text="")
         self.start_button.configure(text=self.app.t("start"))
+        if (
+            getattr(self, "fullscreen_start_button", None)
+            and self.fullscreen_start_button.winfo_exists()
+        ):
+            self.fullscreen_start_button.configure(
+                text=self.app.t("start"),
+                command=self.start_timer
+            )
 
         self.update_mode_ui()
         self.update_away_metric()

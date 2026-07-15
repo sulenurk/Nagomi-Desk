@@ -229,6 +229,13 @@
   "tooltip_delete_task": "Sil",
   "tooltip_remove_completed_task": "Bu sayfadan kaldır",
 
+  "tooltip_start": "Zamanlayıcıyı başlat",
+  "tooltip_pause": "Duraklat",
+  "tooltip_reset": "Süreyi sıfırla",
+  "tooltip_skip": "Bu oturumu geç",
+  "tooltip_exit_fullscreen": "Tam ekrandan çık",
+  "tooltip_fullscreen": "Tam ekran",
+
   "data_management": "Veri Yönetimi",
   "data_management_desc": "Uygulama verilerini yedekle veya istatistik geçmişini temizle.",
   "export_data": "Veriyi Dışa Aktar",

@@ -1,9 +1,8 @@
 {
   "language": "en",
-  "active_task_id": "task_cef0ec45",
+  "active_task_id": "task_af201d2b",
   "queue_mode_active": true,
   "queue_task_ids": [
-    "task_cef0ec45",
     "task_af201d2b"
   ],
   "last_queue_state": null,
@@ -52,8 +51,8 @@
       "focus_minutes": 25,
       "break_minutes": 5,
       "priority": "medium",
-      "status": "pending",
-      "completed_at": "2026-07-14T15:46:33",
+      "status": "completed",
+      "completed_at": "2026-07-15T12:08:29",
       "hidden_from_plan": false,
       "hidden_from_completed": false
     },
@@ -66,7 +65,7 @@
       "break_minutes": 5,
       "priority": "medium",
       "status": "pending",
-      "completed_at": "2026-07-14T15:46:34",
+      "completed_at": "2026-07-15T11:56:46",
       "hidden_from_plan": false,
       "hidden_from_completed": false
     }
@@ -143,7 +142,55 @@
       "duration_seconds": 1500,
       "away_seconds": 0,
       "completed_at": "2026-07-14T15:42:01"
+    },
+    {
+      "id": "session_9a882c26",
+      "task_id": null,
+      "task_title": "Regular Pomodoro",
+      "subject_id": "subject_other",
+      "subject_name": "Other",
+      "mode": "focus",
+      "source": "regular_pomodoro",
+      "duration_seconds": 60,
+      "away_seconds": 0,
+      "completed_at": "2026-07-15T11:24:46"
+    },
+    {
+      "id": "session_2c7f98ec",
+      "task_id": null,
+      "task_title": "Regular Pomodoro",
+      "subject_id": "subject_other",
+      "subject_name": "Other",
+      "mode": "focus",
+      "source": "regular_pomodoro",
+      "duration_seconds": 60,
+      "away_seconds": 0,
+      "completed_at": "2026-07-15T11:26:47"
+    },
+    {
+      "id": "session_ce71f33c",
+      "task_id": null,
+      "task_title": "Regular Pomodoro",
+      "subject_id": "subject_other",
+      "subject_name": "Other",
+      "mode": "focus",
+      "source": "regular_pomodoro",
+      "duration_seconds": 60,
+      "away_seconds": 0,
+      "completed_at": "2026-07-15T11:28:49"
+    },
+    {
+      "id": "session_56570139",
+      "task_id": null,
+      "task_title": "Regular Pomodoro",
+      "subject_id": "subject_other",
+      "subject_name": "Other",
+      "mode": "focus",
+      "source": "regular_pomodoro",
+      "duration_seconds": 60,
+      "away_seconds": 0,
+      "completed_at": "2026-07-15T11:36:13"
     }
   ],
-  "total_focus_seconds_today": 60
+  "total_focus_seconds_today": 300
 }
