@@ -224,7 +224,6 @@
   "tooltip_edit_task": "Edit",
   "tooltip_complete_task": "Mark as completed",
   "tooltip_remove_task": "Remove from page",
-  "tooltip_drag_task": "Drag to reorder",
   "tooltip_delete_task": "Delete",
   "tooltip_remove_completed_task": "Remove from this page",
 
@@ -234,6 +233,8 @@
   "tooltip_skip": "Skip session",
   "tooltip_exit_fullscreen": "Exit fullscreen",
   "tooltip_fullscreen": "Fullscreen",
+  "tooltip_move_up": "Task Up",
+  "tooltip_move_down": "Task Down",
 
   "data_management": "Data Management",
   "data_management_desc": "Back up your app data or clear your statistics history.",

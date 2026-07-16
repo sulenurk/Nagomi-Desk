@@ -36,6 +36,11 @@ class StudyPlanPage(ctk.CTkFrame):
         self.active_filter = "all_tasks"
         self.editing_task_id = None
 
+        self.drag_target_id = None
+        self.dragged_task_id = None
+        self.drag_placeholder = None
+        self.drag_target_row = None
+
         self.subject_options = [
             "math",
             "physics",
@@ -59,6 +64,50 @@ class StudyPlanPage(ctk.CTkFrame):
         self.create_action_bar()
         self.create_add_task_card()
         self.create_task_list()
+        self.render_tasks()
+
+    def get_visible_tasks(self):
+        tasks = self.app.app_data.get("tasks", [])
+        active_task_id = self.app.app_data.get("active_task_id")
+
+        if self.active_filter == "completed":
+            return [t for t in tasks if t.get("status") == "completed" and not t.get("hidden_from_completed", False)]
+        elif self.active_filter == "pending":
+            return [t for t in tasks if t.get("status") != "completed" and t.get("id") != active_task_id and not t.get("hidden_from_plan", False)]
+        elif self.active_filter == "active":
+            return [t for t in tasks if t.get("id") == active_task_id and t.get("status") != "completed" and not t.get("hidden_from_plan", False)]
+        else:
+            return [t for t in tasks if not t.get("hidden_from_plan", False)]
+
+    def move_task_up(self, task_id):
+        self.swap_tasks(task_id, -1)
+
+    def move_task_down(self, task_id):
+        self.swap_tasks(task_id, 1)
+
+    def swap_tasks(self, task_id, direction):
+        visible_tasks = self.get_visible_tasks()
+        visible_index = next((i for i, t in enumerate(visible_tasks) if t.get("id") == task_id), None)
+        
+        if visible_index is None: 
+            return
+            
+        target_visible_index = visible_index + direction
+        
+        # İlk eleman yukarı, son eleman aşağı gidemez
+        if target_visible_index < 0 or target_visible_index >= len(visible_tasks):
+            return
+
+        target_id = visible_tasks[target_visible_index]["id"]
+
+        global_tasks = self.app.app_data.setdefault("tasks", [])
+        global_index1 = next(i for i, t in enumerate(global_tasks) if t.get("id") == task_id)
+        global_index2 = next(i for i, t in enumerate(global_tasks) if t.get("id") == target_id)
+
+        # Veritabanında yer değiştir
+        global_tasks[global_index1], global_tasks[global_index2] = global_tasks[global_index2], global_tasks[global_index1]
+
+        self.app.save_app_data()
         self.render_tasks()
 
     def ensure_subjects_data(self):
@@ -118,7 +167,7 @@ class StudyPlanPage(ctk.CTkFrame):
             command=self.start_plan,
             width=140
         )
-        self.start_plan_button.grid(row=0, column=1, rowspan=2, padx=(0, 150), sticky="e")
+        self.start_plan_button.grid(row=0, column=1, rowspan=2, padx=(0, 10), sticky="e")
 
         """ self.add_top_button = PrimaryButton(
             self.header,
@@ -571,49 +620,28 @@ class StudyPlanPage(ctk.CTkFrame):
 
     def render_tasks(self):
         self.update_summary_cards()
+        self.focus_set() # Hata önleyici odak çekme
 
         for widget in self.task_scroll.winfo_children():
-            widget.destroy()
+            try:
+                widget.destroy()
+            except:
+                pass
 
-        tasks = self.app.app_data.get("tasks", [])
-        active_task_id = self.app.app_data.get("active_task_id")
-
-        if self.active_filter == "completed":
-            tasks = [
-                task for task in tasks
-                if task.get("status") == "completed"
-                and not task.get("hidden_from_completed", False)
-            ]
-
-        elif self.active_filter == "pending":
-            tasks = [
-                task for task in tasks
-                if task.get("status") != "completed"
-                and task.get("id") != active_task_id
-                and not task.get("hidden_from_plan", False)
-            ]
-
-        elif self.active_filter == "active":
-            tasks = [
-                task for task in tasks
-                if task.get("id") == active_task_id
-                and task.get("status") != "completed"
-                and not task.get("hidden_from_plan", False)
-            ]
-
-        else:
-            tasks = [
-                task for task in tasks
-                if not task.get("hidden_from_plan", False)
-            ]
+        tasks = self.get_visible_tasks()
+        total_tasks = len(tasks)
 
         if not tasks:
             self.render_empty_state()
             return
 
-        for row_index, task in enumerate(tasks):
+        for index, task in enumerate(tasks):
             is_active = task.get("id") == self.app.app_data.get("active_task_id")
             is_completed = task.get("status") == "completed"
+            
+            # Kartın ilk mi son mu olduğunu tespit et
+            is_first = (index == 0)
+            is_last = (index == total_tasks - 1)
 
             card = TaskCard(
                 self.task_scroll,
@@ -621,17 +649,19 @@ class StudyPlanPage(ctk.CTkFrame):
                 task,
                 is_active=is_active,
                 is_completed=is_completed,
+                is_first=is_first,
+                is_last=is_last,
                 on_start=self.start_task,
                 on_edit=self.edit_task,
                 on_delete=self.delete_task,
                 on_complete=self.complete_task,
-                on_drag_start=self.drag_start,
-                on_drag_release=self.drag_release,
                 on_duplicate=self.duplicate_task,
-                on_move_to_pending=self.move_completed_task_to_pending
+                on_move_to_pending=self.move_completed_task_to_pending,
+                on_move_up=self.move_task_up,
+                on_move_down=self.move_task_down
             )
 
-            card.grid(row=row_index, column=0, pady=7, sticky="ew")
+            card.grid(row=index, column=0, pady=7, sticky="ew")
 
     def delete_task(self, task_id):
         tasks = self.app.app_data.get("tasks", [])
@@ -859,28 +889,6 @@ class StudyPlanPage(ctk.CTkFrame):
         self.cancel_edit_button.grid()
         self.task_name_entry.focus_set()
 
-    def drag_start(self, task_id):
-        self.dragged_task_id = task_id
-
-    def drag_release(self, task_id, event):
-        if not getattr(self, "dragged_task_id", None):
-            return
-
-        target_widget = self.winfo_containing(event.x_root, event.y_root)
-
-        target_task_id = None
-
-        while target_widget:
-            if hasattr(target_widget, "task"):
-                target_task_id = target_widget.task.get("id")
-                break
-            target_widget = target_widget.master
-
-        if target_task_id and target_task_id != self.dragged_task_id:
-            self.reorder_tasks(self.dragged_task_id, target_task_id)
-
-        self.dragged_task_id = None
-
     def reorder_tasks(self, dragged_task_id, target_task_id):
         tasks = self.app.app_data.get("tasks", [])
 
@@ -1069,18 +1077,20 @@ class TaskCard(AppCard):
         task,
         is_active=False,
         is_completed=False,
+        is_first=False,
+        is_last=False,
         on_start=None,
         on_edit=None,
         on_delete=None,
         on_complete=None,
         on_duplicate=None,
         on_move_to_pending=None,
-        on_drag_start=None,
-        on_drag_release=None
+        on_move_up=None,
+        on_move_down=None
     ):
         self.on_edit = on_edit
-        self.on_drag_start = on_drag_start
-        self.on_drag_release = on_drag_release
+        self.on_move_up = on_move_up
+        self.on_move_down = on_move_down
 
         border_color = COLORS["primary"] if is_active else COLORS["card_border"]
         fg_color = COLORS["surface"] if is_completed else COLORS["card"]
@@ -1107,7 +1117,6 @@ class TaskCard(AppCard):
         self.grid_columnconfigure(1, weight=1)
 
         subject_name = task.get("subject_name")
-
         if not subject_name:
             old_subject_key = task.get("subject", "other")
             subject_name = self.app.t(old_subject_key)
@@ -1117,15 +1126,11 @@ class TaskCard(AppCard):
         subject_color = self.app.get_subject_color(task.get("subject_id"))
 
         self.icon = SubjectIcon(
-            self,
-            subject_key=subject_key,
-            icon_text=subject_meta["icon"],
-            color=subject_color
+            self, subject_key=subject_key, icon_text=subject_meta["icon"], color=subject_color
         )
         self.icon.grid(row=0, column=0, rowspan=2, padx=(18, 14), pady=16)
 
         title_text = f"{subject_name} - {task.get('title', '')}"
-
         self.title = ctk.CTkLabel(
             self,
             text=title_text,
@@ -1139,13 +1144,8 @@ class TaskCard(AppCard):
             f"◷ {task.get('focus_minutes', 0)}{self.app.t('minute_short')} {self.app.t('focus_label_short')}   "
             f"○ {task.get('break_minutes', 0)}{self.app.t('minute_short')} {self.app.t('break_label_short')}"
         )
-
         self.details = ctk.CTkLabel(
-            self,
-            text=detail_text,
-            text_color=COLORS["muted"],
-            font=ctk.CTkFont(size=13),
-            anchor="w"
+            self, text=detail_text, text_color=COLORS["muted"], font=ctk.CTkFont(size=13), anchor="w"
         )
         self.details.grid(row=1, column=1, padx=0, pady=(0, 16), sticky="ew")
 
@@ -1163,205 +1163,78 @@ class TaskCard(AppCard):
             status_color = COLORS["card_soft"]
 
         self.status_badge = ctk.CTkLabel(
-            self,
-            text=status_text,
-            fg_color=status_color,
-            text_color=COLORS["white"],
-            corner_radius=10,
-            padx=10,
-            pady=5,
-            font=ctk.CTkFont(size=12, weight="bold")
+            self, text=status_text, fg_color=status_color, text_color=COLORS["white"], corner_radius=10, padx=10, pady=5, font=ctk.CTkFont(size=12, weight="bold")
         )
         self.status_badge.grid(row=0, column=3, rowspan=2, padx=(0, 8), pady=20)
 
         self.start_button = SecondaryButton(
-            self,
-            text=f"▶ {self.app.t('start_task')}",
-            command=lambda: self.on_start(task.get("id")) if self.on_start else None,
-            width=92
+            self, text=f"▶ {self.app.t('start_task')}", command=lambda: self.on_start(task.get("id")) if self.on_start else None, width=92
         )
         self.start_button.grid(row=0, column=4, rowspan=2, padx=(0, 8), pady=20)
 
         if self.is_completed:
             self.secondary_action_button = SecondaryButton(
-                self,
-                text="↺",
-                command=lambda: self.on_move_to_pending(task.get("id")) if self.on_move_to_pending else None,
-                width=44
+                self, text="↺", command=lambda: self.on_move_to_pending(task.get("id")) if self.on_move_to_pending else None, width=44
             )
         else:
             self.secondary_action_button = SecondaryButton(
-                self,
-                text="⧉",
-                command=lambda: self.on_duplicate(task.get("id")) if self.on_duplicate else None,
-                width=44
+                self, text="⧉", command=lambda: self.on_duplicate(task.get("id")) if self.on_duplicate else None, width=44
             )
-
         self.secondary_action_button.grid(row=0, column=5, rowspan=2, padx=(0, 8), pady=20)
 
         self.edit_button = SecondaryButton(
-            self,
-            text="✎",
-            command=lambda: self.on_edit(task.get("id")) if self.on_edit else None,
-            width=44
+            self, text="✎", command=lambda: self.on_edit(task.get("id")) if self.on_edit else None, width=44
         )
         self.edit_button.grid(row=0, column=6, rowspan=2, padx=(0, 8), pady=20)
 
         self.complete_button = SecondaryButton(
-            self,
-            text="✓",
-            command=lambda: self.on_complete(task.get("id")) if self.on_complete else None,
-            width=44
+            self, text="✓", command=lambda: self.on_complete(task.get("id")) if self.on_complete else None, width=44
         )
         self.complete_button.grid(row=0, column=7, rowspan=2, padx=(0, 8), pady=20)
 
         self.delete_button = SecondaryButton(
-            self,
-            text="×",
-            command=lambda: self.on_delete(task.get("id")) if self.on_delete else None,
-            width=44
+            self, text="×", command=lambda: self.on_delete(task.get("id")) if self.on_delete else None, width=44
         )
         self.delete_button.grid(row=0, column=8, rowspan=2, padx=(0, 8), pady=20)
 
-        self.drag_handle = ctk.CTkLabel(
-            self,
-            text="☰",
-            text_color=COLORS["muted"],
-            font=ctk.CTkFont(size=18, weight="bold"),
-            cursor="hand2"
+        # --- YENİ EKLENEN YUKARI / AŞAĞI BUTONLARI ---
+        self.move_up_button = SecondaryButton(
+            self, text="▲", command=lambda: self.on_move_up(task.get("id")) if self.on_move_up else None, width=32
         )
-        self.drag_handle.grid(row=0, column=9, rowspan=2, padx=(0, 18), pady=20)
+        self.move_up_button.grid(row=0, column=9, padx=(0, 18), pady=(12, 2), sticky="s")
 
+        self.move_down_button = SecondaryButton(
+            self, text="▼", command=lambda: self.on_move_down(task.get("id")) if self.on_move_down else None, width=32
+        )
+        self.move_down_button.grid(row=1, column=9, padx=(0, 18), pady=(2, 12), sticky="n")
+
+        # --- AKTİFLİK/DEAKTİFLİK DURUMLARI ---
+        if self.is_completed:
+            self.start_button.configure(state="disabled", fg_color=COLORS["surface"], text_color=COLORS["muted"])
+            self.complete_button.configure(state="disabled", fg_color=COLORS["surface"], text_color=COLORS["muted"])
+            self.move_up_button.configure(state="disabled", fg_color=COLORS["surface"], text_color=COLORS["muted"])
+            self.move_down_button.configure(state="disabled", fg_color=COLORS["surface"], text_color=COLORS["muted"])
+        else:
+            if is_first:
+                self.move_up_button.configure(state="disabled", fg_color=COLORS["surface"], text_color=COLORS["muted"])
+            if is_last:
+                self.move_down_button.configure(state="disabled", fg_color=COLORS["surface"], text_color=COLORS["muted"])
+
+        if self.is_active:
+            self.start_button.configure(state="disabled", fg_color=COLORS["surface"], text_color=COLORS["muted"])
+            self.edit_button.configure(state="disabled", fg_color=COLORS["surface"], text_color=COLORS["muted"])
+            self.secondary_action_button.configure(state="disabled", fg_color=COLORS["surface"], text_color=COLORS["muted"])
+
+        # --- TOOLTİPLER ---
         Tooltip(self.start_button, self.app.t("tooltip_start_task"))
+        Tooltip(self.edit_button, self.app.t("tooltip_edit_task"))
+        Tooltip(self.complete_button, self.app.t("tooltip_complete_task"))
+        Tooltip(self.move_up_button, self.app.t("tooltip_move_up"))
+        Tooltip(self.move_down_button, self.app.t("tooltip_move_down"))
 
         if self.is_completed:
             Tooltip(self.secondary_action_button, self.app.t("tooltip_move_to_pending"))
+            Tooltip(self.delete_button, self.app.t("tooltip_remove_completed_task"))
         else:
             Tooltip(self.secondary_action_button, self.app.t("tooltip_duplicate_task"))
-
-        Tooltip(self.edit_button, self.app.t("tooltip_edit_task"))
-        Tooltip(self.complete_button, self.app.t("tooltip_complete_task"))
-
-        delete_tooltip_text = (
-            self.app.t("tooltip_remove_completed_task")
-            if self.is_completed
-            else self.app.t("tooltip_delete_task")
-        )
-
-        Tooltip(self.delete_button, delete_tooltip_text)
-        Tooltip(self.drag_handle, self.app.t("tooltip_drag_task"))
-
-        if self.on_drag_start:
-            self.drag_handle.bind(
-                "<Button-1>",
-                self.handle_drag_start
-            )
-
-        if self.on_drag_release:
-            self.drag_handle.bind(
-                "<ButtonRelease-1>",
-                self.handle_drag_release
-            )
-
-        if self.is_active:
-            self.start_button.configure(
-                state="disabled",
-                fg_color=COLORS["surface"],
-                text_color=COLORS["muted"]
-            )
-
-            self.edit_button.configure(
-                state="disabled",
-                fg_color=COLORS["surface"],
-                text_color=COLORS["muted"]
-            )
-
-            self.secondary_action_button.configure(
-                state="disabled",
-                fg_color=COLORS["surface"],
-                text_color=COLORS["muted"]
-            )
-
-        if self.is_completed:
-            self.start_button.configure(
-                state="disabled",
-                fg_color=COLORS["surface"],
-                text_color=COLORS["muted"]
-            )
-
-            self.complete_button.configure(
-                state="disabled",
-                fg_color=COLORS["surface"],
-                text_color=COLORS["muted"]
-            )
-
-            self.drag_handle.configure(
-                text_color=COLORS["surface"],
-                cursor=""
-            )
-
-            self.drag_handle.unbind("<Button-1>")
-            self.drag_handle.unbind("<ButtonRelease-1>")
-
-    def set_dragging_style(self):
-        if self.is_completed:
-            return
-
-        self.configure(
-            fg_color=COLORS["surface"],
-            border_width=2,
-            border_color=COLORS["primary"]
-        )
-
-        self.title.configure(text_color=COLORS["muted"])
-        self.details.configure(text_color=COLORS["muted"])
-
-        self.drag_handle.configure(
-            text_color=COLORS["primary"],
-            font=ctk.CTkFont(size=21, weight="bold")
-        )
-
-
-    def reset_dragging_style(self):
-        if self.is_completed:
-            return
-
-        border_color = COLORS["primary"] if self.is_active else COLORS["card_border"]
-        fg_color = COLORS["surface"] if self.is_completed else COLORS["card"]
-
-        self.configure(
-            fg_color=fg_color,
-            border_width=2 if self.is_active else 1,
-            border_color=border_color
-        )
-
-        self.title.configure(
-            text_color=COLORS["muted"] if self.is_completed else COLORS["text"]
-        )
-
-        self.details.configure(text_color=COLORS["muted"])
-
-        self.drag_handle.configure(
-            text_color=COLORS["muted"],
-            font=ctk.CTkFont(size=18, weight="bold")
-        )
-
-
-    def handle_drag_start(self, event):
-        if self.is_completed:
-            return
-
-        self.set_dragging_style()
-
-        if self.on_drag_start:
-            self.on_drag_start(self.task.get("id"))
-
-
-    def handle_drag_release(self, event):
-        if self.is_completed:
-            return
-
-        self.reset_dragging_style()
-
-        if self.on_drag_release:
-            self.on_drag_release(self.task.get("id"), event)
+            Tooltip(self.delete_button, self.app.t("tooltip_delete_task"))

@@ -225,7 +225,6 @@
   "tooltip_edit_task": "Düzenle",
   "tooltip_complete_task": "Tamamlandı olarak işaretle",
   "tooltip_remove_task": "Kaldır",
-  "tooltip_drag_task": "Sıralamak için sürükle",
   "tooltip_delete_task": "Sil",
   "tooltip_remove_completed_task": "Bu sayfadan kaldır",
 
@@ -235,6 +234,8 @@
   "tooltip_skip": "Bu oturumu geç",
   "tooltip_exit_fullscreen": "Tam ekrandan çık",
   "tooltip_fullscreen": "Tam ekran",
+  "tooltip_move_up": "Yukarı Taşı",
+  "tooltip_move_down": "Aşağı Taşı",
 
   "data_management": "Veri Yönetimi",
   "data_management_desc": "Uygulama verilerini yedekle veya istatistik geçmişini temizle.",
