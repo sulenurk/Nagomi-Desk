@@ -27,8 +27,7 @@ class FocusFlowApp(ctk.CTk):
         self.active_page = "pomodoro"
 
         self.title(self.t("app_name"))
-        self.geometry("1000x650")
-        self.minsize(900, 600)
+        self.center_window(1360, 820)
         self.configure(fg_color=COLORS["bg"])
 
         ctk.set_appearance_mode(self.app_data["settings"].get("appearance_mode", "dark"))
@@ -43,6 +42,15 @@ class FocusFlowApp(ctk.CTk):
         self.create_pages()
 
         self.show_pomodoro_page()
+    
+    def center_window(self, width=1360, height=820):
+        screen_width = self.winfo_screenwidth()
+        screen_height = self.winfo_screenheight()
+
+        x = (screen_width - width) // 2
+        y = (screen_height - height) // 2
+
+        self.geometry(f"{width}x{height}+{x}+{y}")
 
     def ensure_app_data_defaults(self):
         self.app_data.setdefault("language", "en")

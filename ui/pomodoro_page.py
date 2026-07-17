@@ -272,7 +272,6 @@ class PomodoroPage(ctk.CTkFrame):
 
         self.hide_normal_alarm_button()
         self.scroll.grid_remove()
-
         self.create_fullscreen_view()
 
         self.update_mode_ui()
@@ -531,11 +530,11 @@ class PomodoroPage(ctk.CTkFrame):
         self.title_label = PageTitle(self.header, self.app.t("regular_pomodoro"))
         self.title_label.grid(row=0, column=0, sticky="w")
 
-        self.subtitle_label = PageSubtitle(
+        """ self.subtitle_label = PageSubtitle(
             self.header,
             self.app.t("pomodoro_subtitle")
         )
-        self.subtitle_label.grid(row=1, column=0, pady=(4, 0), sticky="w")
+        self.subtitle_label.grid(row=1, column=0, pady=(4, 0), sticky="w") """
 
     def create_content(self):
         self.content = ctk.CTkFrame(self.scroll, fg_color="transparent")
@@ -731,7 +730,7 @@ class PomodoroPage(ctk.CTkFrame):
         )
         self.summary_title.grid(row=0, column=0, padx=20, pady=(18, 8), sticky="w")
 
-        self.cycle_dots_frame = ctk.CTkFrame(self.summary_card, fg_color="transparent")
+        """ self.cycle_dots_frame = ctk.CTkFrame(self.summary_card, fg_color="transparent")
         self.cycle_dots_frame.grid(row=1, column=0, padx=20, pady=(0, 14), sticky="w")
 
         self.cycle_dots = []
@@ -744,7 +743,7 @@ class PomodoroPage(ctk.CTkFrame):
                 font=ctk.CTkFont(size=16)
             )
             dot.grid(row=0, column=index, padx=(0, 6))
-            self.cycle_dots.append(dot)
+            self.cycle_dots.append(dot) """
 
         self.focus_info = self.create_session_info_row(
             parent=self.summary_card,
@@ -830,7 +829,7 @@ class PomodoroPage(ctk.CTkFrame):
             sticky="w"
         )
 
-        self.save_status_label = ctk.CTkLabel(
+        """ self.save_status_label = ctk.CTkLabel(
             self.settings_card,
             text=" ",
             text_color=COLORS["muted"],
@@ -846,7 +845,7 @@ class PomodoroPage(ctk.CTkFrame):
             padx=20,
             pady=(0, 10),
             sticky="ew"
-        )
+        ) """
 
         self.focus_label = self.create_form_label(self.settings_card, "focus_duration", row=2)
         self.focus_entry = AppEntry(self.settings_card, width=90)
@@ -1141,7 +1140,7 @@ class PomodoroPage(ctk.CTkFrame):
             text=f"{self.app.t('current_cycle')} {current_focus_number} / {total_text}"
         )
 
-        self.cycle_label.configure(
+        """ self.cycle_label.configure(
             text=f"#{current_focus_number} / {total_text}"
         )
 
@@ -1163,7 +1162,7 @@ class PomodoroPage(ctk.CTkFrame):
             else:
                 dot.configure(
                     text_color=COLORS["primary"] if index < self.completed_focus_count else COLORS["muted"]
-                )
+                ) """
 
         if self.fullscreen_cycle_label:
             self.fullscreen_cycle_label.configure(
@@ -1523,7 +1522,7 @@ class PomodoroPage(ctk.CTkFrame):
 
     def refresh_texts(self):
         self.title_label.configure(text=self.app.t("regular_pomodoro"))
-        self.subtitle_label.configure(text=self.app.t("pomodoro_subtitle"))
+        #self.subtitle_label.configure(text=self.app.t("pomodoro_subtitle"))
 
         self.settings_title.configure(text=self.app.t("pomodoro_settings"))
 
