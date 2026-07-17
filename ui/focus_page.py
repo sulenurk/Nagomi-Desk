@@ -23,6 +23,12 @@ class FocusPage(ctk.CTkFrame):
         self.fullscreen_task_label = None
         self.fullscreen_subject_label = None
 
+        self.alarm_is_ringing = False
+        self.alarm_after_id = None
+
+        self.stop_alarm_button = None
+        self.fullscreen_stop_alarm_button = None
+
         self.focus_seconds = 25 * 60
         self.break_seconds = 5 * 60
         self.remaining_seconds = self.focus_seconds
@@ -90,6 +96,11 @@ class FocusPage(ctk.CTkFrame):
 
         if self.fullscreen_frame:
             self.fullscreen_frame.destroy()
+            self.fullscreen_alarm_frame = None
+            self.fullscreen_stop_alarm_button = None
+
+            if self.alarm_is_ringing:
+                self.show_normal_alarm_button()
             self.fullscreen_frame = None
 
         self.fullscreen_start_button = None
@@ -185,6 +196,15 @@ class FocusPage(ctk.CTkFrame):
             pady=20
         )
 
+        self.fullscreen_alarm_frame = ctk.CTkFrame(
+            self.fullscreen_frame,
+            fg_color="transparent"
+        )
+
+        self.fullscreen_alarm_frame.pack(
+            pady=(12, 0)
+        )
+
         fullscreen_text = (
             self.app.t("pause")
             if self.is_running
@@ -251,6 +271,8 @@ class FocusPage(ctk.CTkFrame):
             pady=(50,0)
         )
 
+        if self.alarm_is_ringing:
+            self.show_fullscreen_alarm_button()
 
         self.update_fullscreen_task_info()
 
@@ -373,6 +395,28 @@ class FocusPage(ctk.CTkFrame):
             width=130
         )
         self.reset_button.grid(row=0, column=2, padx=8)
+
+        self.stop_alarm_button = ctk.CTkButton(
+            self.button_frame,
+            text=f"🔕 {self.app.t('stop_alarm')}",
+            command=self.dismiss_alarm,
+            width=180,
+            height=40,
+            corner_radius=12,
+            fg_color=COLORS["red"],
+            hover_color="#DC2626",
+            text_color=COLORS["white"],
+            font=ctk.CTkFont(size=14, weight="bold")
+        )
+
+        self.stop_alarm_button.grid(
+            row=1,
+            column=0,
+            columnspan=3,
+            pady=(16, 0)
+        )
+
+        self.stop_alarm_button.grid_remove()
 
         self.away_warning_label = ctk.CTkLabel(
             self.timer_card,
@@ -501,8 +545,79 @@ class FocusPage(ctk.CTkFrame):
         self.away_card.grid(row=2, column=0, sticky="ew")
         self.away_card.grid_columnconfigure(0, weight=1)
 
+        # AUTO START CARD
+        self.auto_start_card = AppCard(self.side_panel)
+        self.auto_start_card.grid(
+            row=3,
+            column=0,
+            sticky="ew",
+            pady=(16, 0)
+        )
+
+        self.auto_start_card.grid_columnconfigure(
+            0,
+            weight=1
+        )
+
+        self.auto_start_title = ctk.CTkLabel(
+            self.auto_start_card,
+            text=self.app.t("auto_start"),
+            text_color=COLORS["text"],
+            font=ctk.CTkFont(
+                size=16,
+                weight="bold"
+            ),
+            anchor="w"
+        )
+
+        self.auto_start_title.grid(
+            row=0,
+            column=0,
+            padx=(24, 12),
+            pady=(22, 4),
+            sticky="w"
+        )
+
+        self.auto_start_description = ctk.CTkLabel(
+            self.auto_start_card,
+            text=self.app.t("pomodoro_auto_start_all"),
+            text_color=COLORS["muted"],
+            font=ctk.CTkFont(size=13),
+            anchor="w",
+            justify="left",
+            wraplength=210
+        )
+
+        self.auto_start_description.grid(
+            row=1,
+            column=0,
+            padx=(24, 12),
+            pady=(0, 22),
+            sticky="w"
+        )
+
+        self.auto_start_switch = ctk.CTkSwitch(
+            self.auto_start_card,
+            text="",
+            command=self.toggle_auto_start,
+            width=48,
+            progress_color=COLORS["primary"],
+            button_color=COLORS["white"],
+            button_hover_color=COLORS["white"]
+        )
+
+        self.auto_start_switch.grid(
+            row=0,
+            column=1,
+            rowspan=2,
+            padx=(12, 24),
+            pady=20,
+            sticky="e"
+        )
+
+
         self.queue_card = AppCard(self.side_panel)
-        self.queue_card.grid(row=3, column=0, sticky="ew", pady=(16, 0))
+        self.queue_card.grid(row=4, column=0, sticky="ew", pady=(16, 0))
         self.queue_card.grid_columnconfigure(0, weight=1)
 
         self.queue_title = ctk.CTkLabel(
@@ -552,6 +667,46 @@ class FocusPage(ctk.CTkFrame):
             font=ctk.CTkFont(size=30, weight="bold")
         )
         self.away_value.grid(row=1, column=0, padx=20, pady=(0, 18), sticky="w")
+
+        self.load_auto_start_switch()
+
+    def load_auto_start_switch(self):
+        settings = self.app.app_data.setdefault(
+            "settings",
+            {}
+        )
+
+        auto_start_focus = settings.get(
+            "auto_start_focus",
+            False
+        )
+
+        auto_start_break = settings.get(
+            "auto_start_break",
+            False
+        )
+
+        # Switch yalnızca ikisi de açıksa ON görünür.
+        if auto_start_focus and auto_start_break:
+            self.auto_start_switch.select()
+        else:
+            self.auto_start_switch.deselect()
+
+    def toggle_auto_start(self):
+        is_enabled = bool(
+            self.auto_start_switch.get()
+        )
+
+        settings = self.app.app_data.setdefault(
+            "settings",
+            {}
+        )
+
+        # Tek switch, iki modu birlikte yönetir.
+        settings["auto_start_focus"] = is_enabled
+        settings["auto_start_break"] = is_enabled
+
+        self.app.save_app_data()
 
     def format_time(self, seconds):
         minutes = seconds // 60
@@ -763,7 +918,12 @@ class FocusPage(ctk.CTkFrame):
         self.update_queue_progress()
         self.refresh_queue_progress_visibility()
 
-    def start_timer(self):
+    def start_timer(self, manual_start=True):
+
+        # Kullanıcı butona basarak başlatıyorsa mevcut alarmı sustur.
+        # Auto-start sırasında alarm 10 saniye çalmaya devam eder.
+        if manual_start and self.alarm_is_ringing:
+            self.dismiss_alarm()
 
         # RESUME
         if self.is_paused:
@@ -771,7 +931,6 @@ class FocusPage(ctk.CTkFrame):
             self.away_seconds = 0
             self.away_warning_label.configure(text="")
             self.update_away_metric()
-
             self.update_mode_ui()
 
         # START
@@ -779,8 +938,10 @@ class FocusPage(ctk.CTkFrame):
             self.is_running = True
             self.is_waiting_for_next = False
 
+            self.start_button.configure(
+                text=self.app.t("pause")
+            )
 
-            # fullscreen butonu pause olmalı
             if (
                 getattr(self, "fullscreen_start_button", None)
                 and self.fullscreen_start_button.winfo_exists()
@@ -846,6 +1007,7 @@ class FocusPage(ctk.CTkFrame):
             self.update_away_timer()
 
     def reset_timer(self):
+        self.dismiss_alarm()
         self.is_running = False
         self.is_paused = False
         self.is_waiting_for_next = False
@@ -903,7 +1065,7 @@ class FocusPage(ctk.CTkFrame):
 
         auto_start_break = self.app.app_data.get("settings", {}).get("auto_start_break", False)
         if auto_start_break:
-            self.start_timer()
+            self.start_timer(manual_start=False)
 
     def switch_to_focus_ready(self):
         self.current_mode = "focus"
@@ -926,7 +1088,7 @@ class FocusPage(ctk.CTkFrame):
 
         auto_start_focus = self.app.app_data.get("settings", {}).get("auto_start_focus", False)
         if auto_start_focus:
-            self.start_timer()
+            self.start_timer(manual_start=False)
 
     def update_mode_ui(self):
         if self.current_mode == "focus":
@@ -965,12 +1127,12 @@ class FocusPage(ctk.CTkFrame):
         elif self.is_running and self.remaining_seconds <= 0:
             self.update_current_task_progress()
             self.is_running = False
+            self.start_alarm()
             self.timer_label.configure(text="00:00")
             if self.fullscreen_timer_label:
                 self.fullscreen_timer_label.configure(
                     text="00:00"
                 )
-            self.app.play_alarm()
 
             if self.current_mode == "focus":
                 self.away_warning_label.configure(text=self.app.t("focus_completed"))
@@ -1041,6 +1203,7 @@ class FocusPage(ctk.CTkFrame):
                         self.away_warning_label.configure(text=self.app.t("queue_completed"))
                 else:
                     self.switch_to_focus_ready()
+
                     
     def update_away_timer(self):
         if self.is_paused:
@@ -1084,6 +1247,14 @@ class FocusPage(ctk.CTkFrame):
         self.away_title.configure(text=self.app.t("away_time"))
         self.timer_hint_label.configure(text=self.app.t("one_session_at_a_time"))
 
+        self.auto_start_title.configure(
+            text=self.app.t("auto_start")
+        )
+
+        self.auto_start_description.configure(
+            text=self.app.t("pomodoro_auto_start_all")
+        )
+
         self.queue_title.configure(text=self.app.t("study_queue"))
         self.stop_plan_button.configure(text=self.app.t("stop_plan"))
 
@@ -1125,6 +1296,7 @@ class FocusPage(ctk.CTkFrame):
         self.update_queue_progress()
         self.refresh_queue_progress_visibility()
         self.update_total_focus_label()
+        self.load_auto_start_switch()
         self.update_away_metric()
         self.refresh_away_card_visibility()
 
@@ -1307,5 +1479,141 @@ class FocusPage(ctk.CTkFrame):
         self.update_total_focus_label()
         self.update_away_metric()
         self.refresh_away_card_visibility()
+        self.load_auto_start_switch()
         self.update_queue_progress()
         self.refresh_queue_progress_visibility()
+
+    def start_alarm(self):
+
+        settings = self.app.app_data.get("settings", {})
+
+        if not settings.get("sound_enabled", True):
+            return
+
+        self.dismiss_alarm()
+
+        self.alarm_is_ringing = True
+
+        if hasattr(self.app, "play_alarm"):
+            self.app.play_alarm()
+
+        self.show_alarm_controls()
+
+        self.alarm_after_id = self.after(
+            10000,
+            self.auto_stop_alarm
+        )
+
+
+    def auto_stop_alarm(self):
+
+        self.alarm_after_id = None
+
+        if self.alarm_is_ringing:
+            self.dismiss_alarm()
+
+
+    def dismiss_alarm(self):
+
+        if self.alarm_after_id is not None:
+            try:
+                self.after_cancel(self.alarm_after_id)
+            except Exception:
+                pass
+
+            self.alarm_after_id = None
+
+        if hasattr(self.app, "stop_alarm"):
+            self.app.stop_alarm()
+
+        self.alarm_is_ringing = False
+        self.hide_alarm_controls()
+
+
+    def show_alarm_controls(self):
+        if not self.alarm_is_ringing:
+            return
+
+        if self.fullscreen_mode:
+            self.hide_normal_alarm_button()
+            self.show_fullscreen_alarm_button()
+        else:
+            self.hide_fullscreen_alarm_button()
+            self.show_normal_alarm_button()
+
+
+    def hide_alarm_controls(self):
+
+        self.hide_normal_alarm_button()
+        self.hide_fullscreen_alarm_button()
+
+
+    def show_normal_alarm_button(self):
+
+        if (
+            self.stop_alarm_button is not None
+            and self.stop_alarm_button.winfo_exists()
+        ):
+            self.stop_alarm_button.grid(
+                row=1,
+                column=0,
+                columnspan=3,
+                pady=(16, 0)
+            )
+            self.stop_alarm_button.lift()
+
+
+    def hide_normal_alarm_button(self):
+
+        if (
+            self.stop_alarm_button is not None
+            and self.stop_alarm_button.winfo_exists()
+        ):
+            self.stop_alarm_button.grid_remove()
+
+
+    def show_fullscreen_alarm_button(self):
+
+        if (
+            self.fullscreen_alarm_frame is None
+            or not self.fullscreen_alarm_frame.winfo_exists()
+        ):
+            return
+
+        if (
+            self.fullscreen_stop_alarm_button is None
+            or not self.fullscreen_stop_alarm_button.winfo_exists()
+        ):
+            self.fullscreen_stop_alarm_button = ctk.CTkButton(
+                self.fullscreen_alarm_frame,
+                text=f"🔕 {self.app.t('stop_alarm')}",
+                command=self.dismiss_alarm,
+                width=220,
+                height=50,
+                corner_radius=16,
+                fg_color=COLORS["red"],
+                hover_color="#DC2626",
+                text_color=COLORS["white"],
+                font=ctk.CTkFont(
+                    size=15,
+                    weight="bold"
+                )
+            )
+
+        self.fullscreen_stop_alarm_button.pack(
+            padx=20,
+            pady=4
+        )
+
+
+
+    def hide_fullscreen_alarm_button(self):
+
+        if (
+            self.fullscreen_stop_alarm_button is not None
+            and self.fullscreen_stop_alarm_button.winfo_exists()
+        ):
+            self.fullscreen_stop_alarm_button.pack_forget()
+
+    def stop_alarm_on_page_leave(self):
+        self.dismiss_alarm()
