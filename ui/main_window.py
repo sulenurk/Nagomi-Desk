@@ -10,11 +10,12 @@ from ui.study_plan_page import StudyPlanPage
 from ui.subjects_page import SubjectsPage
 from ui.settings_page import SettingsPage
 from ui.theme import COLORS, SUBJECT_COLOR_PALETTE, apply_color_palette
+from core.alarm_sounds import ALARM_SOUNDS, get_alarm_path
 
 class FocusFlowApp(ctk.CTk):
     def __init__(self):
         super().__init__()
-
+        
         self.base_path = Path(__file__).resolve().parent.parent
         self.data_path = self.base_path / "data" / "app_data.json"
 
@@ -36,12 +37,22 @@ class FocusFlowApp(ctk.CTk):
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
         
-        pygame.mixer.init()
+        self.alarm_active = False
+        self.alarm_source = None
+        self.alarm_stop_after_id = None
+        self.alarm_preview_after_id = None
+
+        if not pygame.mixer.get_init():
+            try:
+                pygame.mixer.init()
+            except pygame.error as error:
+                print(f"Ses sistemi başlatılamadı: {error}")
         
         self.create_sidebar()
         self.create_pages()
 
         self.show_pomodoro_page()
+
     
     def center_window(self, width=1360, height=820):
         screen_width = self.winfo_screenwidth()
@@ -170,6 +181,185 @@ class FocusFlowApp(ctk.CTk):
 
         return text
     
+    def _cancel_alarm_stop_callback(self):
+        if self.alarm_stop_after_id is None:
+            return
+
+        try:
+            self.after_cancel(self.alarm_stop_after_id)
+        except Exception:
+            pass
+
+        self.alarm_stop_after_id = None
+    
+    def play_alarm(self, source):
+        """
+        Gerçek timer alarmını başlatır.
+
+        source:
+            "focus"
+            "pomodoro"
+        """
+
+        # Ayarlardaki önizleme için kurulmuş eski callback'i iptal et.
+        self._cancel_alarm_preview_callback()
+
+        settings = self.app_data.get("settings", {})
+
+        if not settings.get("sound_enabled", True):
+            self.stop_alarm()
+            return False
+
+        alarm_id = settings.get("selected_alarm", "birdy")
+        sound_path = get_alarm_path(alarm_id)
+
+        if sound_path is None:
+            print(f"Alarm tanımı bulunamadı: {alarm_id}")
+            self.stop_alarm()
+            return False
+
+        if not sound_path.exists():
+            print(f"Alarm dosyası bulunamadı: {sound_path}")
+            self.stop_alarm()
+            return False        
+
+        # Daha önce çalan alarmı ve eski butonları temizle.
+        self._stop_audio()
+        self._hide_all_alarm_controls()
+
+        try:
+            if not pygame.mixer.get_init():
+                pygame.mixer.init()
+
+            pygame.mixer.music.load(str(sound_path))
+
+            # Kullanıcı susturana veya sayfa değiştirene kadar tekrar çal.
+            pygame.mixer.music.play(-1)
+
+        except pygame.error as error:
+            print(f"Alarm çalınamadı: {error}")
+
+            self.alarm_active = False
+            self.alarm_source = None
+            self._hide_all_alarm_controls()
+
+            return False
+
+        self.alarm_active = True
+        self.alarm_source = source
+
+        self._show_alarm_controls(source)
+
+        self.alarm_stop_after_id = self.after(
+            10_000,
+            self.stop_alarm
+        )
+
+        return True
+
+
+    def stop_alarm(self):
+        """
+        Gerçek alarmı veya ayarlardaki önizleme sesini tamamen durdurur.
+        Alarm butonlarını da gizler.
+        """
+
+        self._cancel_alarm_preview_callback()
+        self._stop_audio()
+        self._hide_all_alarm_controls()
+
+        self.alarm_active = False
+        self.alarm_source = None
+
+
+    def preview_alarm(self, alarm_id, duration_ms=4000):
+        """
+        SettingsPage tarafından kullanılan alarm önizlemesi.
+        SettingsPage doğrudan pygame kullanmaz.
+        """
+
+        sound_path = get_alarm_path(alarm_id)
+
+        if sound_path is None:
+            print(f"Alarm tanımı bulunamadı: {alarm_id}")
+            return False
+
+        if not sound_path.exists():
+            print(f"Alarm dosyası bulunamadı: {sound_path}")
+            return False
+
+        # Gerçek alarm veya önceki önizleme varsa temizle.
+        self.stop_alarm()
+
+        try:
+            if not pygame.mixer.get_init():
+                pygame.mixer.init()
+
+            pygame.mixer.music.load(str(sound_path))
+            pygame.mixer.music.play()
+
+        except pygame.error as error:
+            print(f"Alarm önizlemesi çalınamadı: {error}")
+            return False
+
+        self.alarm_preview_after_id = self.after(
+            duration_ms,
+            self._stop_alarm_preview
+        )
+
+        return True
+
+
+    def _stop_alarm_preview(self):
+        self.alarm_preview_after_id = None
+
+        # Bu fonksiyon yalnızca önizlemeyi durdurur.
+        # Gerçek timer alarmının UI durumuna dokunmaz.
+        if not self.alarm_active:
+            self._stop_audio()
+
+
+    def _cancel_alarm_preview_callback(self):
+        if self.alarm_preview_after_id is None:
+            return
+
+        try:
+            self.after_cancel(self.alarm_preview_after_id)
+        except Exception:
+            pass
+
+        self.alarm_preview_after_id = None
+
+
+    def _stop_audio(self):
+        try:
+            pygame.mixer.music.stop()
+        except pygame.error:
+            pass
+
+        try:
+            pygame.mixer.music.unload()
+        except (pygame.error, AttributeError):
+            pass
+
+
+    def _show_alarm_controls(self, source):
+        if source == "focus":
+            if hasattr(self, "focus_page"):
+                self.focus_page.show_alarm_controls()
+
+        elif source == "pomodoro":
+            if hasattr(self, "pomodoro_page"):
+                self.pomodoro_page.show_alarm_controls()
+
+
+    def _hide_all_alarm_controls(self):
+        if hasattr(self, "focus_page"):
+            self.focus_page.hide_alarm_controls()
+
+        if hasattr(self, "pomodoro_page"):
+            self.pomodoro_page.hide_alarm_controls()
+    
     def get_subject_display_name(self, subject):
         if not subject:
             return self.t("other_subject")
@@ -201,22 +391,6 @@ class FocusFlowApp(ctk.CTk):
             settings.get("appearance_mode", "dark")
         )
 
-    def stop_pomodoro_alarm_on_navigation(self):
-        if hasattr(self, "pomodoro_page"):
-            self.pomodoro_page.stop_alarm_on_page_leave()
-
-    def stop_alarm(self):
-        if hasattr(self, "alarm_sound"):
-            try:
-                self.alarm_sound.stop()
-            except Exception:
-                pass
-
-        if hasattr(self, "alarm_channel") and self.alarm_channel:
-            try:
-                self.alarm_channel.stop()
-            except Exception:
-                pass
 
     def apply_theme(self, palette_key=None, appearance_mode=None):
         settings = self.app_data.setdefault("settings", {})
@@ -292,11 +466,6 @@ class FocusFlowApp(ctk.CTk):
         if hasattr(self, "settings_page"):
             self.settings_page.load_settings()
 
-    def play_alarm(self):
-        if not self.app_data.get("settings", {}).get("sound_enabled", True):
-            return
-        self.bell()
-        self.after(180, self.bell)
     
     def get_language_options(self):
         return {
@@ -484,60 +653,94 @@ class FocusFlowApp(ctk.CTk):
         self.mode_button.configure(text="☀" if mode == "dark" else "☾")
         self.sound_button.configure(text="🔔" if sound_on else "🔕")
 
+
     def show_focus_page(self):
-        self.stop_pomodoro_alarm_on_navigation()
+        self.stop_alarm()
+
         self.active_page = "focus"
         self.update_sidebar_active_state()
-        self.focus_page.tkraise()
+
+        # Sayfa görünmeden önce verilerini güncelle
         if hasattr(self.focus_page, "refresh_page"):
             self.focus_page.refresh_page()
         elif hasattr(self.focus_page, "refresh_texts"):
             self.focus_page.refresh_texts()
 
+        self.focus_page.update_idletasks()
+        self.focus_page.tkraise()
+
     def show_todo_page(self):
-        self.stop_pomodoro_alarm_on_navigation()
+        self.stop_alarm()
+
         self.active_page = "study"
         self.update_sidebar_active_state()
 
-        if hasattr(self.todo_page, "refresh_subject_menu"):
-            self.todo_page.refresh_subject_menu()
+        # Sayfa görünmeden önce güncelle
+        if hasattr(self.todo_page, "refresh_page"):
+            self.todo_page.refresh_page()
+        elif hasattr(self.todo_page, "refresh_texts"):
+            self.todo_page.refresh_texts()
 
-        if hasattr(self.todo_page, "render_tasks"):
-            self.todo_page.render_tasks()
-
+        self.todo_page.update_idletasks()
         self.todo_page.tkraise()
 
     def show_pomodoro_page(self):
+        
+        self.stop_alarm()
+
         self.active_page = "pomodoro"
         self.update_sidebar_active_state()
+
+        if hasattr(self.pomodoro_page, "refresh_page"):
+            self.pomodoro_page.refresh_page()
+        elif hasattr(self.pomodoro_page, "refresh_texts"):
+            self.pomodoro_page.refresh_texts()
+
+        self.pomodoro_page.update_idletasks()
         self.pomodoro_page.tkraise()
 
-        if hasattr(self, "pomodoro_page"):
-            self.pomodoro_page.update_auto_start_info()
-
     def show_subjects_page(self):
-        self.stop_pomodoro_alarm_on_navigation()
+        self.stop_alarm()
+
         self.active_page = "subjects"
         self.update_sidebar_active_state()
-        self.subjects_page.tkraise()
 
-        if hasattr(self.subjects_page, "refresh_texts"):
+        if hasattr(self.subjects_page, "refresh_page"):
+            self.subjects_page.refresh_page()
+        elif hasattr(self.subjects_page, "refresh_texts"):
             self.subjects_page.refresh_texts()
 
-        if hasattr(self.subjects_page, "focus_subject_entry"):
-            self.subjects_page.focus_subject_entry()
-
+        self.subjects_page.update_idletasks()
+        self.subjects_page.tkraise()
+        
     def show_statistics_page(self):
-        self.stop_pomodoro_alarm_on_navigation()
+        self.stop_alarm()
+
         self.active_page = "statistics"
         self.update_sidebar_active_state()
-        self.statistics_page.refresh_stats()
-        self.statistics_page.tkraise()
+
+        if hasattr(self.statistics_page, "refresh_page"):
+            self.statistics_page.refresh_page()
+        elif hasattr(self.statistics_page, "refresh_statistics"):
+            self.statistics_page.refresh_statistics()
+        elif hasattr(self.statistics_page, "refresh_texts"):
+            self.statistics_page.refresh_texts()
+
+        self.statistics_page.update_idletasks()
+        self.statistics_page.tkraise() 
 
     def show_settings_page(self):
-        self.stop_pomodoro_alarm_on_navigation()
+        self.stop_alarm()
+
         self.active_page = "settings"
         self.update_sidebar_active_state()
+
+        if hasattr(self.settings_page, "refresh_page"):
+            self.settings_page.refresh_page()
+        elif hasattr(self.settings_page, "refresh_texts"):
+            self.settings_page.refresh_texts()
+
+        self.settings_page.update_idletasks()
         self.settings_page.tkraise()
 
     def change_language(self, selected_language):

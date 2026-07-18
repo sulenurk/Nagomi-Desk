@@ -255,5 +255,16 @@
   "select_backup_file": "Select FocusFlow backup file",
 
   "confirm_import_data": "This will replace current data. Press again to import.",
-  "stop_alarm": "Stop Alarm"
+  "stop_alarm": "Stop Alarm",
+
+  "alarm_sound": "Alarm Sound",
+  "alarm_sound_desc": "Choose the sound played when a session finishes.",
+
+  "alarm_birdy": "Birdy",
+  "alarm_buzz": "Buzz",
+  "alarm_analog": "Analogue",
+  "alarm_beep": "Beep",
+  "alarm_galaxy": "Galaxy",
+  "alarm_dance": "Dance",
+  "selected": "selected."
 }

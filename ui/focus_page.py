@@ -22,9 +22,12 @@ class FocusPage(ctk.CTkFrame):
         self.fullscreen_timer_label = None
         self.fullscreen_task_label = None
         self.fullscreen_subject_label = None
-
-        self.alarm_is_ringing = False
-        self.alarm_after_id = None
+        self.fullscreen_alarm_frame = None
+        self.fullscreen_start_button = None
+        self.fullscreen_status_label = None
+        self.fullscreen_button_frame = None
+        self.fullscreen_exit_button = None
+        self.previous_geometry = None
 
         self.stop_alarm_button = None
         self.fullscreen_stop_alarm_button = None
@@ -99,8 +102,12 @@ class FocusPage(ctk.CTkFrame):
             self.fullscreen_alarm_frame = None
             self.fullscreen_stop_alarm_button = None
 
-            if self.alarm_is_ringing:
+            if (
+                getattr(self.app, "alarm_active", False)
+                and getattr(self.app, "alarm_source", None) == "focus"
+            ):
                 self.show_normal_alarm_button()
+            
             self.fullscreen_frame = None
 
         self.fullscreen_start_button = None
@@ -271,30 +278,17 @@ class FocusPage(ctk.CTkFrame):
             pady=(50,0)
         )
 
-        if self.alarm_is_ringing:
+        if (
+            getattr(self.app, "alarm_active", False)
+            and getattr(self.app, "alarm_source", None) == "focus"
+        ):
             self.show_fullscreen_alarm_button()
-
         self.update_fullscreen_task_info()
 
     def create_header(self):
         self.header = ctk.CTkFrame(self, fg_color="transparent")
         self.header.grid(row=0, column=0, padx=36, pady=(30, 12), sticky="ew")
         self.header.grid_columnconfigure(0, weight=1)
-
-        self.fullscreen_button = SecondaryButton(
-            self.header,
-            text="⛶",
-            command=self.toggle_fullscreen,
-            width=50
-        )
-
-        self.fullscreen_button.grid(
-            row=0,
-            column=1,
-            rowspan=2,
-            padx=(20, 0),
-            sticky="e"
-        )
 
         self.title_label = PageTitle(self.header, self.app.t("focus_timer"))
         self.title_label.grid(row=0, column=0, sticky="w")
@@ -380,13 +374,13 @@ class FocusPage(ctk.CTkFrame):
         )
         self.start_button.grid(row=0, column=0, padx=8)
 
-        self.pause_button = SecondaryButton(
+        """ self.pause_button = SecondaryButton(
             self.button_frame,
             text=self.app.t("pause"),
             command=self.pause_timer,
             width=130
         )
-        self.pause_button.grid(row=0, column=1, padx=8)
+        self.pause_button.grid(row=0, column=1, padx=8) """
 
         self.reset_button = SecondaryButton(
             self.button_frame,
@@ -790,7 +784,8 @@ class FocusPage(ctk.CTkFrame):
                     )
 
                 self.start_button.configure(
-                    state="disabled"
+                    state="disabled",
+                    command=self.start_timer
                 )
 
                 self.status_pill.configure(
@@ -900,7 +895,8 @@ class FocusPage(ctk.CTkFrame):
 
 
             self.start_button.configure(
-                state="normal"
+                state="normal",
+                command=self.start_timer
             )
 
 
@@ -919,95 +915,55 @@ class FocusPage(ctk.CTkFrame):
         self.refresh_queue_progress_visibility()
 
     def start_timer(self, manual_start=True):
-
-        # Kullanıcı butona basarak başlatıyorsa mevcut alarmı sustur.
-        # Auto-start sırasında alarm 10 saniye çalmaya devam eder.
-        if manual_start and self.alarm_is_ringing:
+        if (
+            manual_start
+            and getattr(self.app, "alarm_active", False)
+            and getattr(self.app, "alarm_source", None) == "focus"
+        ):
             self.dismiss_alarm()
 
-        # RESUME
-        if self.is_paused:
-            self.is_paused = False
-            self.away_seconds = 0
-            self.away_warning_label.configure(text="")
-            self.update_away_metric()
-            self.update_mode_ui()
-
-        # START
-        if not self.is_running:
-            self.is_running = True
-            self.is_waiting_for_next = False
-
-            self.start_button.configure(
-                text=self.app.t("pause")
-            )
-
-            if (
-                getattr(self, "fullscreen_start_button", None)
-                and self.fullscreen_start_button.winfo_exists()
-            ):
-                self.fullscreen_start_button.configure(
-                    text=self.app.t("pause"),
-                    command=self.pause_timer
-                )
-
-            self.count_down()
-
-    def pause_timer(self):
-
-        # RESUME
-        if self.is_paused:
-            self.is_paused = False
-            self.is_running = True
-
-            self.start_button.configure(
-                text=self.app.t("pause")
-            )
-
-            if (
-                getattr(self, "fullscreen_start_button", None)
-                and self.fullscreen_start_button.winfo_exists()
-            ):
-                self.fullscreen_start_button.configure(
-                    text=self.app.t("start"),
-                    command=self.start_timer
-                )
-
-            self.status_pill.configure(
-                text=self.app.t("focus_mode"),
-                fg_color=COLORS["primary_soft"],
-                text_color=COLORS["white"]
-            )
-
-            self.count_down()
-
+        # Aktif görev yoksa timer başlatma.
+        if not self.app.get_active_task():
             return
 
-        # PAUSE
+        # Zaten çalışıyorsa ikinci bir countdown zinciri oluşturma.
         if self.is_running:
-            self.is_running = False
-            self.is_paused = True
+            return
 
-            self.start_button.configure(
-                text=self.app.t("start")
-            )
+        self.is_paused = False
+        self.is_running = True
+        self.is_waiting_for_next = False
 
-            if getattr(self, "fullscreen_start_button", None):
-                self.fullscreen_start_button.configure(
-                    text=self.app.t("start"),
-                    command=self.start_timer
-                )
+        self.away_seconds = 0
+        self.away_warning_label.configure(text="")
+        self.update_away_metric()
+        self.update_mode_ui()
+        self._set_timer_controls_running()
 
-            self.status_pill.configure(
-                text=self.app.t("paused"),
-                fg_color="#92400E",
-                text_color="#FEF3C7"
-            )
+        self.count_down()
 
-            self.update_away_timer()
+    def pause_timer(self):
+        if not self.is_running:
+            return
+
+        self.is_running = False
+        self.is_paused = True
+
+        self._set_timer_controls_ready(
+            text_key="resume"
+        )
+
+        self.status_pill.configure(
+            text=self.app.t("paused"),
+            fg_color="#92400E",
+            text_color="#FEF3C7"
+        )
+
+        self.update_away_timer()
 
     def reset_timer(self):
         self.dismiss_alarm()
+
         self.is_running = False
         self.is_paused = False
         self.is_waiting_for_next = False
@@ -1016,6 +972,7 @@ class FocusPage(ctk.CTkFrame):
         self.current_mode = "focus"
 
         task = self.app.get_active_task()
+
         if task:
             self.focus_seconds = task.get("focus_minutes", 25) * 60
             self.break_seconds = task.get("break_minutes", 5) * 60
@@ -1025,20 +982,72 @@ class FocusPage(ctk.CTkFrame):
 
         self.remaining_seconds = self.focus_seconds
 
-        self.timer_label.configure(text=self.format_time(self.remaining_seconds))
-        self.away_warning_label.configure(text="")
-        self.start_button.configure(text=self.app.t("start"))
+        self.timer_label.configure(
+            text=self.format_time(self.remaining_seconds)
+        )
+
+        fullscreen_timer_label = getattr(
+            self,
+            "fullscreen_timer_label",
+            None
+        )
+
         if (
-            getattr(self, "fullscreen_start_button", None)
-            and self.fullscreen_start_button.winfo_exists()
+            fullscreen_timer_label is not None
+            and fullscreen_timer_label.winfo_exists()
         ):
-            self.fullscreen_start_button.configure(
-                text=self.app.t("start"),
+            fullscreen_timer_label.configure(
+                text=self.format_time(self.remaining_seconds)
+            )
+
+        self.away_warning_label.configure(text="")
+        self._set_timer_controls_ready(text_key="start")
+        self.update_mode_ui()
+        self.update_away_metric()
+        self.update_current_task_progress()
+
+    def _set_timer_controls_running(self):
+        self.start_button.configure(
+            text=self.app.t("pause"),
+            command=self.pause_timer
+        )
+
+        fullscreen_start_button = getattr(
+            self,
+            "fullscreen_start_button",
+            None
+        )
+
+        if (
+            fullscreen_start_button is not None
+            and fullscreen_start_button.winfo_exists()
+        ):
+            fullscreen_start_button.configure(
+                text=self.app.t("pause"),
+                command=self.pause_timer
+            )
+
+    def _set_timer_controls_ready(self, text_key="start"):
+        self.start_button.configure(
+            text=self.app.t(text_key),
+            command=self.start_timer
+        )
+
+        fullscreen_start_button = getattr(
+            self,
+            "fullscreen_start_button",
+            None
+        )
+
+        if (
+            fullscreen_start_button is not None
+            and fullscreen_start_button.winfo_exists()
+        ):
+            fullscreen_start_button.configure(
+                text=self.app.t(text_key),
                 command=self.start_timer
             )
 
-        self.update_mode_ui()
-        self.update_away_metric()
 
     def get_current_mode_total_seconds(self):
         if self.current_mode == "focus":
@@ -1048,22 +1057,60 @@ class FocusPage(ctk.CTkFrame):
     def switch_to_break_ready(self):
         self.current_mode = "break"
         self.remaining_seconds = self.break_seconds
-        self.update_current_task_progress()
         self.is_waiting_for_next = True
-        self.timer_label.configure(text=self.format_time(self.remaining_seconds))
-        self.away_warning_label.configure(text=self.app.t("break_ready"))
-        self.start_button.configure(text=self.app.t("start_break"))
+
+        self.timer_label.configure(
+            text=self.format_time(self.remaining_seconds)
+        )
+
+        fullscreen_timer_label = getattr(
+            self,
+            "fullscreen_timer_label",
+            None
+        )
+
+        if (
+            fullscreen_timer_label is not None
+            and fullscreen_timer_label.winfo_exists()
+        ):
+            fullscreen_timer_label.configure(
+                text=self.format_time(self.remaining_seconds)
+            )
+
+        self.away_warning_label.configure(
+            text=self.app.t("break_ready")
+        )
+
+        self._set_timer_controls_ready(
+            text_key="start_break"
+        )
+
         self.task_progress.set(0)
         self.task_progress_label.configure(text="0%")
-        
         self.update_mode_ui()
 
-        if self.fullscreen_status_label:
-            self.fullscreen_status_label.configure(
+        fullscreen_status_label = getattr(
+            self,
+            "fullscreen_status_label",
+            None
+        )
+
+        if (
+            fullscreen_status_label is not None
+            and fullscreen_status_label.winfo_exists()
+        ):
+            fullscreen_status_label.configure(
                 text=self.app.t("break_mode")
             )
 
-        auto_start_break = self.app.app_data.get("settings", {}).get("auto_start_break", False)
+        auto_start_break = self.app.app_data.get(
+            "settings",
+            {}
+        ).get(
+            "auto_start_break",
+            False
+        )
+
         if auto_start_break:
             self.start_timer(manual_start=False)
 
@@ -1071,22 +1118,60 @@ class FocusPage(ctk.CTkFrame):
         self.current_mode = "focus"
         self.remaining_seconds = self.focus_seconds
         self.is_waiting_for_next = True
-        self.timer_label.configure(text=self.format_time(self.remaining_seconds))
-        self.away_warning_label.configure(text=self.app.t("focus_ready"))
-        self.start_button.configure(text=self.app.t("start_focus"))
+
+        self.timer_label.configure(
+            text=self.format_time(self.remaining_seconds)
+        )
+
+        fullscreen_timer_label = getattr(
+            self,
+            "fullscreen_timer_label",
+            None
+        )
+
+        if (
+            fullscreen_timer_label is not None
+            and fullscreen_timer_label.winfo_exists()
+        ):
+            fullscreen_timer_label.configure(
+                text=self.format_time(self.remaining_seconds)
+            )
+
+        self.away_warning_label.configure(
+            text=self.app.t("focus_ready")
+        )
+
+        self._set_timer_controls_ready(
+            text_key="start_focus"
+        )
 
         self.task_progress.set(0)
         self.task_progress_label.configure(text="0%")
         self.update_current_task_progress()
-
         self.update_mode_ui()
 
-        if self.fullscreen_status_label:
-            self.fullscreen_status_label.configure(
+        fullscreen_status_label = getattr(
+            self,
+            "fullscreen_status_label",
+            None
+        )
+
+        if (
+            fullscreen_status_label is not None
+            and fullscreen_status_label.winfo_exists()
+        ):
+            fullscreen_status_label.configure(
                 text=self.app.t("focus_mode")
             )
 
-        auto_start_focus = self.app.app_data.get("settings", {}).get("auto_start_focus", False)
+        auto_start_focus = self.app.app_data.get(
+            "settings",
+            {}
+        ).get(
+            "auto_start_focus",
+            False
+        )
+
         if auto_start_focus:
             self.start_timer(manual_start=False)
 
@@ -1105,106 +1190,159 @@ class FocusPage(ctk.CTkFrame):
             )
 
     def count_down(self):
-        if self.is_running and self.remaining_seconds > 0:
+        if not self.is_running:
+            return
 
-            time_text = self.format_time(self.remaining_seconds)
+        if self.remaining_seconds > 0:
+            time_text = self.format_time(
+                self.remaining_seconds
+            )
 
             self.timer_label.configure(
                 text=time_text
             )
 
-            if self.fullscreen_timer_label:
-                self.fullscreen_timer_label.configure(
+            fullscreen_timer_label = getattr(
+                self,
+                "fullscreen_timer_label",
+                None
+            )
+
+            if (
+                fullscreen_timer_label is not None
+                and fullscreen_timer_label.winfo_exists()
+            ):
+                fullscreen_timer_label.configure(
                     text=time_text
                 )
 
             self.update_current_task_progress()
-
             self.remaining_seconds -= 1
-
             self.after(1000, self.count_down)
+            return
 
-        elif self.is_running and self.remaining_seconds <= 0:
-            self.update_current_task_progress()
+        self.update_current_task_progress()
+        self.is_running = False
+        self.is_paused = False
+
+        self.timer_label.configure(
+            text="00:00"
+        )
+
+        fullscreen_timer_label = getattr(
+            self,
+            "fullscreen_timer_label",
+            None
+        )
+
+        if (
+            fullscreen_timer_label is not None
+            and fullscreen_timer_label.winfo_exists()
+        ):
+            fullscreen_timer_label.configure(
+                text="00:00"
+            )
+
+        self.start_alarm()
+
+        if self.current_mode == "focus":
+            self.away_warning_label.configure(
+                text=self.app.t("focus_completed")
+            )
+
+            self.update_queue_progress()
+
+            self.status_pill.configure(
+                text=self.app.t("completed_status"),
+                fg_color="#065F46",
+                text_color="#D1FAE5"
+            )
+
+            active_task = self.app.get_active_task()
+            active_task_id = (
+                active_task.get("id")
+                if active_task
+                else None
+            )
+
+            self.app.app_data["total_focus_seconds_today"] = (
+                self.app.app_data.get(
+                    "total_focus_seconds_today",
+                    0
+                )
+                + self.focus_seconds
+            )
+
+            self.log_focus_session()
+
+            if self.app.app_data.get(
+                "queue_mode_active",
+                False
+            ):
+                self.app.mark_task_completed(
+                    active_task_id
+                )
+
+            self.app.save_app_data()
+            self.update_total_focus_label()
+
+            if hasattr(
+                self.app,
+                "statistics_page"
+            ):
+                self.app.statistics_page.refresh_stats()
+
+            self.session_away_seconds = 0
+            self.away_seconds = 0
+            self.update_away_metric()
+            self.switch_to_break_ready()
+            return
+
+        self.away_warning_label.configure(
+            text=self.app.t("break_completed")
+        )
+
+        if self.app.app_data.get(
+            "queue_mode_active",
+            False
+        ):
+            moved_to_next_task = (
+                self.app.move_to_next_queue_task()
+            )
+
+            if moved_to_next_task:
+                self.switch_to_focus_ready()
+                return
+
             self.is_running = False
-            self.start_alarm()
-            self.timer_label.configure(text="00:00")
-            if self.fullscreen_timer_label:
-                self.fullscreen_timer_label.configure(
-                    text="00:00"
-                )
+            self.is_paused = False
+            self.is_waiting_for_next = False
+            self.current_mode = "focus"
 
-            if self.current_mode == "focus":
-                self.away_warning_label.configure(text=self.app.t("focus_completed"))
+            self.app.app_data["active_task_id"] = None
+            self.app.app_data["queue_mode_active"] = False
+            self.app.app_data["queue_task_ids"] = []
+            self.app.save_app_data()
 
-                self.update_queue_progress()
+            self.load_active_task()
+            self.update_queue_progress()
+            self._set_timer_controls_ready(
+                text_key="start"
+            )
 
-                self.status_pill.configure(
-                    text=self.app.t("completed_status"),
-                    fg_color="#065F46",
-                    text_color="#D1FAE5"
-                )
+            self.status_pill.configure(
+                text=self.app.t("focus_mode"),
+                fg_color=COLORS["primary_soft"],
+                text_color=COLORS["white"]
+            )
 
-                active_task = self.app.get_active_task()
-                active_task_id = active_task.get("id") if active_task else None
+            self.away_warning_label.configure(
+                text=self.app.t("queue_completed")
+            )
+            return
 
-                self.app.app_data["total_focus_seconds_today"] = (
-                    self.app.app_data.get("total_focus_seconds_today", 0)
-                    + self.focus_seconds
-                )
+        self.switch_to_focus_ready()
 
-                self.log_focus_session()
-
-                if self.app.app_data.get("queue_mode_active", False):
-                    self.app.mark_task_completed(active_task_id)
-
-                self.app.save_app_data()
-                self.update_total_focus_label()
-
-                if hasattr(self.app, "statistics_page"):
-                    self.app.statistics_page.refresh_stats()
-
-                self.session_away_seconds = 0
-                self.away_seconds = 0
-                self.update_away_metric()
-
-                self.switch_to_break_ready()
-
-            else:
-                self.away_warning_label.configure(text=self.app.t("break_completed"))
-
-                if self.app.app_data.get("queue_mode_active", False):
-                    moved_to_next_task = self.app.move_to_next_queue_task()
-
-                    if moved_to_next_task:
-                        self.away_warning_label.configure(text=self.app.t("focus_ready"))
-                        self.switch_to_focus_ready()
-                    else:
-                        self.is_running = False
-                        self.is_paused = False
-                        self.is_waiting_for_next = False
-                        self.current_mode = "focus"
-
-                        self.app.app_data["active_task_id"] = None
-                        self.app.app_data["queue_mode_active"] = False
-                        self.app.app_data["queue_task_ids"] = []
-                        self.app.save_app_data()
-
-                        self.load_active_task()
-                        self.update_queue_progress()
-
-                        self.timer_label.configure(text=self.format_time(self.remaining_seconds))
-                        self.start_button.configure(text=self.app.t("start"))
-                        self.status_pill.configure(
-                            text=self.app.t("focus_mode"),
-                            fg_color=COLORS["primary_soft"],
-                            text_color=COLORS["white"]
-                        )
-                        self.away_warning_label.configure(text=self.app.t("queue_completed"))
-                else:
-                    self.switch_to_focus_ready()
-
-                    
     def update_away_timer(self):
         if self.is_paused:
             self.away_seconds += 1
@@ -1484,56 +1622,12 @@ class FocusPage(ctk.CTkFrame):
         self.refresh_queue_progress_visibility()
 
     def start_alarm(self):
-
-        settings = self.app.app_data.get("settings", {})
-
-        if not settings.get("sound_enabled", True):
-            return
-
-        self.dismiss_alarm()
-
-        self.alarm_is_ringing = True
-
-        if hasattr(self.app, "play_alarm"):
-            self.app.play_alarm()
-
-        self.show_alarm_controls()
-
-        self.alarm_after_id = self.after(
-            10000,
-            self.auto_stop_alarm
-        )
-
-
-    def auto_stop_alarm(self):
-
-        self.alarm_after_id = None
-
-        if self.alarm_is_ringing:
-            self.dismiss_alarm()
-
+        self.app.play_alarm("focus")
 
     def dismiss_alarm(self):
-
-        if self.alarm_after_id is not None:
-            try:
-                self.after_cancel(self.alarm_after_id)
-            except Exception:
-                pass
-
-            self.alarm_after_id = None
-
-        if hasattr(self.app, "stop_alarm"):
-            self.app.stop_alarm()
-
-        self.alarm_is_ringing = False
-        self.hide_alarm_controls()
-
+        self.app.stop_alarm()
 
     def show_alarm_controls(self):
-        if not self.alarm_is_ringing:
-            return
-
         if self.fullscreen_mode:
             self.hide_normal_alarm_button()
             self.show_fullscreen_alarm_button()
@@ -1541,12 +1635,10 @@ class FocusPage(ctk.CTkFrame):
             self.hide_fullscreen_alarm_button()
             self.show_normal_alarm_button()
 
-
     def hide_alarm_controls(self):
 
         self.hide_normal_alarm_button()
         self.hide_fullscreen_alarm_button()
-
 
     def show_normal_alarm_button(self):
 
@@ -1562,7 +1654,6 @@ class FocusPage(ctk.CTkFrame):
             )
             self.stop_alarm_button.lift()
 
-
     def hide_normal_alarm_button(self):
 
         if (
@@ -1570,7 +1661,6 @@ class FocusPage(ctk.CTkFrame):
             and self.stop_alarm_button.winfo_exists()
         ):
             self.stop_alarm_button.grid_remove()
-
 
     def show_fullscreen_alarm_button(self):
 
@@ -1606,7 +1696,6 @@ class FocusPage(ctk.CTkFrame):
         )
 
 
-
     def hide_fullscreen_alarm_button(self):
 
         if (
@@ -1614,6 +1703,3 @@ class FocusPage(ctk.CTkFrame):
             and self.fullscreen_stop_alarm_button.winfo_exists()
         ):
             self.fullscreen_stop_alarm_button.pack_forget()
-
-    def stop_alarm_on_page_leave(self):
-        self.dismiss_alarm()

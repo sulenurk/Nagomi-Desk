@@ -87,8 +87,6 @@ class PomodoroPage(ctk.CTkFrame):
         
         self.stop_alarm_button = None
         self.fullscreen_stop_alarm_button = None
-        self.alarm_is_ringing = False
-        self.alarm_after_id = None
 
         self.previous_geometry = None
         
@@ -126,41 +124,9 @@ class PomodoroPage(ctk.CTkFrame):
         self.update_cycle_labels()
 
     def start_alarm(self):
-        settings = self.app.app_data.get("settings", {})
-        sound_enabled = settings.get("sound_enabled", True)
-
-        if not sound_enabled:
-            self.dismiss_alarm()
-            return
-
-        # Önce önceki alarm/timeout kalıntılarını temizle.
-        self.dismiss_alarm()
-
-        self.alarm_is_ringing = True
-
-        if hasattr(self.app, "play_alarm"):
-            self.app.play_alarm()
-
-        self.show_alarm_controls()
-
-        # Kullanıcı susturmazsa 10 saniye sonra otomatik kapat.
-        self.alarm_after_id = self.after(
-            10000,
-            self.auto_stop_alarm
-        )
-
-
-    def auto_stop_alarm(self):
-        self.alarm_after_id = None
-
-        if self.alarm_is_ringing:
-            self.dismiss_alarm()
-
+        self.app.play_alarm("pomodoro")
 
     def show_alarm_controls(self):
-        if not self.alarm_is_ringing:
-            return
-
         if self.fullscreen_mode and self.fullscreen_frame is not None:
             self.hide_normal_alarm_button()
             self.show_fullscreen_alarm_button()
@@ -239,23 +205,7 @@ class PomodoroPage(ctk.CTkFrame):
 
 
     def dismiss_alarm(self):
-        if self.alarm_after_id is not None:
-            try:
-                self.after_cancel(self.alarm_after_id)
-            except Exception:
-                pass
-
-            self.alarm_after_id = None
-
-        if hasattr(self.app, "stop_alarm"):
-            self.app.stop_alarm()
-
-        self.alarm_is_ringing = False
-        self.hide_alarm_controls()
-
-
-    def stop_alarm_on_page_leave(self):
-        self.dismiss_alarm()
+        self.app.stop_alarm()
             
     def enter_fullscreen(self):
         if self.fullscreen_mode:
@@ -285,7 +235,10 @@ class PomodoroPage(ctk.CTkFrame):
             lambda event: self.exit_fullscreen()
         )
 
-        if self.alarm_is_ringing:
+        if (
+            getattr(self.app, "alarm_active", False)
+            and getattr(self.app, "alarm_source", None) == "pomodoro"
+        ):
             self.show_fullscreen_alarm_button()
 
     def exit_fullscreen(self):
@@ -331,7 +284,10 @@ class PomodoroPage(ctk.CTkFrame):
         self.update_mode_ui()
         self.update_cycle_labels()
 
-        if self.alarm_is_ringing:
+        if (
+            getattr(self.app, "alarm_active", False)
+            and getattr(self.app, "alarm_source", None) == "pomodoro"
+        ):
             self.show_normal_alarm_button()
 
     def create_fullscreen_view(self):
@@ -504,7 +460,10 @@ class PomodoroPage(ctk.CTkFrame):
             sticky="n"
         )
 
-        if self.alarm_is_ringing:
+        if (
+            getattr(self.app, "alarm_active", False)
+            and getattr(self.app, "alarm_source", None) == "pomodoro"
+        ):
             self.show_fullscreen_alarm_button()
 
     def update_timer_label(self):
@@ -829,7 +788,7 @@ class PomodoroPage(ctk.CTkFrame):
             sticky="w"
         )
 
-        """ self.save_status_label = ctk.CTkLabel(
+        self.save_status_label = ctk.CTkLabel(
             self.settings_card,
             text=" ",
             text_color=COLORS["muted"],
@@ -845,7 +804,7 @@ class PomodoroPage(ctk.CTkFrame):
             padx=20,
             pady=(0, 10),
             sticky="ew"
-        ) """
+        )
 
         self.focus_label = self.create_form_label(self.settings_card, "focus_duration", row=2)
         self.focus_entry = AppEntry(self.settings_card, width=90)
@@ -1134,39 +1093,23 @@ class PomodoroPage(ctk.CTkFrame):
         current_focus_number = self.completed_focus_count + 1
 
         if regular_focus_count > 0:
-            current_focus_number = min(current_focus_number, regular_focus_count)
+            current_focus_number = min(
+                current_focus_number,
+                regular_focus_count
+            )
 
         self.summary_title.configure(
-            text=f"{self.app.t('current_cycle')} {current_focus_number} / {total_text}"
+            text=f"{self.app.t('current_cycle')} "
+                f"{current_focus_number} / {total_text}"
         )
 
-        """ self.cycle_label.configure(
+        self.cycle_label.configure(
             text=f"#{current_focus_number} / {total_text}"
         )
 
-        visible_dot_count = min(
-            regular_focus_count if regular_focus_count > 0 else len(self.cycle_dots),
-            len(self.cycle_dots)
-        )
-
-        for index, dot in enumerate(self.cycle_dots):
-            if regular_focus_count > 0 and index >= visible_dot_count:
-                dot.configure(text_color=COLORS["surface"])
-                continue
-
-            if regular_focus_count == 0:
-                active_index = self.completed_focus_count % len(self.cycle_dots)
-                dot.configure(
-                    text_color=COLORS["primary"] if index == active_index else COLORS["muted"]
-                )
-            else:
-                dot.configure(
-                    text_color=COLORS["primary"] if index < self.completed_focus_count else COLORS["muted"]
-                ) """
-
         if self.fullscreen_cycle_label:
             self.fullscreen_cycle_label.configure(
-                text=self.cycle_label.cget("text")
+                text=f"#{current_focus_number} / {total_text}"
             )
 
     def update_mode_ui(self):
@@ -1212,7 +1155,13 @@ class PomodoroPage(ctk.CTkFrame):
         self.update_progress_ring()
 
     def start_timer(self, manual_start=True):
-        if manual_start and self.alarm_is_ringing:
+        # Yalnızca kullanıcı manuel başlatırsa mevcut alarmı kapat.
+        # Auto-start alarmı kapatmaz; alarm 10 saniye çalmaya devam eder.
+        if (
+            manual_start
+            and getattr(self.app, "alarm_active", False)
+            and getattr(self.app, "alarm_source", None) == "pomodoro"
+        ):
             self.dismiss_alarm()
 
         if self.is_running:
@@ -1328,7 +1277,8 @@ class PomodoroPage(ctk.CTkFrame):
 
         # normal ekran
         self.start_button.configure(
-            text="▶"
+            text="▶",
+            command=self.start_timer
         )
 
 
@@ -1349,12 +1299,6 @@ class PomodoroPage(ctk.CTkFrame):
         if getattr(self, "fullscreen_timer_label", None):
             self.fullscreen_timer_label.configure(
                 text=self.format_time(self.remaining_seconds)
-            )
-
-
-        if getattr(self, "fullscreen_cycle_label", None):
-            self.fullscreen_cycle_label.configure(
-                text=f"#{self.completed_focus_count} / {self.long_break_after}"
             )
 
     def complete_pomodoro_cycle(self):

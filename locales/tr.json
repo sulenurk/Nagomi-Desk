@@ -13,7 +13,7 @@
   "add_task": "Görev Ekle",
   "add_new_task": "Yeni Görev Ekle",
   "task_name": "Görev adı",
-  "subject": "Ders",
+  "subject": "Görev",
   "focus_minutes": "Odak dk",
   "break_minutes": "Mola dk",
   "priority": "Öncelik",
@@ -179,11 +179,11 @@
 
   "one_session_at_a_time": "Her seferinde tek oturum",
 
-  "subjects": "Dersler",
-  "subjects_subtitle": "Çalışma konularını ve derslerini yönet.",
-  "add_subject": "Ders Ekle",
-  "subject_name_placeholder": "Ders adı yaz...",
-  "subject_list": "Ders Listesi",
+  "subjects": "Görevler",
+  "subjects_subtitle": "Konuları ve görevleri yönet.",
+  "add_subject": "Görev Ekle",
+  "subject_name_placeholder": "Görev adı yaz...",
+  "subject_list": "Görev Listesi",
   "subject_color": "Renk",
   "color_palette": "Renk paleti",
   "color_palette_desc": "FocusFlow için genel renk stilini seç. Varsayılan renk mor tonlarıdır.",
@@ -191,16 +191,16 @@
   "default_subject": "Varsayılan",
   "delete": "Sil",
 
-  "weekly_subject_distribution": "Haftalık Ders Dağılımı",
+  "weekly_subject_distribution": "Haftalık Görev Dağılımı",
   "weekly_total": "Haftalık toplam",
-  "no_subject_stats": "Bu hafta henüz ders bazlı çalışma kaydı yok.",
+  "no_subject_stats": "Bu hafta henüz görev bazlı çalışma kaydı yok.",
 
   "weekly_overview": "Haftalık Çalışma Trendi",
   "pending_label_short": "bekleyen",
 
-  "subject_filter": "Ders Filtresi",
-  "subject_filter_subtitle": "İstatistikleri belirli bir derse göre filtrele.",
-  "all_subjects": "Tüm Dersler",
+  "subject_filter": "Görev Filtresi",
+  "subject_filter_subtitle": "İstatistikleri belirli bir göreve göre filtrele.",
+  "all_subjects": "Tüm Görevler",
 
   "week_start_day": "Hafta başlangıcı",
   "week_start_monday": "Pazartesi",
@@ -247,7 +247,7 @@
 
   "reset_application": "Uygulamayı Sıfırla",
   "confirm_reset_statistics": "İstatistikleri sıfırlamak için tekrar bas.",
-  "confirm_reset_application": "Tüm uygulamayı sıfırlamak için tekrar bas. Bu işlem görevleri, dersleri ve istatistikleri siler.",
+  "confirm_reset_application": "Tüm uygulamayı sıfırlamak için tekrar bas. Bu işlem görevleri, görevleri ve istatistikleri siler.",
   "application_reset_done": "Uygulama varsayılan ayarlara sıfırlandı.",
 
   "import_data": "Veriyi İçe Aktar",
@@ -256,5 +256,16 @@
   "select_backup_file": "FocusFlow yedek dosyasını seç",
 
   "confirm_import_data": "Bu işlem mevcut verileri değiştirecek. İçe aktarmak için tekrar bas.",
-  "stop_alarm": "Alarmı Sustur"
+  "stop_alarm": "Alarmı Sustur",
+
+  "alarm_sound": "Alarm Sesi",
+  "alarm_sound_desc": "Bildirimler için ses seçin.",
+
+  "alarm_birdy": "Birdy",
+  "alarm_buzz": "Buzz",
+  "alarm_analog": "Analog",
+  "alarm_beep": "Beep",
+  "alarm_galaxy": "Galaxy",
+  "alarm_dance": "Dans",
+  "selected": "seçildi."
 }

@@ -1,12 +1,10 @@
 import customtkinter as ctk
 import json
-import pygame
-import os
 from datetime import datetime
 from tkinter import filedialog
 from ui.theme import COLORS, THEME_PALETTES
 from ui.components import AppCard, PageTitle, PageSubtitle, PrimaryButton, AppEntry
-
+from core.alarm_sounds import ALARM_SOUNDS
 
 class SettingsPage(ctk.CTkFrame):
     def __init__(self, parent, app):
@@ -54,22 +52,33 @@ class SettingsPage(ctk.CTkFrame):
         self.subtitle_label.grid(row=1, column=0, pady=(6, 0), sticky="w")
 
     def preview_and_save_alarm(self, selected_name):
-        # 1. Ses Çalma (Önizleme)
-        pygame.mixer.music.stop()
-        sound_path = self.alarm_sounds.get(selected_name)
-        
-        if sound_path and os.path.exists(sound_path):
-            pygame.mixer.music.load(sound_path)
-            pygame.mixer.music.play()
-            # 4 saniye sonra sesi durdur
-            self.after(4000, pygame.mixer.music.stop)
-        
-        # 2. Kaydetme
+        # Menüde görünen çevrilmiş isimden sabit alarm ID'sini bul.
+        alarm_id = self.alarm_display_names.get(selected_name)
+
+        if not alarm_id:
+            print(f"Alarm ID bulunamadı: {selected_name}")
+            return
+
+        # Sabit alarm ID'sini kaydet.
         settings = self.get_settings()
-        settings["selected_alarm"] = selected_name
+        settings["selected_alarm"] = alarm_id
         self.app.save_app_data()
-        self.status_label.configure(text=f"{selected_name} seçildi.", text_color=COLORS["green"])
-        self.after(2000, lambda: self.status_label.configure(text=""))
+
+        # Önizleme sesini merkezi alarm sistemi çalsın.
+        self.app.preview_alarm(
+            alarm_id=alarm_id,
+            duration_ms=4000
+        )
+
+        self.status_label.configure(
+            text=f"{selected_name} {self.app.t('selected')}",
+            text_color=COLORS["green"]
+        )
+
+        self.after(
+            2000,
+            lambda: self.status_label.configure(text="")
+        )
 
     def import_app_data(self):
         self.pending_reset_action = None
@@ -216,24 +225,8 @@ class SettingsPage(ctk.CTkFrame):
             "sunday": self.app.t("week_start_sunday")
 }
 
-        self.auto_break_frame = self.create_setting_row(
-            row=0,
-            title_key="auto_start_break",
-            description_key="auto_start_break_desc"
-        )
-
-        self.auto_break_switch = ctk.CTkSwitch(
-            self.auto_break_frame,
-            text="",
-            progress_color=COLORS["primary"],
-            button_color=COLORS["text"],
-            button_hover_color=COLORS["soft"],
-            command=self.save_settings
-        )
-        self.auto_break_switch.grid(row=0, column=1, rowspan=2, padx=20, pady=18)
-
         self.auto_focus_frame = self.create_setting_row(
-            row=1,
+            row=0,
             title_key="auto_start_focus",
             description_key="auto_start_focus_desc"
         )
@@ -248,6 +241,22 @@ class SettingsPage(ctk.CTkFrame):
         )
         self.auto_focus_switch.grid(row=0, column=1, rowspan=2, padx=20, pady=18)
 
+        self.auto_break_frame = self.create_setting_row(
+            row=1,
+            title_key="auto_start_break",
+            description_key="auto_start_break_desc"
+        )
+
+        self.auto_break_switch = ctk.CTkSwitch(
+            self.auto_break_frame,
+            text="",
+            progress_color=COLORS["primary"],
+            button_color=COLORS["text"],
+            button_hover_color=COLORS["soft"],
+            command=self.save_settings
+        )
+        self.auto_break_switch.grid(row=0, column=1, rowspan=2, padx=20, pady=18)
+        
         self.sound_frame = self.create_setting_row(
             row=2,
             title_key="sound_notification",
@@ -264,13 +273,9 @@ class SettingsPage(ctk.CTkFrame):
         )
         self.sound_switch.grid(row=0, column=1, rowspan=2, padx=20, pady=18)
 
-        self.alarm_sounds = {
-            "Birdy": "sounds/alarm1.mp3",
-            "Buzz": "sounds/alarm2.mp3",
-            "Classic": "sounds/alarm3.mp3",
-            "Digital": "sounds/alarm4.mp3",
-            "Zen": "sounds/alarm5.mp3",
-            "Chime": "sounds/alarm6.mp3"
+        self.alarm_display_names = {
+            self.app.t(data["name_key"]): alarm_id
+            for alarm_id, data in ALARM_SOUNDS.items()
         }
 
         # Alarm Seçim Frame'i
@@ -278,14 +283,14 @@ class SettingsPage(ctk.CTkFrame):
         self.alarm_frame.grid(row=3, column=0, padx=20, pady=(8, 8), sticky="ew")
         self.alarm_frame.grid_columnconfigure(0, weight=1)
 
-        self.alarm_label = ctk.CTkLabel(self.alarm_frame, text="Alarm Sesi", text_color=COLORS["text"], font=ctk.CTkFont(size=15, weight="bold"))
+        self.alarm_label = ctk.CTkLabel(self.alarm_frame, text=self.app.t("alarm_sound"), text_color=COLORS["text"], font=ctk.CTkFont(size=15, weight="bold"))
         self.alarm_label.grid(row=0, column=0, padx=18, pady=(16, 2), sticky="w")
 
-        self.alarm_desc = ctk.CTkLabel(self.alarm_frame, text="Bildirimler için ses seçin", text_color=COLORS["muted"], font=ctk.CTkFont(size=13))
+        self.alarm_desc = ctk.CTkLabel(self.alarm_frame, text=self.app.t("alarm_sound_desc"), text_color=COLORS["muted"], font=ctk.CTkFont(size=13))
         self.alarm_desc.grid(row=1, column=0, padx=18, pady=(0, 16), sticky="w")
 
         self.alarm_menu = ctk.CTkOptionMenu(
-            self.alarm_frame, values=list(self.alarm_sounds.keys()), width=160, height=40,
+            self.alarm_frame, values=list(self.alarm_display_names.keys()), width=160, height=40,
             fg_color=COLORS["primary"], button_color=COLORS["primary"],
             button_hover_color=COLORS["primary_hover"], text_color=COLORS["white"],
             dropdown_fg_color=COLORS["surface"], dropdown_text_color=COLORS["text"], 
@@ -293,8 +298,54 @@ class SettingsPage(ctk.CTkFrame):
         )
         self.alarm_menu.grid(row=0, column=1, rowspan=2, padx=20, pady=18, sticky="e")
 
-        self.queue_progress_frame = self.create_setting_row(
+        self.goal_frame = ctk.CTkFrame(
+            self.settings_card,
+            fg_color=COLORS["surface"],
+            corner_radius=18
+        )
+        self.goal_frame.grid(
             row=4,
+            column=0,
+            padx=20,
+            pady=(8, 8),
+            sticky="ew"
+        )
+        self.goal_frame.grid_columnconfigure(0, weight=1)
+        self.goal_frame.grid_columnconfigure(1, weight=0)
+        self.goal_frame.grid_columnconfigure(2, weight=0)
+
+        self.goal_title = ctk.CTkLabel(
+            self.goal_frame,
+            text=self.app.t("daily_focus_goal"),
+            text_color=COLORS["text"],
+            font=ctk.CTkFont(size=15, weight="bold")
+        )
+        self.goal_title.grid(row=0, column=0, padx=18, pady=(16, 2), sticky="w")
+
+        self.goal_desc = ctk.CTkLabel(
+            self.goal_frame,
+            text=self.app.t("daily_focus_goal_desc"),
+            text_color=COLORS["muted"],
+            font=ctk.CTkFont(size=13)
+        )
+        self.goal_desc.grid(row=1, column=0, padx=18, pady=(0, 16), sticky="w")
+
+        self.goal_entry = AppEntry(
+            self.goal_frame,
+            placeholder_text=self.app.t("minutes_short"),
+            width=90
+        )
+        self.goal_entry.grid(row=0, column=1, rowspan=2, padx=(12, 8), pady=18, sticky="e")
+        self.save_button = PrimaryButton(
+            self.goal_frame,
+            text=self.app.t("save"),
+            command=self.save_settings,
+            width=90
+        )
+        self.save_button.grid(row=0, column=2, rowspan=2, padx=(0, 18), pady=18, sticky="e")
+
+        self.queue_progress_frame = self.create_setting_row(
+            row=5,
             title_key="show_queue_progress",
             description_key="show_queue_progress_desc"
         )
@@ -324,34 +375,6 @@ class SettingsPage(ctk.CTkFrame):
             command=self.save_settings
         )
         self.cumulative_away_switch.grid(row=0, column=1, rowspan=2, padx=20, pady=18)
-
-        self.palette_frame = ctk.CTkFrame(
-            self.settings_card,
-            fg_color=COLORS["surface"],
-            corner_radius=18
-        )
-        self.palette_frame.grid(row=6, column=0, padx=20, pady=(8, 8), sticky="ew")
-        self.palette_frame.grid_columnconfigure(0, weight=1)
-
-        self.palette_title = ctk.CTkLabel(
-            self.palette_frame, text=self.app.t("color_palette"), text_color=COLORS["text"],
-            font=ctk.CTkFont(size=15, weight="bold")
-        )
-        self.palette_title.grid(row=0, column=0, padx=18, pady=(16, 2), sticky="w")
-        self.palette_desc = ctk.CTkLabel(
-            self.palette_frame, text=self.app.t("color_palette_desc"), text_color=COLORS["muted"],
-            font=ctk.CTkFont(size=13), wraplength=520, justify="left"
-        )
-        self.palette_desc.grid(row=1, column=0, padx=18, pady=(0, 16), sticky="w")
-        self.palette_values = {data["name"]: key for key, data in THEME_PALETTES.items()}
-        self.palette_menu = ctk.CTkOptionMenu(
-            self.palette_frame, values=list(self.palette_values), width=160, height=40,
-            fg_color=COLORS["primary"], button_color=COLORS["primary"],
-            button_hover_color=COLORS["primary_hover"], text_color=COLORS["white"],
-            dropdown_fg_color=COLORS["surface"], dropdown_text_color=COLORS["text"],
-            command=self.change_color_palette
-        )
-        self.palette_menu.grid(row=0, column=1, rowspan=2, padx=20, pady=18, sticky="e")
 
         self.week_start_frame = ctk.CTkFrame(
             self.settings_card,
@@ -392,47 +415,34 @@ class SettingsPage(ctk.CTkFrame):
             command=self.change_week_start_day
         )
         self.week_start_menu.grid(row=0, column=1, rowspan=2, padx=20, pady=18, sticky="e")
-
-        self.goal_frame = ctk.CTkFrame(
+        
+        self.palette_frame = ctk.CTkFrame(
             self.settings_card,
             fg_color=COLORS["surface"],
             corner_radius=18
         )
-        self.goal_frame.grid(row=8, column=0, padx=20, pady=(8, 8), sticky="ew")
-        self.goal_frame.grid_columnconfigure(0, weight=1)
-        self.goal_frame.grid_columnconfigure(1, weight=0)
-        self.goal_frame.grid_columnconfigure(2, weight=0)
+        self.palette_frame.grid(row=8, column=0, padx=20, pady=(8, 8), sticky="ew")
+        self.palette_frame.grid_columnconfigure(0, weight=1)
 
-        self.goal_title = ctk.CTkLabel(
-            self.goal_frame,
-            text=self.app.t("daily_focus_goal"),
-            text_color=COLORS["text"],
+        self.palette_title = ctk.CTkLabel(
+            self.palette_frame, text=self.app.t("color_palette"), text_color=COLORS["text"],
             font=ctk.CTkFont(size=15, weight="bold")
         )
-        self.goal_title.grid(row=0, column=0, padx=18, pady=(16, 2), sticky="w")
-
-        self.goal_desc = ctk.CTkLabel(
-            self.goal_frame,
-            text=self.app.t("daily_focus_goal_desc"),
-            text_color=COLORS["muted"],
-            font=ctk.CTkFont(size=13)
+        self.palette_title.grid(row=0, column=0, padx=18, pady=(16, 2), sticky="w")
+        self.palette_desc = ctk.CTkLabel(
+            self.palette_frame, text=self.app.t("color_palette_desc"), text_color=COLORS["muted"],
+            font=ctk.CTkFont(size=13), wraplength=520, justify="left"
         )
-        self.goal_desc.grid(row=1, column=0, padx=18, pady=(0, 16), sticky="w")
-
-        self.goal_entry = AppEntry(
-            self.goal_frame,
-            placeholder_text=self.app.t("minutes_short"),
-            width=90
+        self.palette_desc.grid(row=1, column=0, padx=18, pady=(0, 16), sticky="w")
+        self.palette_values = {data["name"]: key for key, data in THEME_PALETTES.items()}
+        self.palette_menu = ctk.CTkOptionMenu(
+            self.palette_frame, values=list(self.palette_values), width=160, height=40,
+            fg_color=COLORS["primary"], button_color=COLORS["primary"],
+            button_hover_color=COLORS["primary_hover"], text_color=COLORS["white"],
+            dropdown_fg_color=COLORS["surface"], dropdown_text_color=COLORS["text"],
+            command=self.change_color_palette
         )
-        self.goal_entry.grid(row=0, column=1, rowspan=2, padx=(12, 8), pady=18, sticky="e")
-
-        self.save_button = PrimaryButton(
-            self.goal_frame,
-            text=self.app.t("save"),
-            command=self.save_settings,
-            width=90
-        )
-        self.save_button.grid(row=0, column=2, rowspan=2, padx=(0, 18), pady=18, sticky="e")
+        self.palette_menu.grid(row=0, column=1, rowspan=2, padx=20, pady=18, sticky="e")
 
         self.data_frame = ctk.CTkFrame(
             self.settings_card,

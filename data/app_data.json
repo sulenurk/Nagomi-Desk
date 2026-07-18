@@ -1,15 +1,17 @@
 {
   "language": "en",
-  "active_task_id": "task_af201d2b",
+  "active_task_id": "task_78028cc0",
   "queue_mode_active": true,
   "queue_task_ids": [
-    "task_af201d2b"
+    "task_78028cc0",
+    "task_81036aad",
+    "task_7b0853dc"
   ],
   "last_queue_state": null,
   "settings": {
-    "auto_start_break": true,
-    "auto_start_focus": true,
-    "sound_enabled": false,
+    "auto_start_break": false,
+    "auto_start_focus": false,
+    "sound_enabled": true,
     "daily_focus_goal_minutes": 300,
     "regular_focus_minutes": 1,
     "regular_short_break_minutes": 1,
@@ -18,9 +20,10 @@
     "regular_focus_count": 4,
     "show_queue_progress": true,
     "show_cumulative_away_time": true,
-    "week_start_day": "sunday",
+    "week_start_day": "monday",
     "appearance_mode": "dark",
-    "color_palette": "purple"
+    "color_palette": "purple",
+    "selected_alarm": "birdy"
   },
   "subjects": [
     {
@@ -30,85 +33,53 @@
       "name_key": "other_subject"
     },
     {
-      "id": "subject_5646ae16",
-      "name": "aszd",
-      "color": "#FCD34D",
-      "is_default": false
-    },
-    {
-      "id": "subject_ae4830d9",
-      "name": "asfafe",
-      "color": "#F9A8D4",
+      "id": "subject_23bd7040",
+      "name": "li",
+      "color": "#86EFAC",
       "is_default": false
     }
   ],
   "tasks": [
     {
-      "id": "task_cef0ec45",
-      "subject_id": "subject_5646ae16",
-      "subject_name": "aszd",
+      "id": "task_78028cc0",
+      "subject_id": "subject_23bd7040",
+      "subject_name": "li",
       "title": "Study Session",
-      "focus_minutes": 25,
-      "break_minutes": 5,
+      "focus_minutes": 1,
+      "break_minutes": 2,
       "priority": "medium",
       "status": "completed",
-      "completed_at": "2026-07-15T12:08:29",
       "hidden_from_plan": false,
       "hidden_from_completed": false
     },
     {
-      "id": "task_af201d2b",
-      "subject_id": "subject_ae4830d9",
-      "subject_name": "asfafe",
+      "id": "task_81036aad",
+      "subject_id": "subject_23bd7040",
+      "subject_name": "li",
       "title": "Study Session",
-      "focus_minutes": 25,
-      "break_minutes": 5,
+      "focus_minutes": 1,
+      "break_minutes": 1,
       "priority": "medium",
       "status": "pending",
-      "completed_at": "2026-07-15T11:56:46",
+      "hidden_from_plan": false,
+      "hidden_from_completed": false
+    },
+    {
+      "id": "task_7b0853dc",
+      "subject_id": "subject_other",
+      "subject_name": "Other",
+      "title": "Study Session",
+      "focus_minutes": 1,
+      "break_minutes": 1,
+      "priority": "medium",
+      "status": "pending",
       "hidden_from_plan": false,
       "hidden_from_completed": false
     }
   ],
   "sessions": [
     {
-      "id": "session_c0968cc1",
-      "task_id": "task_29055e5e",
-      "task_title": "Study Session",
-      "subject_id": "subject_other",
-      "subject_name": "Other",
-      "mode": "focus",
-      "source": "study_plan",
-      "duration_seconds": 1500,
-      "away_seconds": 0,
-      "completed_at": "2026-07-14T08:51:41"
-    },
-    {
-      "id": "session_babff8bd",
-      "task_id": "task_d06c221a",
-      "task_title": "Study Session",
-      "subject_id": "subject_other",
-      "subject_name": "Other",
-      "mode": "focus",
-      "source": "study_plan",
-      "duration_seconds": 1500,
-      "away_seconds": 0,
-      "completed_at": "2026-07-14T08:51:42"
-    },
-    {
-      "id": "session_fbfca394",
-      "task_id": "task_591a758f",
-      "task_title": "Study Session",
-      "subject_id": "subject_05133af9",
-      "subject_name": "lit",
-      "mode": "focus",
-      "source": "study_plan",
-      "duration_seconds": 1500,
-      "away_seconds": 0,
-      "completed_at": "2026-07-14T09:22:57"
-    },
-    {
-      "id": "session_88710887",
+      "id": "session_5eb896af",
       "task_id": null,
       "task_title": "Regular Pomodoro",
       "subject_id": "subject_other",
@@ -117,80 +88,152 @@
       "source": "regular_pomodoro",
       "duration_seconds": 60,
       "away_seconds": 0,
-      "completed_at": "2026-07-14T10:02:51"
+      "completed_at": "2026-07-17T19:56:55"
     },
     {
-      "id": "session_5f9c2980",
-      "task_id": "task_cef0ec45",
+      "id": "session_b10541d2",
+      "task_id": null,
+      "task_title": "Regular Pomodoro",
+      "subject_id": "subject_other",
+      "subject_name": "Other",
+      "mode": "focus",
+      "source": "regular_pomodoro",
+      "duration_seconds": 60,
+      "away_seconds": 0,
+      "completed_at": "2026-07-17T19:59:47"
+    },
+    {
+      "id": "session_638228c4",
+      "task_id": null,
+      "task_title": "Regular Pomodoro",
+      "subject_id": "subject_other",
+      "subject_name": "Other",
+      "mode": "focus",
+      "source": "regular_pomodoro",
+      "duration_seconds": 60,
+      "away_seconds": 0,
+      "completed_at": "2026-07-17T20:09:11"
+    },
+    {
+      "id": "session_677b439a",
+      "task_id": null,
+      "task_title": "Regular Pomodoro",
+      "subject_id": "subject_other",
+      "subject_name": "Other",
+      "mode": "focus",
+      "source": "regular_pomodoro",
+      "duration_seconds": 60,
+      "away_seconds": 0,
+      "completed_at": "2026-07-18T03:29:53"
+    },
+    {
+      "id": "session_d54dd4db",
+      "task_id": null,
+      "task_title": "Regular Pomodoro",
+      "subject_id": "subject_other",
+      "subject_name": "Other",
+      "mode": "focus",
+      "source": "regular_pomodoro",
+      "duration_seconds": 60,
+      "away_seconds": 0,
+      "completed_at": "2026-07-18T10:45:47"
+    },
+    {
+      "id": "session_b52467b6",
+      "task_id": "task_78028cc0",
       "task_title": "Study Session",
-      "subject_id": "subject_5646ae16",
-      "subject_name": "aszd",
+      "subject_id": "subject_23bd7040",
+      "subject_name": "li",
       "mode": "focus",
       "source": "study_plan",
-      "duration_seconds": 1500,
+      "duration_seconds": 60,
       "away_seconds": 0,
-      "completed_at": "2026-07-14T15:42:00"
+      "completed_at": "2026-07-18T10:47:14"
     },
     {
-      "id": "session_186c8601",
-      "task_id": "task_af201d2b",
+      "id": "session_647e8b42",
+      "task_id": "task_78028cc0",
       "task_title": "Study Session",
-      "subject_id": "subject_ae4830d9",
-      "subject_name": "asfafe",
+      "subject_id": "subject_23bd7040",
+      "subject_name": "li",
       "mode": "focus",
       "source": "study_plan",
-      "duration_seconds": 1500,
-      "away_seconds": 0,
-      "completed_at": "2026-07-14T15:42:01"
+      "duration_seconds": 60,
+      "away_seconds": 2,
+      "completed_at": "2026-07-18T10:49:12"
     },
     {
-      "id": "session_9a882c26",
-      "task_id": null,
-      "task_title": "Regular Pomodoro",
+      "id": "session_611dbe5a",
+      "task_id": "task_78028cc0",
+      "task_title": "Study Session",
+      "subject_id": "subject_23bd7040",
+      "subject_name": "li",
+      "mode": "focus",
+      "source": "study_plan",
+      "duration_seconds": 60,
+      "away_seconds": 2,
+      "completed_at": "2026-07-18T10:51:47"
+    },
+    {
+      "id": "session_73e1a0fc",
+      "task_id": "task_78028cc0",
+      "task_title": "Study Session",
+      "subject_id": "subject_23bd7040",
+      "subject_name": "li",
+      "mode": "focus",
+      "source": "study_plan",
+      "duration_seconds": 60,
+      "away_seconds": 0,
+      "completed_at": "2026-07-18T11:20:16"
+    },
+    {
+      "id": "session_8490b91b",
+      "task_id": "task_78028cc0",
+      "task_title": "Study Session",
+      "subject_id": "subject_23bd7040",
+      "subject_name": "li",
+      "mode": "focus",
+      "source": "study_plan",
+      "duration_seconds": 60,
+      "away_seconds": 0,
+      "completed_at": "2026-07-18T11:22:03"
+    },
+    {
+      "id": "session_a70fa37e",
+      "task_id": "task_81036aad",
+      "task_title": "Study Session",
+      "subject_id": "subject_23bd7040",
+      "subject_name": "li",
+      "mode": "focus",
+      "source": "study_plan",
+      "duration_seconds": 60,
+      "away_seconds": 0,
+      "completed_at": "2026-07-18T11:24:06"
+    },
+    {
+      "id": "session_ba912d06",
+      "task_id": "task_7b0853dc",
+      "task_title": "Study Session",
       "subject_id": "subject_other",
       "subject_name": "Other",
       "mode": "focus",
-      "source": "regular_pomodoro",
+      "source": "study_plan",
       "duration_seconds": 60,
       "away_seconds": 0,
-      "completed_at": "2026-07-15T11:24:46"
+      "completed_at": "2026-07-18T11:26:22"
     },
     {
-      "id": "session_2c7f98ec",
-      "task_id": null,
-      "task_title": "Regular Pomodoro",
-      "subject_id": "subject_other",
-      "subject_name": "Other",
+      "id": "session_b0b20c8f",
+      "task_id": "task_78028cc0",
+      "task_title": "Study Session",
+      "subject_id": "subject_23bd7040",
+      "subject_name": "li",
       "mode": "focus",
-      "source": "regular_pomodoro",
+      "source": "study_plan",
       "duration_seconds": 60,
-      "away_seconds": 0,
-      "completed_at": "2026-07-15T11:26:47"
-    },
-    {
-      "id": "session_ce71f33c",
-      "task_id": null,
-      "task_title": "Regular Pomodoro",
-      "subject_id": "subject_other",
-      "subject_name": "Other",
-      "mode": "focus",
-      "source": "regular_pomodoro",
-      "duration_seconds": 60,
-      "away_seconds": 0,
-      "completed_at": "2026-07-15T11:28:49"
-    },
-    {
-      "id": "session_56570139",
-      "task_id": null,
-      "task_title": "Regular Pomodoro",
-      "subject_id": "subject_other",
-      "subject_name": "Other",
-      "mode": "focus",
-      "source": "regular_pomodoro",
-      "duration_seconds": 60,
-      "away_seconds": 0,
-      "completed_at": "2026-07-15T11:36:13"
+      "away_seconds": 1,
+      "completed_at": "2026-07-18T11:28:20"
     }
   ],
-  "total_focus_seconds_today": 300
+  "total_focus_seconds_today": 780
 }
