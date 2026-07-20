@@ -470,7 +470,13 @@ class FocusFlowApp(ctk.CTk):
     def get_language_options(self):
         return {
             "tr": "Türkçe",
-            "en": "English"
+            "en": "English",
+            "de": "Deutsch",
+            "es": "Español",
+            "fr": "Français",
+            "ja": "日本語",
+            "pt": "Português",
+            "zh": "中文 (简体)"
         }
 
     def get_language_display_name(self, language_code):
