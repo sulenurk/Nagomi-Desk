@@ -141,12 +141,9 @@ class FocusFlowApp(ctk.CTk):
             json.dump(self.app_data, file, indent=2, ensure_ascii=False)
 
     def load_translations(self):
-        import json
-        import os
-
         translations = {}
 
-        for language in ["tr", "en"]:
+        for language in self.get_language_options().keys():
             file_path = os.path.join("locales", f"{language}.json")
 
             try:

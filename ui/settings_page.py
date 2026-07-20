@@ -942,6 +942,9 @@ class SettingsPage(ctk.CTkFrame):
             frame.title_label.configure(text=self.app.t(frame.title_key))
             frame.desc_label.configure(text=self.app.t(frame.description_key))
 
+        self.alarm_label.configure(text=self.app.t("alarm_sound"))
+        self.alarm_desc.configure(text=self.app.t("alarm_sound_desc"))
+
         self.week_start_label.configure(text=self.app.t("week_start_day"))
         self.week_start_desc.configure(text=self.app.t("week_start_day_desc"))
         self.palette_title.configure(text=self.app.t("color_palette"))

@@ -1063,9 +1063,17 @@ class PomodoroPage(ctk.CTkFrame):
             self.auto_switch.deselect()
 
     def update_session_info_values(self):
-        self.focus_info["value"].configure(text=f"{self.focus_seconds // 60} min")
-        self.short_break_info["value"].configure(text=f"{self.short_break_seconds // 60} min")
-        self.long_break_info["value"].configure(text=f"{self.long_break_seconds // 60} min")
+        self.focus_info["value"].configure(
+            text=f"{self.focus_seconds // 60} {self.app.t('minutes_short')}"
+        )
+
+        self.short_break_info["value"].configure(
+            text=f"{self.short_break_seconds // 60} {self.app.t('minutes_short')}"
+        )
+
+        self.long_break_info["value"].configure(
+            text=f"{self.long_break_seconds // 60} {self.app.t('minutes_short')}"
+        )
         self.focus_count_info = self.create_session_info_row(
             parent=self.summary_card,
             row=5,

@@ -945,7 +945,7 @@ class StudyPlanPage(ctk.CTkFrame):
         self.pending_card.value_label.configure(text=str(len(pending_tasks)))
         self.active_card.value_label.configure(text=str(len(active_tasks)))
         self.completed_card.value_label.configure(text=str(len(completed_tasks)))
-        self.total_focus_card.value_label.configure(text=f"{total_focus_minutes}m")
+        self.total_focus_card.value_label.configure(text=f"{total_focus_minutes}{self.app.t('minutes_short')}")
 
     def clear_completed_tasks(self):
         for task in self.app.app_data.get("tasks", []):
