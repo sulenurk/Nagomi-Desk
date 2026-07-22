@@ -1214,7 +1214,8 @@ class PomodoroPage(ctk.CTkFrame):
             self.is_paused = True
 
             self.start_button.configure(
-                text="▶"
+                text="▶",
+                command=self.start_timer
             )
 
             if getattr(self, "fullscreen_start_button", None):
