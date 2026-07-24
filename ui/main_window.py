@@ -2,6 +2,7 @@ import json
 import customtkinter as ctk
 import pygame
 import os
+import sys
 from core.path_utils import resource_path, user_data_path
 from pathlib import Path
 from ui.pomodoro_page import PomodoroPage
@@ -20,6 +21,12 @@ class NagomiDeskApp(ctk.CTk):
         app_data_dir = os.path.join(
             os.environ.get("LOCALAPPDATA", os.path.expanduser("~")),
             "NagomiDesk"
+        )
+
+        self.iconbitmap(
+            self.resource_path(
+                os.path.join("assets", "icon.ico")
+            )
         )
 
         os.makedirs(app_data_dir, exist_ok=True)
@@ -59,6 +66,14 @@ class NagomiDeskApp(ctk.CTk):
 
         self.show_pomodoro_page()
 
+    def resource_path(self, relative_path):
+        if hasattr(sys, "_MEIPASS"):
+            return os.path.join(sys._MEIPASS, relative_path)
+
+        return os.path.join(
+            os.path.abspath("."),
+            relative_path
+        )
     
     def center_window(self, width=1360, height=820):
         screen_width = self.winfo_screenwidth()
