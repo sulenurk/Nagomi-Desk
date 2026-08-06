@@ -192,34 +192,83 @@ class SubjectDonutChart(ctk.CTkFrame):
         y2 = cy + outer_radius
 
         if self.total_minutes <= 0 or not self.data:
-            self.draw_empty_donut(cx, cy, x1, y1, x2, y2, inner_radius)
-            return
-
-        start_angle = 90
-
-        for index, item in enumerate(self.data):
-            value = item.get("minutes", 0)
-            color = item.get("color", COLORS.get("primary", "#8B5CF6"))
-
-            if value <= 0:
-                continue
-
-            extent = -360 * (value / self.total_minutes)
-
-            self.canvas.create_arc(
+            self.draw_empty_donut(
+                cx,
+                cy,
                 x1,
                 y1,
                 x2,
                 y2,
-                start=start_angle,
-                extent=extent,
+                inner_radius
+            )
+            return
+
+        positive_items = [
+            item
+            for item in self.data
+            if item.get("minutes", 0) > 0
+        ]
+
+        if not positive_items:
+            self.draw_empty_donut(
+                cx,
+                cy,
+                x1,
+                y1,
+                x2,
+                y2,
+                inner_radius
+            )
+            return
+
+        # Tek kategori %100 ise create_arc tam 360 derecede
+        # görünmeyebiliyor. Bu yüzden dolu daire çiziyoruz.
+        if len(positive_items) == 1:
+            color = positive_items[0].get(
+                "color",
+                COLORS.get("primary", "#8B5CF6")
+            )
+
+            self.canvas.create_oval(
+                x1,
+                y1,
+                x2,
+                y2,
                 fill=color,
                 outline=COLORS["surface"],
                 width=2
             )
 
-            start_angle += extent
+        else:
+            start_angle = 90
 
+            for item in positive_items:
+                value = item.get("minutes", 0)
+
+                color = item.get(
+                    "color",
+                    COLORS.get("primary", "#8B5CF6")
+                )
+
+                extent = -360 * (
+                    value / self.total_minutes
+                )
+
+                self.canvas.create_arc(
+                    x1,
+                    y1,
+                    x2,
+                    y2,
+                    start=start_angle,
+                    extent=extent,
+                    fill=color,
+                    outline=COLORS["surface"],
+                    width=2
+                )
+
+                start_angle += extent
+
+        # Ortadaki deliği oluştur
         self.canvas.create_oval(
             cx - inner_radius,
             cy - inner_radius,
@@ -229,6 +278,7 @@ class SubjectDonutChart(ctk.CTkFrame):
             outline=COLORS["surface"]
         )
 
+        # Toplam dakika
         self.canvas.create_text(
             cx,
             cy - 8,
@@ -237,6 +287,7 @@ class SubjectDonutChart(ctk.CTkFrame):
             font=("Arial", 22, "bold")
         )
 
+        # Dakika etiketi
         self.canvas.create_text(
             cx,
             cy + 18,
@@ -866,7 +917,6 @@ class StatisticsPage(ctk.CTkFrame):
             text=f"{percent}% · {total_focus_text} / {goal_text}"
         )
         
-        self.refresh_subject_donut_chart()
         self.render_subject_distribution()
         self.refresh_weekly_overview()
         self.render_recent_sessions()
