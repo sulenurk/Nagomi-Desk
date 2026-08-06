@@ -90,6 +90,9 @@ class PomodoroPage(ctk.CTkFrame):
 
         self.previous_geometry = None
         self.previous_window_state = None
+
+        self.fullscreen_resize_bind_id = None
+        self.fullscreen_resize_after_id = None
         
         self.current_mode = "focus"  # focus, short_break, long_break
         self.completed_focus_count = 0
@@ -179,9 +182,10 @@ class PomodoroPage(ctk.CTkFrame):
         self.fullscreen_stop_alarm_button.grid(
             row=0,
             column=0,
-            padx=20,
-            sticky="n"
+            padx=4,
+            pady=4
         )
+        self.app.after_idle(self.resize_fullscreen_view)
 
 
     def hide_normal_alarm_button(self):
@@ -220,11 +224,19 @@ class PomodoroPage(ctk.CTkFrame):
         # Gerçek fullscreen yerine Windows'un çerçeveli büyütülmüş görünümü.
         self.app.attributes("-fullscreen", False)
         self.app.state("zoomed")
-        self.app.minsize(520, 360)
+        self.app.minsize(220, 150)
 
         self.hide_normal_alarm_button()
         self.scroll.grid_remove()
         self.create_fullscreen_view()
+
+        self.fullscreen_resize_bind_id = self.app.bind(
+            "<Configure>",
+            self._schedule_fullscreen_resize,
+            add="+"
+        )
+
+        self.app.after_idle(self.resize_fullscreen_view)
 
         self.update_mode_ui()
         self.update_cycle_labels()
@@ -248,6 +260,26 @@ class PomodoroPage(ctk.CTkFrame):
             return
 
         self.fullscreen_mode = False
+
+        if self.fullscreen_resize_after_id is not None:
+            try:
+                self.app.after_cancel(self.fullscreen_resize_after_id)
+            except Exception:
+                pass
+
+            self.fullscreen_resize_after_id = None
+
+        if self.fullscreen_resize_bind_id is not None:
+            try:
+                self.app.unbind(
+                    "<Configure>",
+                    self.fullscreen_resize_bind_id
+                )
+            except Exception:
+                pass
+
+            self.fullscreen_resize_bind_id = None
+
         self.app.unbind("<Escape>")
 
         self.app.attributes("-fullscreen", False)
@@ -270,6 +302,7 @@ class PomodoroPage(ctk.CTkFrame):
         self.fullscreen_button_frame = None
         self.fullscreen_alarm_frame = None
         self.fullscreen_top_spacer = None
+        self.fullscreen_bottom_spacer = None
 
         self.fullscreen_start_button = None
         self.fullscreen_reset_button = None
@@ -295,6 +328,322 @@ class PomodoroPage(ctk.CTkFrame):
         ):
             self.show_normal_alarm_button()
 
+    def _schedule_fullscreen_resize(self, event=None):
+        if not self.fullscreen_mode:
+            return
+
+        if event is not None and event.widget != self.app:
+            return
+
+        # Aynı anda çok sayıda Configure olayı geldiğinde yalnızca
+        # Tkinter'ın sıradaki boş anında bir kez güncelle.
+        if self.fullscreen_resize_after_id is not None:
+            return
+
+        self.fullscreen_resize_after_id = self.app.after_idle(
+            self.resize_fullscreen_view
+        )
+
+
+    def resize_fullscreen_view(self):
+        self.fullscreen_resize_after_id = None
+
+        if not self.fullscreen_mode:
+            return
+
+        if (
+            self.fullscreen_frame is None
+            or not self.fullscreen_frame.winfo_exists()
+        ):
+            return
+
+        window_width = max(self.app.winfo_width(), 1)
+        window_height = max(self.app.winfo_height(), 1)
+
+        compact_mode = (
+            window_width < 420
+            or window_height < 300
+        )
+
+        tiny_mode = (
+            window_width < 280
+            or window_height < 190
+        )
+
+        # 1360 × 820 referans ölçüsü
+        width_scale = window_width / 1360
+        height_scale = window_height / 820
+
+        scale = min(width_scale, height_scale)
+        scale = max(0.20, min(scale, 1.55))
+
+        timer_font_size = max(
+            28,
+            min(int(280 * scale), 430)
+        )
+
+        mode_font_size = max(
+            11,
+            min(int(28 * scale), 40)
+        )
+
+        cycle_font_size = max(
+            10,
+            min(int(22 * scale), 32)
+        )
+
+        button_size = max(
+            26,
+            min(int(54 * scale), 78)
+        )
+
+        primary_button_size = max(
+            30,
+            min(int(62 * scale), 88)
+        )
+
+        button_font_size = max(
+            11,
+            min(int(26 * scale), 38)
+        )
+
+        horizontal_padding = max(
+            2,
+            min(int(10 * scale), 16)
+        )
+
+        timer_bottom_padding = max(
+            3,
+            min(int(36 * scale), 54)
+        )
+
+        button_bottom_padding = max(
+            2,
+            min(int(24 * scale), 36)
+        )
+
+        # Başlık ve cycle görünürlüğü
+        if compact_mode:
+            self.fullscreen_mode_label.grid_remove()
+            self.fullscreen_cycle_label.grid_remove()
+        else:
+            self.fullscreen_mode_label.grid()
+
+            self.fullscreen_cycle_label.grid(
+                row=5,
+                column=0,
+                pady=(6, 10),
+                sticky="n"
+            )
+
+        # Tiny modda yalnızca ana buton ve çıkış butonu
+        if tiny_mode:
+            self.fullscreen_reset_button.grid_remove()
+            self.fullscreen_skip_button.grid_remove()
+
+            self.fullscreen_start_button.grid_configure(
+                row=0,
+                column=0,
+                padx=3
+            )
+
+            self.fullscreen_exit_button.grid_configure(
+                row=0,
+                column=1,
+                padx=3
+            )
+        else:
+            self.fullscreen_start_button.grid_configure(
+                row=0,
+                column=0,
+                padx=horizontal_padding
+            )
+
+            self.fullscreen_reset_button.grid(
+                row=0,
+                column=1,
+                padx=horizontal_padding
+            )
+
+            self.fullscreen_skip_button.grid(
+                row=0,
+                column=2,
+                padx=horizontal_padding
+            )
+
+            self.fullscreen_exit_button.grid_configure(
+                row=0,
+                column=3,
+                padx=horizontal_padding
+            )
+
+        # Sayaç fontu
+        self.fullscreen_timer_label.configure(
+            font=ctk.CTkFont(
+                size=timer_font_size,
+                weight="bold"
+            )
+        )
+
+        # Mod başlığı fontu
+        self.fullscreen_mode_label.configure(
+            font=ctk.CTkFont(
+                size=mode_font_size,
+                weight="bold"
+            )
+        )
+
+        # Cycle fontu
+        self.fullscreen_cycle_label.configure(
+            font=ctk.CTkFont(
+                size=cycle_font_size,
+                weight="bold"
+            )
+        )
+
+        # Ana buton
+        self.fullscreen_start_button.configure(
+            width=primary_button_size,
+            height=primary_button_size,
+            corner_radius=primary_button_size // 2,
+            font=ctk.CTkFont(
+                size=button_font_size,
+                weight="bold"
+            )
+        )
+
+        # İkincil butonlar
+        for button in (
+            self.fullscreen_reset_button,
+            self.fullscreen_skip_button,
+            self.fullscreen_exit_button,
+        ):
+            if button is not None and button.winfo_exists():
+                button.configure(
+                    width=button_size,
+                    height=button_size,
+                    corner_radius=button_size // 2,
+                    font=ctk.CTkFont(
+                        size=button_font_size,
+                        weight="bold"
+                    )
+                )
+
+        # Genel yerleşim
+        if tiny_mode:
+            self.fullscreen_timer_label.grid_configure(
+                pady=(30, 4)
+            )
+
+            self.fullscreen_button_frame.grid_configure(
+                pady=(0, 2)
+            )
+        else:
+            self.fullscreen_timer_label.grid_configure(
+                pady=(0, timer_bottom_padding)
+            )
+
+            self.fullscreen_button_frame.grid_configure(
+                pady=(0, button_bottom_padding)
+            )
+
+        # Alarm frame yerleşimi
+        if (
+            self.fullscreen_alarm_frame is not None
+            and self.fullscreen_alarm_frame.winfo_exists()
+        ):
+            if tiny_mode:
+                alarm_frame_height = 30
+                alarm_frame_padx = 4
+                alarm_frame_pady = (2, 2)
+
+            elif compact_mode:
+                alarm_frame_height = 44
+                alarm_frame_padx = 12
+                alarm_frame_pady = (4, 4)
+
+            else:
+                alarm_frame_height = max(
+                    46,
+                    min(int(54 * scale), 64)
+                )
+
+                alarm_frame_padx = 40
+                alarm_frame_pady = (6, 6)
+
+            self.fullscreen_alarm_frame.configure(
+                height=alarm_frame_height
+            )
+
+            self.fullscreen_alarm_frame.grid_configure(
+                padx=alarm_frame_padx,
+                pady=alarm_frame_pady
+            )
+
+            self.fullscreen_alarm_frame.grid_propagate(False)
+
+        # Stop alarm butonu yalnızca gerçekten oluşturulduysa resize edilir
+        alarm_button = self.fullscreen_stop_alarm_button
+
+        if (
+            alarm_button is not None
+            and alarm_button.winfo_exists()
+        ):
+            if tiny_mode:
+                alarm_button_width = 72
+                alarm_button_height = 24
+                alarm_button_font_size = 8
+
+            elif compact_mode:
+                alarm_button_width = max(
+                    90,
+                    min(int(180 * scale), 150)
+                )
+
+                alarm_button_height = max(
+                    26,
+                    min(int(40 * scale), 36)
+                )
+
+                alarm_button_font_size = max(
+                    9,
+                    min(int(12 * scale), 12)
+                )
+
+            else:
+                alarm_button_width = max(
+                    120,
+                    min(int(210 * scale), 230)
+                )
+
+                alarm_button_height = max(
+                    32,
+                    min(int(46 * scale), 52)
+                )
+
+                alarm_button_font_size = max(
+                    10,
+                    min(int(14 * scale), 16)
+                )
+
+            alarm_button.configure(
+                width=alarm_button_width,
+                height=alarm_button_height,
+                corner_radius=max(
+                    8,
+                    alarm_button_height // 3
+                ),
+                font=ctk.CTkFont(
+                    size=alarm_button_font_size,
+                    weight="bold"
+                )
+            )
+
+            alarm_button.grid_configure(
+                padx=4 if tiny_mode else 8
+            )
+        
+
     def create_fullscreen_view(self):
         self.fullscreen_frame = ctk.CTkFrame(
             self,
@@ -308,8 +657,21 @@ class PomodoroPage(ctk.CTkFrame):
         )
 
         self.fullscreen_frame.grid_columnconfigure(0, weight=1)
-        self.fullscreen_frame.grid_rowconfigure(0, weight=1)
-        self.fullscreen_frame.grid_rowconfigure(5, weight=1)
+
+        self.fullscreen_frame.grid_rowconfigure(
+            0,
+            weight=1
+        )
+
+        self.fullscreen_frame.grid_rowconfigure(
+            5,
+            weight=0
+        )
+
+        self.fullscreen_frame.grid_rowconfigure(
+            6,
+            weight=1
+        )
 
         # Üstte esneyen boşluk
         self.fullscreen_top_spacer = ctk.CTkFrame(
@@ -435,18 +797,29 @@ class PomodoroPage(ctk.CTkFrame):
 
         self.fullscreen_alarm_frame = ctk.CTkFrame(
             self.fullscreen_frame,
-            fg_color="transparent"
+            fg_color="transparent",
+            height=64
         )
 
         self.fullscreen_alarm_frame.grid(
             row=4,
             column=0,
             padx=40,
-            pady=(0, 14),
+            pady=(6, 6),
             sticky="ew"
         )
 
-        self.fullscreen_alarm_frame.grid_columnconfigure(0, weight=1)
+        self.fullscreen_alarm_frame.grid_columnconfigure(
+            0,
+            weight=1
+        )
+
+        self.fullscreen_alarm_frame.grid_rowconfigure(
+            0,
+            weight=1
+        )
+
+        self.fullscreen_alarm_frame.grid_propagate(False)
 
         # Döngü bilgisi
         self.fullscreen_cycle_label = ctk.CTkLabel(
@@ -461,8 +834,19 @@ class PomodoroPage(ctk.CTkFrame):
         self.fullscreen_cycle_label.grid(
             row=5,
             column=0,
-            pady=(18, 40),
+            pady=(6, 10),
             sticky="n"
+        )
+
+        self.fullscreen_bottom_spacer = ctk.CTkFrame(
+            self.fullscreen_frame,
+            fg_color="transparent"
+        )
+
+        self.fullscreen_bottom_spacer.grid(
+            row=6,
+            column=0,
+            sticky="nsew"
         )
 
         if (
@@ -470,6 +854,8 @@ class PomodoroPage(ctk.CTkFrame):
             and getattr(self.app, "alarm_source", None) == "pomodoro"
         ):
             self.show_fullscreen_alarm_button()
+
+        self.app.after_idle(self.resize_fullscreen_view)
 
     def update_timer_label(self):
 
