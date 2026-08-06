@@ -28,6 +28,7 @@ class FocusPage(ctk.CTkFrame):
         self.fullscreen_button_frame = None
         self.fullscreen_exit_button = None
         self.previous_geometry = None
+        self.previous_window_state = None
 
         self.stop_alarm_button = None
         self.fullscreen_stop_alarm_button = None
@@ -66,11 +67,14 @@ class FocusPage(ctk.CTkFrame):
 
         root = self.app
 
-        # eski pencere boyutunu sakla
+        # Eski pencere boyutunu ve durumunu sakla.
         self.previous_geometry = root.geometry()
+        self.previous_window_state = root.state()
 
-        # gerçek fullscreen
-        root.attributes("-fullscreen", True)
+        # Gerçek fullscreen yerine çerçeveli büyütülmüş görünüm.
+        root.attributes("-fullscreen", False)
+        root.state("zoomed")
+        root.minsize(520, 360)
 
         # mevcut arayüzü gizle
         self.header.grid_remove()
@@ -94,8 +98,13 @@ class FocusPage(ctk.CTkFrame):
         root = self.app
         root.attributes("-fullscreen", False)
 
-        if self.previous_geometry:
-            root.geometry(self.previous_geometry)
+        if self.previous_window_state == "zoomed":
+            root.state("zoomed")
+        else:
+            root.state("normal")
+
+            if self.previous_geometry:
+                root.geometry(self.previous_geometry)
 
         if self.fullscreen_frame:
             self.fullscreen_frame.destroy()
@@ -117,6 +126,7 @@ class FocusPage(ctk.CTkFrame):
 
         self.header.grid()
         self.content.grid()
+        root.minsize(1100, 700)
         self.app.show_sidebar()
 
     def update_fullscreen_task_info(self):

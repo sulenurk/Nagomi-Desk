@@ -89,6 +89,7 @@ class PomodoroPage(ctk.CTkFrame):
         self.fullscreen_stop_alarm_button = None
 
         self.previous_geometry = None
+        self.previous_window_state = None
         
         self.current_mode = "focus"  # focus, short_break, long_break
         self.completed_focus_count = 0
@@ -214,11 +215,12 @@ class PomodoroPage(ctk.CTkFrame):
         self.fullscreen_mode = True
 
         self.previous_geometry = self.app.geometry()
+        self.previous_window_state = self.app.state()
 
-        self.app.attributes(
-            "-fullscreen",
-            True
-        )
+        # Gerçek fullscreen yerine Windows'un çerçeveli büyütülmüş görünümü.
+        self.app.attributes("-fullscreen", False)
+        self.app.state("zoomed")
+        self.app.minsize(520, 360)
 
         self.hide_normal_alarm_button()
         self.scroll.grid_remove()
@@ -248,13 +250,15 @@ class PomodoroPage(ctk.CTkFrame):
         self.fullscreen_mode = False
         self.app.unbind("<Escape>")
 
-        self.app.attributes(
-            "-fullscreen",
-            False
-        )
+        self.app.attributes("-fullscreen", False)
 
-        if self.previous_geometry:
-            self.app.geometry(self.previous_geometry)
+        if self.previous_window_state == "zoomed":
+            self.app.state("zoomed")
+        else:
+            self.app.state("normal")
+
+            if self.previous_geometry:
+                self.app.geometry(self.previous_geometry)
 
         if (
             self.fullscreen_frame is not None
@@ -278,6 +282,7 @@ class PomodoroPage(ctk.CTkFrame):
         self.fullscreen_stop_alarm_button = None
 
         self.scroll.grid()
+        self.app.minsize(1100, 700)
         self.app.show_sidebar()
 
         self.update_timer_label()
