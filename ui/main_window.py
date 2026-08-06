@@ -3,6 +3,8 @@ import customtkinter as ctk
 import pygame
 import os
 import sys
+import ctypes
+from ctypes import wintypes
 from core.path_utils import resource_path, user_data_path
 from pathlib import Path
 from ui.pomodoro_page import PomodoroPage
@@ -44,8 +46,12 @@ class NagomiDeskApp(ctk.CTk):
         self.center_window(1360, 820)
         self.configure(fg_color=COLORS["bg"])
 
-        ctk.set_appearance_mode(self.app_data["settings"].get("appearance_mode", "dark"))
+        ctk.set_appearance_mode(
+            self.app_data["settings"].get("appearance_mode", "dark")
+        )
         ctk.set_default_color_theme("blue")
+
+        self.after(100, self.apply_windows_title_bar_theme)
 
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
@@ -54,6 +60,8 @@ class NagomiDeskApp(ctk.CTk):
         self.alarm_source = None
         self.alarm_stop_after_id = None
         self.alarm_preview_after_id = None
+
+        self.theme_rebuild_after_id = None
 
         if not pygame.mixer.get_init():
             try:
@@ -84,6 +92,50 @@ class NagomiDeskApp(ctk.CTk):
 
         self.geometry(f"{width}x{height}+{x}+{y}")
 
+    def apply_windows_title_bar_theme(self):
+        """Windows başlık çubuğunu uygulamanın temasına göre ayarlar."""
+
+        if sys.platform != "win32":
+            return
+
+        try:
+            self.update_idletasks()
+
+            hwnd = ctypes.windll.user32.GetParent(self.winfo_id())
+
+            appearance_mode = self.app_data.get(
+                "settings",
+                {}
+            ).get("appearance_mode", "dark")
+
+            use_dark_mode = wintypes.BOOL(
+                appearance_mode == "dark"
+            )
+
+            # Windows 10 20H1 ve Windows 11
+            DWMWA_USE_IMMERSIVE_DARK_MODE = 20
+
+            result = ctypes.windll.dwmapi.DwmSetWindowAttribute(
+                hwnd,
+                DWMWA_USE_IMMERSIVE_DARK_MODE,
+                ctypes.byref(use_dark_mode),
+                ctypes.sizeof(use_dark_mode)
+            )
+
+            # Bazı eski Windows 10 sürümleri attribute 19 kullanır.
+            if result != 0:
+                DWMWA_USE_IMMERSIVE_DARK_MODE_OLD = 19
+
+                ctypes.windll.dwmapi.DwmSetWindowAttribute(
+                    hwnd,
+                    DWMWA_USE_IMMERSIVE_DARK_MODE_OLD,
+                    ctypes.byref(use_dark_mode),
+                    ctypes.sizeof(use_dark_mode)
+                )
+
+        except (AttributeError, OSError) as error:
+            print(f"[WINDOW THEME ERROR] {error}")
+
     def ensure_app_data_defaults(self):
         self.app_data.setdefault("language", "en")
 
@@ -98,6 +150,7 @@ class NagomiDeskApp(ctk.CTk):
             "auto_start_break": False,
             "auto_start_focus": False,
             "sound_enabled": True,
+            "always_on_top": False,
             "daily_focus_goal_minutes": 300,
             "regular_focus_minutes": 25,
             "regular_short_break_minutes": 5,
@@ -459,8 +512,10 @@ class NagomiDeskApp(ctk.CTk):
 
     def apply_theme(self, palette_key=None, appearance_mode=None):
         settings = self.app_data.setdefault("settings", {})
+
         if palette_key:
             settings["color_palette"] = palette_key
+
         if appearance_mode:
             settings["appearance_mode"] = appearance_mode
 
@@ -469,14 +524,32 @@ class NagomiDeskApp(ctk.CTk):
         self.configure(fg_color=COLORS["bg"])
         self.save_app_data()
 
-        # Widget colors are set at creation time in CustomTkinter. Rebuild the
-        # shell so the new palette is applied consistently everywhere.
+        self.after(100, self.apply_windows_title_bar_theme)
+
+        # Daha önce planlanmış bir yeniden oluşturma varsa iptal et.
+        if self.theme_rebuild_after_id is not None:
+            try:
+                self.after_cancel(self.theme_rebuild_after_id)
+            except Exception:
+                pass
+
+        # Tıklanan CustomTkinter butonunun callback ve focus işlemlerinin
+        # tamamlanmasını bekle. Widget'ları aynı callback içinde yok etme.
+        self.theme_rebuild_after_id = self.after(
+            200,
+            self._rebuild_ui_after_theme_change
+        )
+
+    def _rebuild_ui_after_theme_change(self):
+        self.theme_rebuild_after_id = None
+
         active_page = self.active_page
         timer_states = {}
-        # Stop the old page timers before their widgets are replaced; their
-        # scheduled callbacks will then exit without touching destroyed UI.
+
+        # Eski timer callback'lerinin yok edilen widget'lara erişmesini önle.
         for page_name in ("focus_page", "pomodoro_page"):
             page = getattr(self, page_name, None)
+
             if page is not None:
                 timer_states[page_name] = {
                     "is_running": page.is_running,
@@ -484,10 +557,22 @@ class NagomiDeskApp(ctk.CTk):
                     "current_mode": page.current_mode,
                     "remaining_seconds": page.remaining_seconds,
                 }
+
                 page.is_running = False
                 page.is_paused = False
-        self.sidebar.destroy()
-        self.page_container.destroy()
+
+        # Odağı ana pencereye taşı.
+        try:
+            self.focus_set()
+        except Exception:
+            pass
+
+        if hasattr(self, "sidebar") and self.sidebar.winfo_exists():
+            self.sidebar.destroy()
+
+        if hasattr(self, "page_container") and self.page_container.winfo_exists():
+            self.page_container.destroy()
+
         self.create_sidebar()
         self.create_pages()
         self.restore_timer_state(timer_states)
@@ -530,6 +615,35 @@ class NagomiDeskApp(ctk.CTk):
         self.update_quick_actions()
         if hasattr(self, "settings_page"):
             self.settings_page.load_settings()
+
+    def update_minimal_always_on_top(self):
+        settings = self.app_data.get("settings", {})
+
+        always_on_top_enabled = settings.get(
+            "always_on_top",
+            False
+        )
+
+        focus_fullscreen = (
+            hasattr(self, "focus_page")
+            and self.focus_page.fullscreen_mode
+        )
+
+        pomodoro_fullscreen = (
+            hasattr(self, "pomodoro_page")
+            and self.pomodoro_page.fullscreen_mode
+        )
+
+        minimal_view_active = (
+            focus_fullscreen
+            or pomodoro_fullscreen
+        )
+
+        self.attributes(
+            "-topmost",
+            always_on_top_enabled
+            and minimal_view_active
+        )
 
     
     def get_language_options(self):

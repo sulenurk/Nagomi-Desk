@@ -27,7 +27,12 @@ class FocusPage(ctk.CTkFrame):
         self.fullscreen_status_label = None
         self.fullscreen_button_frame = None
         self.fullscreen_exit_button = None
+
         self.previous_geometry = None
+        self.previous_window_state = None
+
+        self.fullscreen_resize_bind_id = None
+        self.fullscreen_resize_after_id = None
 
         self.stop_alarm_button = None
         self.fullscreen_stop_alarm_button = None
@@ -66,11 +71,14 @@ class FocusPage(ctk.CTkFrame):
 
         root = self.app
 
-        # eski pencere boyutunu sakla
+        # Eski pencere boyutunu ve durumunu sakla.
         self.previous_geometry = root.geometry()
+        self.previous_window_state = root.state()
 
-        # gerçek fullscreen
-        root.attributes("-fullscreen", True)
+        # Gerçek fullscreen yerine çerçeveli büyütülmüş görünüm.
+        root.attributes("-fullscreen", False)
+        root.state("zoomed")
+        root.minsize(220, 150)
 
         # mevcut arayüzü gizle
         self.header.grid_remove()
@@ -81,21 +89,60 @@ class FocusPage(ctk.CTkFrame):
         self.create_fullscreen_view() 
         self.load_active_task()   
 
-        self.app.bind(
+        self.app.update_minimal_always_on_top()
+
+        self.fullscreen_resize_bind_id = root.bind(
+            "<Configure>",
+            self._schedule_fullscreen_resize,
+            add="+"
+        )
+
+        root.after_idle(self.resize_fullscreen_view)
+
+        root.bind(
             "<Escape>",
-            lambda e: self.exit_fullscreen()
+            lambda event: self.exit_fullscreen()
         )
 
     def exit_fullscreen(self):
 
         self.fullscreen_mode = False
+
+        self.app.update_minimal_always_on_top()
+
+        if self.fullscreen_resize_after_id is not None:
+            try:
+                self.app.after_cancel(
+                    self.fullscreen_resize_after_id
+                )
+            except Exception:
+                pass
+
+            self.fullscreen_resize_after_id = None
+
+        if self.fullscreen_resize_bind_id is not None:
+            try:
+                self.app.unbind(
+                    "<Configure>",
+                    self.fullscreen_resize_bind_id
+                )
+            except Exception:
+                pass
+
+            self.fullscreen_resize_bind_id = None
+
         self.app.unbind("<Escape>")
 
         root = self.app
         root.attributes("-fullscreen", False)
 
-        if self.previous_geometry:
-            root.geometry(self.previous_geometry)
+        if self.previous_window_state == "zoomed":
+            root.state("zoomed")
+        else:
+            root.state("normal")
+
+            if self.previous_geometry:
+                root.geometry(self.previous_geometry)
 
         if self.fullscreen_frame:
             self.fullscreen_frame.destroy()
@@ -114,9 +161,14 @@ class FocusPage(ctk.CTkFrame):
         self.fullscreen_timer_label = None
         self.fullscreen_status_label = None
         self.fullscreen_task_label = None
+        self.fullscreen_button_frame = None
+        self.fullscreen_exit_button = None
+        self.fullscreen_alarm_frame = None
+        self.fullscreen_stop_alarm_button = None
 
         self.header.grid()
         self.content.grid()
+        root.minsize(1100, 700)
         self.app.show_sidebar()
 
     def update_fullscreen_task_info(self):
@@ -150,8 +202,334 @@ class FocusPage(ctk.CTkFrame):
             text=f"{subject} · {title}"
         )
 
-    def create_fullscreen_view(self):
+    def _schedule_fullscreen_resize(self, event=None):
+        if not self.fullscreen_mode:
+            return
 
+        if event is not None and event.widget != self.app:
+            return
+
+        if self.fullscreen_resize_after_id is not None:
+            return
+
+        self.fullscreen_resize_after_id = self.app.after_idle(
+            self.resize_fullscreen_view
+        )
+
+    def resize_fullscreen_view(self):
+        self.fullscreen_resize_after_id = None
+
+        if not self.fullscreen_mode:
+            return
+
+        if (
+            self.fullscreen_frame is None
+            or not self.fullscreen_frame.winfo_exists()
+        ):
+            return
+
+        window_width = max(
+            self.app.winfo_width(),
+            1
+        )
+
+        window_height = max(
+            self.app.winfo_height(),
+            1
+        )
+
+        compact_mode = (
+            window_width < 420
+            or window_height < 300
+        )
+
+        tiny_mode = (
+            window_width < 280
+            or window_height < 190
+        )
+
+        width_scale = window_width / 1360
+        height_scale = window_height / 820
+
+        scale = min(
+            width_scale,
+            height_scale
+        )
+
+        scale = max(
+            0.20,
+            min(scale, 1.55)
+        )
+
+        timer_font_size = max(
+            28,
+            min(int(280 * scale), 430)
+        )
+
+        status_font_size = max(
+            11,
+            min(int(28 * scale), 40)
+        )
+
+        task_font_size = max(
+            9,
+            min(int(20 * scale), 28)
+        )
+
+        primary_button_width = max(
+            64,
+            min(int(150 * scale), 190)
+        )
+
+        primary_button_height = max(
+            30,
+            min(int(54 * scale), 68)
+        )
+
+        secondary_button_size = max(
+            26,
+            min(int(54 * scale), 78)
+        )
+
+        button_font_size = max(
+            10,
+            min(int(18 * scale), 24)
+        )
+
+        horizontal_padding = max(
+            3,
+            min(int(10 * scale), 16)
+        )
+
+        # Başlık ve görev bilgisi
+        if compact_mode:
+            self.fullscreen_status_label.grid_remove()
+            self.fullscreen_task_label.grid_remove()
+        else:
+            self.fullscreen_status_label.grid(
+                row=1,
+                column=0,
+                pady=(8, 16)
+            )
+
+            self.fullscreen_task_label.grid(
+                row=5,
+                column=0,
+                pady=(6, 10),
+                sticky="n"
+            )
+
+        # Fontlar
+        self.fullscreen_timer_label.configure(
+            font=ctk.CTkFont(
+                size=timer_font_size,
+                weight="bold"
+            )
+        )
+
+        self.fullscreen_status_label.configure(
+            font=ctk.CTkFont(
+                size=status_font_size,
+                weight="bold"
+            )
+        )
+
+        self.fullscreen_task_label.configure(
+            font=ctk.CTkFont(
+                size=task_font_size,
+                weight="bold"
+            )
+        )
+
+        # Start/Pause butonu
+        if tiny_mode:
+            start_width = 58
+            start_height = 26
+            start_font_size = 9
+
+        elif compact_mode:
+            start_width = max(
+                78,
+                min(int(120 * scale), 110)
+            )
+
+            start_height = max(
+                30,
+                min(int(46 * scale), 42)
+            )
+
+            start_font_size = max(
+                10,
+                min(int(15 * scale), 14)
+            )
+
+        else:
+            start_width = primary_button_width
+            start_height = primary_button_height
+            start_font_size = button_font_size
+
+        self.fullscreen_start_button.configure(
+            width=start_width,
+            height=start_height,
+            corner_radius=max(
+                10,
+                start_height // 3
+            ),
+            font=ctk.CTkFont(
+                size=start_font_size,
+                weight="bold"
+            )
+        )
+
+        # Çıkış butonu
+        self.fullscreen_exit_button.configure(
+            width=secondary_button_size,
+            height=secondary_button_size,
+            corner_radius=secondary_button_size // 2,
+            font=ctk.CTkFont(
+                size=button_font_size,
+                weight="bold"
+            )
+        )
+
+        self.fullscreen_start_button.grid_configure(
+            row=0,
+            column=0,
+            padx=3 if tiny_mode else horizontal_padding
+        )
+
+        self.fullscreen_exit_button.grid_configure(
+            row=0,
+            column=1,
+            padx=3 if tiny_mode else horizontal_padding
+        )
+
+        # Timer ve butonların dikey yerleşimi
+        if tiny_mode:
+            self.fullscreen_timer_label.grid_configure(
+                pady=(30, 4)
+            )
+
+            self.fullscreen_button_frame.grid_configure(
+                pady=(0, 2)
+            )
+
+        else:
+            timer_bottom_padding = max(
+                4,
+                min(int(30 * scale), 40)
+            )
+
+            button_bottom_padding = max(
+                2,
+                min(int(18 * scale), 24)
+            )
+
+            self.fullscreen_timer_label.grid_configure(
+                pady=(0, timer_bottom_padding)
+            )
+
+            self.fullscreen_button_frame.grid_configure(
+                pady=(0, button_bottom_padding)
+            )
+
+        # Alarm alanı
+        if (
+            self.fullscreen_alarm_frame is not None
+            and self.fullscreen_alarm_frame.winfo_exists()
+        ):
+            if tiny_mode:
+                alarm_frame_height = 30
+                alarm_frame_padx = 4
+                alarm_frame_pady = (2, 2)
+
+            elif compact_mode:
+                alarm_frame_height = 44
+                alarm_frame_padx = 12
+                alarm_frame_pady = (4, 4)
+
+            else:
+                alarm_frame_height = max(
+                    46,
+                    min(int(54 * scale), 64)
+                )
+
+                alarm_frame_padx = 40
+                alarm_frame_pady = (6, 6)
+
+            self.fullscreen_alarm_frame.configure(
+                height=alarm_frame_height
+            )
+
+            self.fullscreen_alarm_frame.grid_configure(
+                padx=alarm_frame_padx,
+                pady=alarm_frame_pady
+            )
+
+            self.fullscreen_alarm_frame.grid_propagate(False)
+
+        # Stop alarm butonu
+        alarm_button = self.fullscreen_stop_alarm_button
+
+        if (
+            alarm_button is not None
+            and alarm_button.winfo_exists()
+        ):
+            if tiny_mode:
+                alarm_button_width = 72
+                alarm_button_height = 24
+                alarm_button_font_size = 8
+
+            elif compact_mode:
+                alarm_button_width = max(
+                    90,
+                    min(int(180 * scale), 150)
+                )
+
+                alarm_button_height = max(
+                    26,
+                    min(int(40 * scale), 36)
+                )
+
+                alarm_button_font_size = max(
+                    9,
+                    min(int(12 * scale), 12)
+                )
+
+            else:
+                alarm_button_width = max(
+                    120,
+                    min(int(210 * scale), 230)
+                )
+
+                alarm_button_height = max(
+                    32,
+                    min(int(46 * scale), 52)
+                )
+
+                alarm_button_font_size = max(
+                    10,
+                    min(int(14 * scale), 16)
+                )
+
+            alarm_button.configure(
+                width=alarm_button_width,
+                height=alarm_button_height,
+                corner_radius=max(
+                    8,
+                    alarm_button_height // 3
+                ),
+                font=ctk.CTkFont(
+                    size=alarm_button_font_size,
+                    weight="bold"
+                )
+            )
+
+            alarm_button.grid_configure(
+                padx=4 if tiny_mode else 8
+            )
+
+    def create_fullscreen_view(self):
         self.fullscreen_frame = ctk.CTkFrame(
             self,
             fg_color=COLORS["bg"]
@@ -164,23 +542,57 @@ class FocusPage(ctk.CTkFrame):
             relheight=1
         )
 
-        # STATUS
+        self.fullscreen_frame.grid_columnconfigure(
+            0,
+            weight=1
+        )
+
+        self.fullscreen_frame.grid_rowconfigure(
+            0,
+            weight=1
+        )
+
+        self.fullscreen_frame.grid_rowconfigure(
+            5,
+            weight=0
+        )
+
+        self.fullscreen_frame.grid_rowconfigure(
+            6,
+            weight=1
+        )
+        self.fullscreen_top_spacer = ctk.CTkFrame(
+            self.fullscreen_frame,
+            fg_color="transparent"
+        )
+
+        self.fullscreen_top_spacer.grid(
+            row=0,
+            column=0,
+            sticky="nsew"
+        )
+
         self.fullscreen_status_label = ctk.CTkLabel(
             self.fullscreen_frame,
             text=self.app.t("focus_mode"),
             text_color=COLORS["primary"],
-            font=ctk.CTkFont(size=26, weight="bold")
+            font=ctk.CTkFont(
+                size=26,
+                weight="bold"
+            )
         )
 
-        self.fullscreen_status_label.pack(
-            pady=(80, 30)
+        self.fullscreen_status_label.grid(
+            row=1,
+            column=0,
+            pady=(8, 20)
         )
 
-
-        # TIMER
         self.fullscreen_timer_label = ctk.CTkLabel(
             self.fullscreen_frame,
-            text=self.format_time(self.remaining_seconds),
+            text=self.format_time(
+                self.remaining_seconds
+            ),
             text_color=COLORS["text"],
             font=ctk.CTkFont(
                 size=150,
@@ -188,28 +600,21 @@ class FocusPage(ctk.CTkFrame):
             )
         )
 
-        self.fullscreen_timer_label.pack(
-            pady=(0,40)
+        self.fullscreen_timer_label.grid(
+            row=2,
+            column=0,
+            pady=(0, 30)
         )
 
-
-        # BUTTONS
         self.fullscreen_button_frame = ctk.CTkFrame(
             self.fullscreen_frame,
             fg_color="transparent"
         )
 
-        self.fullscreen_button_frame.pack(
-            pady=20
-        )
-
-        self.fullscreen_alarm_frame = ctk.CTkFrame(
-            self.fullscreen_frame,
-            fg_color="transparent"
-        )
-
-        self.fullscreen_alarm_frame.pack(
-            pady=(12, 0)
+        self.fullscreen_button_frame.grid(
+            row=3,
+            column=0,
+            pady=(0, 18)
         )
 
         fullscreen_text = (
@@ -223,20 +628,11 @@ class FocusPage(ctk.CTkFrame):
             if self.is_running
             else self.start_timer
         )
-        tooltip_text_fullscreen_start_button = (
-            self.app.t("tooltip_pause")
-            if self.is_running
-            else self.app.t("tooltip_start")
-        )
 
         self.fullscreen_start_button = FullscreenPrimaryButton(
             self.fullscreen_button_frame,
             text=fullscreen_text,
             command=fullscreen_command
-        )
-        Tooltip(
-            self.fullscreen_start_button,
-            tooltip_text_fullscreen_start_button
         )
 
         self.fullscreen_start_button.grid(
@@ -244,7 +640,13 @@ class FocusPage(ctk.CTkFrame):
             column=0,
             padx=10
         )
-        
+
+        Tooltip(
+            self.fullscreen_start_button,
+            self.app.t("tooltip_pause")
+            if self.is_running
+            else self.app.t("tooltip_start")
+        )
 
         self.fullscreen_exit_button = FullscreenSecondaryButton(
             self.fullscreen_button_frame,
@@ -257,13 +659,38 @@ class FocusPage(ctk.CTkFrame):
             column=1,
             padx=10
         )
+
         Tooltip(
             self.fullscreen_exit_button,
             self.app.t("tooltip_exit_fullscreen")
         )
 
+        self.fullscreen_alarm_frame = ctk.CTkFrame(
+            self.fullscreen_frame,
+            fg_color="transparent",
+            height=64
+        )
 
-        # TASK NAME
+        self.fullscreen_alarm_frame.grid(
+            row=4,
+            column=0,
+            padx=40,
+            pady=0,
+            sticky="ew"
+        )
+
+        self.fullscreen_alarm_frame.grid_columnconfigure(
+            0,
+            weight=1
+        )
+
+        self.fullscreen_alarm_frame.grid_rowconfigure(
+            0,
+            weight=1
+        )
+
+        self.fullscreen_alarm_frame.grid_propagate(False)
+
         self.fullscreen_task_label = ctk.CTkLabel(
             self.fullscreen_frame,
             text="",
@@ -274,8 +701,22 @@ class FocusPage(ctk.CTkFrame):
             )
         )
 
-        self.fullscreen_task_label.pack(
-            pady=(50,0)
+        self.fullscreen_task_label.grid(
+            row=5,
+            column=0,
+            pady=(6, 10),
+            sticky="n"
+        )
+
+        self.fullscreen_bottom_spacer = ctk.CTkFrame(
+            self.fullscreen_frame,
+            fg_color="transparent"
+        )
+
+        self.fullscreen_bottom_spacer.grid(
+            row=6,
+            column=0,
+            sticky="nsew"
         )
 
         if (
@@ -283,7 +724,12 @@ class FocusPage(ctk.CTkFrame):
             and getattr(self.app, "alarm_source", None) == "focus"
         ):
             self.show_fullscreen_alarm_button()
+
         self.update_fullscreen_task_info()
+
+        self.app.after_idle(
+            self.resize_fullscreen_view
+        )
 
     def create_header(self):
         self.header = ctk.CTkFrame(self, fg_color="transparent")
@@ -1689,9 +2135,15 @@ class FocusPage(ctk.CTkFrame):
                 )
             )
 
-        self.fullscreen_stop_alarm_button.pack(
-            padx=20,
+        self.fullscreen_stop_alarm_button.grid(
+            row=0,
+            column=0,
+            padx=4,
             pady=4
+        )
+
+        self.app.after_idle(
+            self.resize_fullscreen_view
         )
 
 
@@ -1701,4 +2153,4 @@ class FocusPage(ctk.CTkFrame):
             self.fullscreen_stop_alarm_button is not None
             and self.fullscreen_stop_alarm_button.winfo_exists()
         ):
-            self.fullscreen_stop_alarm_button.pack_forget()
+            self.fullscreen_stop_alarm_button.grid_remove()

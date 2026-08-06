@@ -139,9 +139,13 @@ class PillButton(ctk.CTkButton):
 
 
 class PriorityBadge(ctk.CTkLabel):
-    def __init__(self, parent, priority):
-        color = PRIORITY_COLORS.get(priority, PRIORITY_COLORS["medium"])
-        text = priority.capitalize()
+    def __init__(self, parent, app, priority):
+        color = PRIORITY_COLORS.get(
+            priority,
+            PRIORITY_COLORS["medium"]
+        )
+
+        text = app.t(priority)
 
         super().__init__(
             parent,
@@ -151,7 +155,10 @@ class PriorityBadge(ctk.CTkLabel):
             corner_radius=10,
             padx=12,
             pady=5,
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(
+                size=12,
+                weight="bold"
+            )
         )
 
 

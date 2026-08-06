@@ -229,5 +229,8 @@
   "alarm_analog": "Analogue",
   "alarm_beep": "Beep",
   "alarm_galaxy": "Galaxy",
-  "alarm_dance": "Dance"
+  "alarm_dance": "Dance",
+
+  "always_on_top": "Always on Top",
+  "always_on_top_desc": "Keeps the minimal timer view above other windows."
 }

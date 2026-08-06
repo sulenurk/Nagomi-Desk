@@ -229,5 +229,8 @@
   "alarm_analog": "アナログ",
   "alarm_beep": "ビープ",
   "alarm_galaxy": "ギャラクシー",
-  "alarm_dance": "ダンス"
+  "alarm_dance": "ダンス",
+
+  "always_on_top": "常に手前に表示",
+  "always_on_top_desc": "最小表示のタイマーを他のウィンドウより手前に表示します。"
 }

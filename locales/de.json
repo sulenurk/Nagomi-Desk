@@ -229,5 +229,8 @@
   "alarm_analog": "Analog",
   "alarm_beep": "Piepton",
   "alarm_galaxy": "Galaxie",
-  "alarm_dance": "Tanz"
+  "alarm_dance": "Tanz",
+
+  "always_on_top": "Immer im Vordergrund",
+  "always_on_top_desc": "Hält die minimale Timeransicht über anderen Fenstern."
 }

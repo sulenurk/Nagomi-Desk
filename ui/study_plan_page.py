@@ -1149,7 +1149,11 @@ class TaskCard(AppCard):
         )
         self.details.grid(row=1, column=1, padx=0, pady=(0, 16), sticky="ew")
 
-        self.priority = PriorityBadge(self, task.get("priority", "medium"))
+        self.priority = PriorityBadge(
+            self,
+            self.app,
+            task.get("priority", "medium")
+        )
         self.priority.grid(row=0, column=2, rowspan=2, padx=(12, 8), pady=20)
 
         if self.is_completed:

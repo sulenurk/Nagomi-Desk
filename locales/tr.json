@@ -229,5 +229,8 @@
   "alarm_analog": "Analog",
   "alarm_beep": "Beep",
   "alarm_galaxy": "Galaxy",
-  "alarm_dance": "Dans"
+  "alarm_dance": "Dans",
+
+  "always_on_top": "Her Zaman Üstte",
+  "always_on_top_desc": "Minimal sayaç görünümünü diğer pencerelerin üzerinde tutar."
 }

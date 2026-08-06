@@ -229,5 +229,8 @@
   "alarm_analog": "Analogique",
   "alarm_beep": "Bip",
   "alarm_galaxy": "Galaxie",
-  "alarm_dance": "Danse"
+  "alarm_dance": "Danse",
+
+  "always_on_top": "Toujours au Premier Plan",
+  "always_on_top_desc": "Maintient la vue minimale du minuteur au-dessus des autres fenêtres."
 }

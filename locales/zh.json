@@ -229,5 +229,8 @@
   "alarm_analog": "模拟",
   "alarm_beep": "哔哔声",
   "alarm_galaxy": "星系",
-  "alarm_dance": "舞蹈"
+  "alarm_dance": "舞蹈",
+
+  "always_on_top": "始终置顶",
+  "always_on_top_desc": "使最小计时器视图始终显示在其他窗口上方。"
 }
