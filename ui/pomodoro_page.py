@@ -230,6 +230,8 @@ class PomodoroPage(ctk.CTkFrame):
         self.scroll.grid_remove()
         self.create_fullscreen_view()
 
+        self.app.update_minimal_always_on_top()
+
         self.fullscreen_resize_bind_id = self.app.bind(
             "<Configure>",
             self._schedule_fullscreen_resize,
@@ -260,6 +262,7 @@ class PomodoroPage(ctk.CTkFrame):
             return
 
         self.fullscreen_mode = False
+        self.app.update_minimal_always_on_top()
 
         if self.fullscreen_resize_after_id is not None:
             try:

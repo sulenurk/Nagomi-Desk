@@ -89,6 +89,8 @@ class FocusPage(ctk.CTkFrame):
         self.create_fullscreen_view() 
         self.load_active_task()   
 
+        self.app.update_minimal_always_on_top()
+
         self.fullscreen_resize_bind_id = root.bind(
             "<Configure>",
             self._schedule_fullscreen_resize,
@@ -105,6 +107,8 @@ class FocusPage(ctk.CTkFrame):
     def exit_fullscreen(self):
 
         self.fullscreen_mode = False
+
+        self.app.update_minimal_always_on_top()
 
         if self.fullscreen_resize_after_id is not None:
             try:

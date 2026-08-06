@@ -379,12 +379,35 @@ class SettingsPage(ctk.CTkFrame):
         )
         self.cumulative_away_switch.grid(row=0, column=1, rowspan=2, padx=20, pady=18)
 
+        self.always_on_top_frame = self.create_setting_row(
+            row=7,
+            title_key="always_on_top",
+            description_key="always_on_top_desc"
+        )
+
+        self.always_on_top_switch = ctk.CTkSwitch(
+            self.always_on_top_frame,
+            text="",
+            progress_color=COLORS["primary"],
+            button_color=COLORS["text"],
+            button_hover_color=COLORS["soft"],
+            command=self.save_settings
+        )
+
+        self.always_on_top_switch.grid(
+            row=0,
+            column=1,
+            rowspan=2,
+            padx=20,
+            pady=18
+        )
+
         self.week_start_frame = ctk.CTkFrame(
             self.settings_card,
             fg_color=COLORS["surface"],
             corner_radius=18
         )
-        self.week_start_frame.grid(row=7, column=0, padx=20, pady=(8, 8), sticky="ew")
+        self.week_start_frame.grid(row=8, column=0, padx=20, pady=(8, 8), sticky="ew")
         self.week_start_frame.grid_columnconfigure(0, weight=1)
 
         self.week_start_label = ctk.CTkLabel(
@@ -424,7 +447,7 @@ class SettingsPage(ctk.CTkFrame):
             fg_color=COLORS["surface"],
             corner_radius=18
         )
-        self.palette_frame.grid(row=8, column=0, padx=20, pady=(8, 8), sticky="ew")
+        self.palette_frame.grid(row=9, column=0, padx=20, pady=(8, 8), sticky="ew")
         self.palette_frame.grid_columnconfigure(0, weight=1)
 
         self.palette_title = ctk.CTkLabel(
@@ -452,7 +475,7 @@ class SettingsPage(ctk.CTkFrame):
             fg_color=COLORS["surface"],
             corner_radius=18
         )
-        self.data_frame.grid(row=9, column=0, padx=20, pady=(8, 20), sticky="ew")
+        self.data_frame.grid(row=10, column=0, padx=20, pady=(8, 20), sticky="ew")
         self.data_frame.grid_columnconfigure(0, weight=1)
         self.data_frame.grid_columnconfigure(1, weight=1)
 
@@ -525,7 +548,7 @@ class SettingsPage(ctk.CTkFrame):
             text="",
             text_color=COLORS["green"],
             font=ctk.CTkFont(size=13, weight="bold"))
-        self.status_label.grid(row=10, column=0, padx=20, pady=(0, 18), sticky="w")
+        self.status_label.grid(row=11, column=0, padx=20, pady=(0, 18), sticky="w")
 
     def export_study_history_excel(self):
         sessions = self.app.app_data.get("sessions", [])
@@ -689,6 +712,7 @@ class SettingsPage(ctk.CTkFrame):
                 "auto_start_break": False,
                 "auto_start_focus": False,
                 "sound_enabled": True,
+                "always_on_top": False,
                 "daily_focus_goal_minutes": 300,
                 "regular_focus_minutes": 25,
                 "regular_short_break_minutes": 5,
@@ -854,6 +878,11 @@ class SettingsPage(ctk.CTkFrame):
         else:
             self.sound_switch.deselect()
 
+        if settings.get("always_on_top", False):
+            self.always_on_top_switch.select()
+        else:
+            self.always_on_top_switch.deselect()
+
         selected_alarm = settings.get("selected_alarm", "Birdy")
         self.alarm_menu.set(selected_alarm)
         
@@ -906,6 +935,7 @@ class SettingsPage(ctk.CTkFrame):
         settings["auto_start_break"] = bool(self.auto_break_switch.get())
         settings["auto_start_focus"] = bool(self.auto_focus_switch.get())
         settings["sound_enabled"] = bool(self.sound_switch.get())
+        settings["always_on_top"] = bool(self.always_on_top_switch.get())
 
         goal_value = self.goal_entry.get().strip()
 
@@ -924,6 +954,7 @@ class SettingsPage(ctk.CTkFrame):
             self.app.focus_page.refresh_away_card_visibility()
 
         self.app.save_app_data()
+        self.app.update_minimal_always_on_top()
         self.status_label.configure(text=self.app.t("settings_saved"))
 
         self.after(2000, lambda: self.status_label.configure(text=""))
@@ -937,7 +968,8 @@ class SettingsPage(ctk.CTkFrame):
             self.auto_focus_frame,
             self.sound_frame,
             self.queue_progress_frame,
-            self.cumulative_away_frame
+            self.cumulative_away_frame,
+            self.always_on_top_frame
         ]:
             frame.title_label.configure(text=self.app.t(frame.title_key))
             frame.desc_label.configure(text=self.app.t(frame.description_key))

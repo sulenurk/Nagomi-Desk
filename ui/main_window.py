@@ -150,6 +150,7 @@ class NagomiDeskApp(ctk.CTk):
             "auto_start_break": False,
             "auto_start_focus": False,
             "sound_enabled": True,
+            "always_on_top": False,
             "daily_focus_goal_minutes": 300,
             "regular_focus_minutes": 25,
             "regular_short_break_minutes": 5,
@@ -614,6 +615,35 @@ class NagomiDeskApp(ctk.CTk):
         self.update_quick_actions()
         if hasattr(self, "settings_page"):
             self.settings_page.load_settings()
+
+    def update_minimal_always_on_top(self):
+        settings = self.app_data.get("settings", {})
+
+        always_on_top_enabled = settings.get(
+            "always_on_top",
+            False
+        )
+
+        focus_fullscreen = (
+            hasattr(self, "focus_page")
+            and self.focus_page.fullscreen_mode
+        )
+
+        pomodoro_fullscreen = (
+            hasattr(self, "pomodoro_page")
+            and self.pomodoro_page.fullscreen_mode
+        )
+
+        minimal_view_active = (
+            focus_fullscreen
+            or pomodoro_fullscreen
+        )
+
+        self.attributes(
+            "-topmost",
+            always_on_top_enabled
+            and minimal_view_active
+        )
 
     
     def get_language_options(self):
