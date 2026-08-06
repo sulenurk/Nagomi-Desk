@@ -23,6 +23,10 @@ Thumbs.db
 build/
 dist/
 *.spec
+*.exe
+*.msix
+*.msixbundle
+installer/*.exe
 
 # Local data backup
 data/*.backup.json
