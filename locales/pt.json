@@ -229,5 +229,8 @@
   "alarm_analog": "Analógico",
   "alarm_beep": "Bipe",
   "alarm_galaxy": "Galáxia",
-  "alarm_dance": "Dança"
+  "alarm_dance": "Dança",
+
+  "always_on_top": "Sempre no Topo",
+  "always_on_top_desc": "Mantém a visualização mínima do temporizador acima das outras janelas."
 }

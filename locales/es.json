@@ -229,5 +229,8 @@
   "alarm_analog": "Analógico",
   "alarm_beep": "Pitido",
   "alarm_galaxy": "Galaxia",
-  "alarm_dance": "Baile"
+  "alarm_dance": "Baile",
+
+  "always_on_top": "Siempre Visible",
+  "always_on_top_desc": "Mantiene la vista mínima del temporizador sobre las demás ventanas."
 }
