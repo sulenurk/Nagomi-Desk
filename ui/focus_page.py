@@ -525,9 +525,18 @@ class FocusPage(ctk.CTkFrame):
                 )
             )
 
-            alarm_button.grid_configure(
-                padx=4 if tiny_mode else 8
-            )
+            if (
+                getattr(self.app, "alarm_active", False)
+                and getattr(self.app, "alarm_source", None) == "focus"
+            ):
+                alarm_button.grid(
+                    row=0,
+                    column=0,
+                    padx=4 if tiny_mode else 8,
+                    pady=4
+                )
+            else:
+                alarm_button.grid_remove()
 
     def create_fullscreen_view(self):
         self.fullscreen_frame = ctk.CTkFrame(
