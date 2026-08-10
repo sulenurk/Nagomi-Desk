@@ -650,12 +650,12 @@ class FocusPage(ctk.CTkFrame):
             padx=10
         )
 
-        Tooltip(
+        """ Tooltip(
             self.fullscreen_start_button,
             self.app.t("tooltip_pause")
             if self.is_running
             else self.app.t("tooltip_start")
-        )
+        ) """
 
         self.fullscreen_exit_button = FullscreenSecondaryButton(
             self.fullscreen_button_frame,
