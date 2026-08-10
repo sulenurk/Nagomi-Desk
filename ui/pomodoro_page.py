@@ -743,12 +743,12 @@ class PomodoroPage(ctk.CTkFrame):
             padx=10
         )
 
-        Tooltip(
+        """ Tooltip(
             self.fullscreen_start_button,
             self.app.t("tooltip_pause")
             if self.is_running
             else self.app.t("tooltip_start")
-        )
+        ) """
 
         self.fullscreen_reset_button = FullscreenSecondaryButton(
             self.fullscreen_button_frame,
@@ -1017,10 +1017,10 @@ class PomodoroPage(ctk.CTkFrame):
             font=ctk.CTkFont(size=22, weight="bold")
         )
         self.start_button.grid(row=0, column=0, padx=10)
-        Tooltip(
+        """ Tooltip(
             self.start_button,
             self.app.t("tooltip_start")
-        )
+        ) """
 
         self.reset_button = ctk.CTkButton(
             self.button_frame,
