@@ -402,12 +402,35 @@ class SettingsPage(ctk.CTkFrame):
             pady=18
         )
 
+        self.extra_time_frame = self.create_setting_row(
+            row=8,
+            title_key="extra_time",
+            description_key="extra_time_desc"
+        )
+
+        self.extra_time_switch = ctk.CTkSwitch(
+            self.extra_time_frame,
+            text="",
+            progress_color=COLORS["primary"],
+            button_color=COLORS["text"],
+            button_hover_color=COLORS["soft"],
+            command=self.save_settings
+        )
+
+        self.extra_time_switch.grid(
+            row=0,
+            column=1,
+            rowspan=2,
+            padx=20,
+            pady=18
+        )
+
         self.week_start_frame = ctk.CTkFrame(
             self.settings_card,
             fg_color=COLORS["surface"],
             corner_radius=18
         )
-        self.week_start_frame.grid(row=8, column=0, padx=20, pady=(8, 8), sticky="ew")
+        self.week_start_frame.grid(row=9, column=0, padx=20, pady=(8, 8), sticky="ew")
         self.week_start_frame.grid_columnconfigure(0, weight=1)
 
         self.week_start_label = ctk.CTkLabel(
@@ -447,7 +470,7 @@ class SettingsPage(ctk.CTkFrame):
             fg_color=COLORS["surface"],
             corner_radius=18
         )
-        self.palette_frame.grid(row=9, column=0, padx=20, pady=(8, 8), sticky="ew")
+        self.palette_frame.grid(row=10, column=0, padx=20, pady=(8, 8), sticky="ew")
         self.palette_frame.grid_columnconfigure(0, weight=1)
 
         self.palette_title = ctk.CTkLabel(
@@ -475,7 +498,7 @@ class SettingsPage(ctk.CTkFrame):
             fg_color=COLORS["surface"],
             corner_radius=18
         )
-        self.data_frame.grid(row=10, column=0, padx=20, pady=(8, 20), sticky="ew")
+        self.data_frame.grid(row=11, column=0, padx=20, pady=(8, 20), sticky="ew")
         self.data_frame.grid_columnconfigure(0, weight=1)
         self.data_frame.grid_columnconfigure(1, weight=1)
 
@@ -548,7 +571,7 @@ class SettingsPage(ctk.CTkFrame):
             text="",
             text_color=COLORS["green"],
             font=ctk.CTkFont(size=13, weight="bold"))
-        self.status_label.grid(row=11, column=0, padx=20, pady=(0, 18), sticky="w")
+        self.status_label.grid(row=12, column=0, padx=20, pady=(0, 18), sticky="w")
 
     def export_study_history_excel(self):
         sessions = self.app.app_data.get("sessions", [])
@@ -713,6 +736,7 @@ class SettingsPage(ctk.CTkFrame):
                 "auto_start_focus": False,
                 "sound_enabled": True,
                 "always_on_top": False,
+                "extra_time_enabled": False,
                 "daily_focus_goal_minutes": 300,
                 "regular_focus_minutes": 25,
                 "regular_short_break_minutes": 5,
@@ -883,6 +907,11 @@ class SettingsPage(ctk.CTkFrame):
         else:
             self.always_on_top_switch.deselect()
 
+        if settings.get("extra_time_enabled", False):
+            self.extra_time_switch.select()
+        else:
+            self.extra_time_switch.deselect()
+
         selected_alarm = settings.get("selected_alarm", "Birdy")
         self.alarm_menu.set(selected_alarm)
         
@@ -936,6 +965,7 @@ class SettingsPage(ctk.CTkFrame):
         settings["auto_start_focus"] = bool(self.auto_focus_switch.get())
         settings["sound_enabled"] = bool(self.sound_switch.get())
         settings["always_on_top"] = bool(self.always_on_top_switch.get())
+        settings["extra_time_enabled"] = bool(self.extra_time_switch.get())
 
         goal_value = self.goal_entry.get().strip()
 
@@ -969,7 +999,8 @@ class SettingsPage(ctk.CTkFrame):
             self.sound_frame,
             self.queue_progress_frame,
             self.cumulative_away_frame,
-            self.always_on_top_frame
+            self.always_on_top_frame,
+            self.extra_time_frame
         ]:
             frame.title_label.configure(text=self.app.t(frame.title_key))
             frame.desc_label.configure(text=self.app.t(frame.description_key))

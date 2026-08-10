@@ -16,6 +16,10 @@ class FocusPage(ctk.CTkFrame):
 
         self.current_mode = "focus"  # focus or break
         self.is_waiting_for_next = False
+
+        self.is_extra_time = False
+        self.extra_time_seconds = 0
+        self.is_waiting_for_completion_choice = False
         
         self.fullscreen_mode = False
         self.fullscreen_frame = None
@@ -27,6 +31,11 @@ class FocusPage(ctk.CTkFrame):
         self.fullscreen_status_label = None
         self.fullscreen_button_frame = None
         self.fullscreen_exit_button = None
+        self.fullscreen_extra_time_button = None
+        self.fullscreen_finish_extra_time_button = None
+
+        self.skip_break_button = None
+        self.fullscreen_skip_break_button = None
 
         self.previous_geometry = None
         self.previous_window_state = None
@@ -392,15 +401,21 @@ class FocusPage(ctk.CTkFrame):
             )
         )
 
-        self.fullscreen_start_button.grid_configure(
-            row=0,
-            column=0,
-            padx=3 if tiny_mode else horizontal_padding
-        )
+        if (
+            self.is_waiting_for_completion_choice
+            or self.is_extra_time
+        ):
+            self.fullscreen_start_button.grid_remove()
+        else:
+            self.fullscreen_start_button.grid(
+                row=0,
+                column=0,
+                padx=3 if tiny_mode else horizontal_padding
+            )
 
         self.fullscreen_exit_button.grid_configure(
             row=0,
-            column=1,
+            column=2,
             padx=3 if tiny_mode else horizontal_padding
         )
 
@@ -529,12 +544,22 @@ class FocusPage(ctk.CTkFrame):
                 getattr(self.app, "alarm_active", False)
                 and getattr(self.app, "alarm_source", None) == "focus"
             ):
-                alarm_button.grid(
-                    row=0,
-                    column=0,
-                    padx=4 if tiny_mode else 8,
-                    pady=4
-                )
+                if self.is_waiting_for_completion_choice:
+                    alarm_button.grid(
+                        row=0,
+                        column=0,
+                        columnspan=1,
+                        padx=4 if tiny_mode else 8,
+                        pady=4
+                    )
+                else:
+                    alarm_button.grid(
+                        row=0,
+                        column=0,
+                        columnspan=2,
+                        padx=4 if tiny_mode else 8,
+                        pady=4
+                    )
             else:
                 alarm_button.grid_remove()
 
@@ -570,6 +595,9 @@ class FocusPage(ctk.CTkFrame):
             6,
             weight=1
         )
+
+
+        # ÜST BOŞLUK
         self.fullscreen_top_spacer = ctk.CTkFrame(
             self.fullscreen_frame,
             fg_color="transparent"
@@ -581,9 +609,21 @@ class FocusPage(ctk.CTkFrame):
             sticky="nsew"
         )
 
+
+        # STATUS
+        status_text = (
+            self.app.t("extra_time")
+            if self.is_extra_time
+            else (
+                self.app.t("break_mode")
+                if self.current_mode == "break"
+                else self.app.t("focus_mode")
+            )
+        )
+
         self.fullscreen_status_label = ctk.CTkLabel(
             self.fullscreen_frame,
-            text=self.app.t("focus_mode"),
+            text=status_text,
             text_color=COLORS["primary"],
             font=ctk.CTkFont(
                 size=26,
@@ -597,11 +637,20 @@ class FocusPage(ctk.CTkFrame):
             pady=(8, 20)
         )
 
+
+        # TIMER
+        if self.is_extra_time:
+            timer_text = self.format_time(
+                self.extra_time_seconds
+            )
+        else:
+            timer_text = self.format_time(
+                self.remaining_seconds
+            )
+
         self.fullscreen_timer_label = ctk.CTkLabel(
             self.fullscreen_frame,
-            text=self.format_time(
-                self.remaining_seconds
-            ),
+            text=timer_text,
             text_color=COLORS["text"],
             font=ctk.CTkFont(
                 size=150,
@@ -615,6 +664,8 @@ class FocusPage(ctk.CTkFrame):
             pady=(0, 30)
         )
 
+
+        # ANA BUTON FRAME
         self.fullscreen_button_frame = ctk.CTkFrame(
             self.fullscreen_frame,
             fg_color="transparent"
@@ -626,17 +677,24 @@ class FocusPage(ctk.CTkFrame):
             pady=(0, 18)
         )
 
-        fullscreen_text = (
-            self.app.t("pause")
-            if self.is_running
-            else self.app.t("start")
-        )
 
-        fullscreen_command = (
-            self.pause_timer
-            if self.is_running
-            else self.start_timer
-        )
+        # START / PAUSE BUTTON
+        if self.is_running:
+            fullscreen_text = self.app.t("pause")
+            fullscreen_command = self.pause_timer
+
+        elif self.is_waiting_for_next:
+            if self.current_mode == "break":
+                fullscreen_text = self.app.t("start_break")
+            else:
+                fullscreen_text = self.app.t("start_focus")
+
+            fullscreen_command = self.start_timer
+
+        else:
+            fullscreen_text = self.app.t("start")
+            fullscreen_command = self.start_timer
+
 
         self.fullscreen_start_button = FullscreenPrimaryButton(
             self.fullscreen_button_frame,
@@ -650,13 +708,22 @@ class FocusPage(ctk.CTkFrame):
             padx=10
         )
 
-        """ Tooltip(
-            self.fullscreen_start_button,
-            self.app.t("tooltip_pause")
-            if self.is_running
-            else self.app.t("tooltip_start")
-        ) """
+        self.fullscreen_skip_break_button = FullscreenSecondaryButton(
+            self.fullscreen_button_frame,
+            text=self.app.t("skip_break"),
+            command=self.skip_break
+        )
 
+        self.fullscreen_skip_break_button.grid(
+            row=0,
+            column=1,
+            padx=10
+        )
+
+        if self.current_mode != "break":
+            self.fullscreen_skip_break_button.grid_remove()
+
+        # FULLSCREEN EXIT BUTTON
         self.fullscreen_exit_button = FullscreenSecondaryButton(
             self.fullscreen_button_frame,
             text="✕",
@@ -665,7 +732,7 @@ class FocusPage(ctk.CTkFrame):
 
         self.fullscreen_exit_button.grid(
             row=0,
-            column=1,
+            column=2,
             padx=10
         )
 
@@ -674,6 +741,8 @@ class FocusPage(ctk.CTkFrame):
             self.app.t("tooltip_exit_fullscreen")
         )
 
+
+        # ALARM / EXTRA TIME FRAME
         self.fullscreen_alarm_frame = ctk.CTkFrame(
             self.fullscreen_frame,
             fg_color="transparent",
@@ -690,8 +759,15 @@ class FocusPage(ctk.CTkFrame):
 
         self.fullscreen_alarm_frame.grid_columnconfigure(
             0,
-            weight=1
+            weight=0
         )
+
+        self.fullscreen_alarm_frame.grid_columnconfigure(
+            1,
+            weight=0
+        )
+
+        self.fullscreen_alarm_frame.grid_anchor("center")
 
         self.fullscreen_alarm_frame.grid_rowconfigure(
             0,
@@ -700,6 +776,8 @@ class FocusPage(ctk.CTkFrame):
 
         self.fullscreen_alarm_frame.grid_propagate(False)
 
+
+        # TASK LABEL
         self.fullscreen_task_label = ctk.CTkLabel(
             self.fullscreen_frame,
             text="",
@@ -717,6 +795,8 @@ class FocusPage(ctk.CTkFrame):
             sticky="n"
         )
 
+
+        # ALT BOŞLUK
         self.fullscreen_bottom_spacer = ctk.CTkFrame(
             self.fullscreen_frame,
             fg_color="transparent"
@@ -728,14 +808,72 @@ class FocusPage(ctk.CTkFrame):
             sticky="nsew"
         )
 
-        if (
-            getattr(self.app, "alarm_active", False)
-            and getattr(self.app, "alarm_source", None) == "focus"
-        ):
+
+        # -------------------------------------------------
+        # CURRENT TIMER STATE'E GÖRE FULLSCREEN CONTROLS
+        # -------------------------------------------------
+
+        if self.is_waiting_for_completion_choice:
+
+            # Focus bitti:
+            # Stop Alarm + Extra Time
             self.show_fullscreen_alarm_button()
 
+            self.fullscreen_start_button.grid_remove()
+
+
+        elif self.is_extra_time:
+
+            # Extra Time aktif:
+            # yalnızca Finish
+            self.fullscreen_start_button.grid_remove()
+
+            if (
+                self.fullscreen_finish_extra_time_button is None
+                or not self.fullscreen_finish_extra_time_button.winfo_exists()
+            ):
+                self.fullscreen_finish_extra_time_button = ctk.CTkButton(
+                    self.fullscreen_alarm_frame,
+                    text=self.app.t("finish"),
+                    command=self.finish_extra_time,
+                    width=220,
+                    height=50,
+                    corner_radius=16,
+                    fg_color=COLORS["green"],
+                    text_color=COLORS["white"],
+                    font=ctk.CTkFont(
+                        size=15,
+                        weight="bold"
+                    )
+                )
+
+            self.fullscreen_finish_extra_time_button.grid(
+                row=0,
+                column=0,
+                columnspan=2,
+                padx=8,
+                pady=4
+            )
+
+
+        elif (
+            getattr(self.app, "alarm_active", False)
+            and getattr(
+                self.app,
+                "alarm_source",
+                None
+            ) == "focus"
+        ):
+
+            # Normal alarm state
+            self.show_fullscreen_alarm_button()
+
+
+        # TASK INFO
         self.update_fullscreen_task_info()
 
+
+        # RESPONSIVE RESIZE
         self.app.after_idle(
             self.resize_fullscreen_view
         )
@@ -845,6 +983,21 @@ class FocusPage(ctk.CTkFrame):
         )
         self.reset_button.grid(row=0, column=2, padx=8)
 
+        self.skip_break_button = SecondaryButton(
+            self.button_frame,
+            text=self.app.t("skip_break"),
+            command=self.skip_break,
+            width=130
+        )
+
+        self.skip_break_button.grid(
+            row=0,
+            column=1,
+            padx=8
+        )
+
+        self.skip_break_button.grid_remove()
+
         self.stop_alarm_button = ctk.CTkButton(
             self.button_frame,
             text=f"🔕 {self.app.t('stop_alarm')}",
@@ -861,11 +1014,55 @@ class FocusPage(ctk.CTkFrame):
         self.stop_alarm_button.grid(
             row=1,
             column=0,
+            pady=(16, 0),
+            padx=(0, 8)
+        )
+
+        self.stop_alarm_button.grid_remove()
+
+        self.extra_time_button = ctk.CTkButton(
+            self.button_frame,
+            text=f"+ {self.app.t('extra_time')}",
+            command=self.start_extra_time,
+            width=180,
+            height=40,
+            corner_radius=12,
+            fg_color=COLORS["primary"],
+            hover_color=COLORS["primary_hover"],
+            text_color=COLORS["white"],
+            font=ctk.CTkFont(size=14, weight="bold")
+        )
+
+        self.extra_time_button.grid(
+            row=1,
+            column=1,
+            pady=(16, 0),
+            padx=(8, 0)
+        )
+
+        self.extra_time_button.grid_remove()
+
+
+        self.finish_extra_time_button = ctk.CTkButton(
+            self.button_frame,
+            text=self.app.t("finish"),
+            command=self.finish_extra_time,
+            width=180,
+            height=40,
+            corner_radius=12,
+            fg_color=COLORS["green"],
+            text_color=COLORS["white"],
+            font=ctk.CTkFont(size=14, weight="bold")
+        )
+
+        self.finish_extra_time_button.grid(
+            row=1,
+            column=0,
             columnspan=3,
             pady=(16, 0)
         )
 
-        self.stop_alarm_button.grid_remove()
+        self.finish_extra_time_button.grid_remove()
 
         self.away_warning_label = ctk.CTkLabel(
             self.timer_card,
@@ -1192,6 +1389,19 @@ class FocusPage(ctk.CTkFrame):
     def load_active_task(self):
         task = self.app.get_active_task()
 
+        if self.is_waiting_for_completion_choice:
+            self.timer_label.configure(text="00:00")
+
+            self.status_pill.configure(
+                text=self.app.t("completed_status"),
+                fg_color="#065F46",
+                text_color="#D1FAE5"
+            )
+
+            self.show_completion_choice_controls()
+            self.update_fullscreen_task_info()
+            return
+
         if not task:
             empty_title, empty_detail = self.get_focus_empty_state_texts()
 
@@ -1218,7 +1428,13 @@ class FocusPage(ctk.CTkFrame):
                 self.focus_seconds = 25 * 60
                 self.break_seconds = 5 * 60
 
-            if not self.is_running and not self.is_paused:
+            if (
+                not self.is_running
+                and not self.is_paused
+                and not self.is_waiting_for_next
+                and not self.is_waiting_for_completion_choice
+                and not self.is_extra_time
+            ):
                 self.current_mode = "focus"
 
                 if last_queue_state == "completed":
@@ -1329,7 +1545,13 @@ class FocusPage(ctk.CTkFrame):
         self.break_seconds = break_minutes * 60
 
 
-        if not self.is_running and not self.is_paused:
+        if (
+            not self.is_running
+            and not self.is_paused
+            and not self.is_waiting_for_next
+            and not self.is_waiting_for_completion_choice
+            and not self.is_extra_time
+        ):
 
             self.current_mode = "focus"
 
@@ -1395,6 +1617,27 @@ class FocusPage(ctk.CTkFrame):
         self.update_mode_ui()
         self._set_timer_controls_running()
 
+        if self.current_mode == "break":
+            if (
+                self.skip_break_button is not None
+                and self.skip_break_button.winfo_exists()
+            ):
+                self.skip_break_button.grid(
+                    row=0,
+                    column=1,
+                    padx=8
+                )
+
+            if (
+                self.fullscreen_skip_break_button is not None
+                and self.fullscreen_skip_break_button.winfo_exists()
+            ):
+                self.fullscreen_skip_break_button.grid(
+                    row=0,
+                    column=1,
+                    padx=10
+                )
+
         self.count_down()
 
     def pause_timer(self):
@@ -1425,6 +1668,8 @@ class FocusPage(ctk.CTkFrame):
         self.away_seconds = 0
         self.session_away_seconds = 0
         self.current_mode = "focus"
+
+        self.hide_skip_break_controls()
 
         task = self.app.get_active_task()
 
@@ -1503,11 +1748,94 @@ class FocusPage(ctk.CTkFrame):
                 command=self.start_timer
             )
 
+            # Completion choice veya Extra Time sırasında
+            # normal Start/Resume butonunu gösterme.
+            if (
+                not self.is_waiting_for_completion_choice
+                and not self.is_extra_time
+            ):
+                fullscreen_start_button.grid(
+                    row=0,
+                    column=0,
+                    padx=10
+                )
+            else:
+                fullscreen_start_button.grid_remove()
+
 
     def get_current_mode_total_seconds(self):
         if self.current_mode == "focus":
             return self.focus_seconds
         return self.break_seconds
+
+    def skip_break(self):
+        if self.current_mode != "break":
+            return
+
+        # Çalışan break countdown'unu durdur.
+        self.is_running = False
+        self.is_paused = False
+        self.is_waiting_for_next = False
+
+        # Eğer break alarmı bir nedenle aktifse kapat.
+        self.app.stop_alarm()
+
+        # Skip butonlarını gizle.
+        if (
+            self.skip_break_button is not None
+            and self.skip_break_button.winfo_exists()
+        ):
+            self.skip_break_button.grid_remove()
+
+        if (
+            self.fullscreen_skip_break_button is not None
+            and self.fullscreen_skip_break_button.winfo_exists()
+        ):
+            self.fullscreen_skip_break_button.grid_remove()
+
+        # Queue kullanılıyorsa normal break tamamlanmış gibi
+        # sıradaki göreve geç.
+        if self.app.app_data.get(
+            "queue_mode_active",
+            False
+        ):
+            moved_to_next_task = (
+                self.app.move_to_next_queue_task()
+            )
+
+            if moved_to_next_task:
+                self.switch_to_focus_ready()
+                return
+
+            # Queue tamamen bittiyse
+            self.current_mode = "focus"
+
+            self.app.app_data["active_task_id"] = None
+            self.app.app_data["queue_mode_active"] = False
+            self.app.app_data["queue_task_ids"] = []
+            self.app.save_app_data()
+
+            self.load_active_task()
+            self.update_queue_progress()
+
+            self._set_timer_controls_ready(
+                text_key="start"
+            )
+
+            self.status_pill.configure(
+                text=self.app.t("focus_mode"),
+                fg_color=COLORS["primary_soft"],
+                text_color=COLORS["white"]
+            )
+
+            self.away_warning_label.configure(
+                text=self.app.t("queue_completed")
+            )
+
+            return
+
+        # Queue yoksa doğrudan yeni focus'a hazırlan.
+        self.switch_to_focus_ready()
 
     def switch_to_break_ready(self):
         self.current_mode = "break"
@@ -1539,6 +1867,26 @@ class FocusPage(ctk.CTkFrame):
         self._set_timer_controls_ready(
             text_key="start_break"
         )
+
+        if (
+            self.skip_break_button is not None
+            and self.skip_break_button.winfo_exists()
+        ):
+            self.skip_break_button.grid(
+                row=0,
+                column=1,
+                padx=8
+            )
+
+        if (
+            self.fullscreen_skip_break_button is not None
+            and self.fullscreen_skip_break_button.winfo_exists()
+        ):
+            self.fullscreen_skip_break_button.grid(
+                row=0,
+                column=1,
+                padx=10
+            )
 
         self.task_progress.set(0)
         self.task_progress_label.configure(text="0%")
@@ -1577,6 +1925,18 @@ class FocusPage(ctk.CTkFrame):
         self.timer_label.configure(
             text=self.format_time(self.remaining_seconds)
         )
+
+        if (
+            self.skip_break_button is not None
+            and self.skip_break_button.winfo_exists()
+        ):
+            self.skip_break_button.grid_remove()
+
+        if (
+            self.fullscreen_skip_break_button is not None
+            and self.fullscreen_skip_break_button.winfo_exists()
+        ):
+            self.fullscreen_skip_break_button.grid_remove()
 
         fullscreen_timer_label = getattr(
             self,
@@ -1705,52 +2065,60 @@ class FocusPage(ctk.CTkFrame):
                 text=self.app.t("focus_completed")
             )
 
-            self.update_queue_progress()
-
             self.status_pill.configure(
                 text=self.app.t("completed_status"),
                 fg_color="#065F46",
                 text_color="#D1FAE5"
             )
 
-            active_task = self.app.get_active_task()
-            active_task_id = (
-                active_task.get("id")
-                if active_task
-                else None
+            settings = self.app.app_data.get(
+                "settings",
+                {}
             )
 
-            self.app.app_data["total_focus_seconds_today"] = (
-                self.app.app_data.get(
-                    "total_focus_seconds_today",
-                    0
-                )
-                + self.focus_seconds
-            )
-
-            self.log_focus_session()
-
-            if self.app.app_data.get(
-                "queue_mode_active",
+            extra_time_enabled = settings.get(
+                "extra_time_enabled",
                 False
-            ):
-                self.app.mark_task_completed(
-                    active_task_id
-                )
+            )
 
-            self.app.save_app_data()
-            self.update_total_focus_label()
+            auto_start_break = settings.get(
+                "auto_start_break",
+                False
+            )
 
-            if hasattr(
-                self.app,
-                "statistics_page"
-            ):
-                self.app.statistics_page.refresh_stats()
+            # Auto Start açıksa Extra Time seçimini atla.
+            # Focus session'ı tamamla ve doğrudan break'e geç.
+            if auto_start_break:
+                self.is_waiting_for_completion_choice = False
+                self.is_extra_time = False
+                self.extra_time_seconds = 0
 
-            self.session_away_seconds = 0
-            self.away_seconds = 0
-            self.update_away_metric()
-            self.switch_to_break_ready()
+                self.hide_completion_choice_controls()
+
+                # Focus session'ını kapat.
+                # Bu fonksiyon Break'e geçecek ve Auto Start
+                # açıksa break countdown'unu başlatacak.
+                self.finalize_focus_session()
+
+                # Alarm hâlâ çalıyorsa Stop Alarm butonu görünmeli.
+                if getattr(self.app, "alarm_active", False):
+                    self.show_alarm_controls()
+
+                return
+
+            # Auto Start kapalıysa ve Extra Time açıksa
+            # kullanıcı karar versin.
+            if extra_time_enabled:
+                self.is_waiting_for_completion_choice = True
+                self.is_extra_time = False
+                self.extra_time_seconds = 0
+
+                self.show_completion_choice_controls()
+                return
+
+            # Ne Auto Start ne de Extra Time seçimi gerekiyorsa
+            # normal şekilde break-ready ekranına geç.
+            self.finalize_focus_session()
             return
 
         self.away_warning_label.configure(
@@ -1773,6 +2141,7 @@ class FocusPage(ctk.CTkFrame):
             self.is_paused = False
             self.is_waiting_for_next = False
             self.current_mode = "focus"
+            self.hide_skip_break_controls()
 
             self.app.app_data["active_task_id"] = None
             self.app.app_data["queue_mode_active"] = False
@@ -1882,7 +2251,13 @@ class FocusPage(ctk.CTkFrame):
 
         self.reset_button.configure(text=self.app.t("reset"))
 
-        if not self.is_running and not self.is_paused:
+        if (
+            not self.is_running
+            and not self.is_paused
+            and not self.is_waiting_for_next
+            and not self.is_waiting_for_completion_choice
+            and not self.is_extra_time
+        ):
             self.load_active_task()
 
         self.update_queue_progress()
@@ -1906,7 +2281,12 @@ class FocusPage(ctk.CTkFrame):
             "subject_name": task.get("subject_name", self.app.t("other_subject")),
             "mode": "focus",
             "source": "study_plan",
-            "duration_seconds": self.focus_seconds,
+            "planned_seconds": self.focus_seconds,
+            "extra_time_seconds": self.extra_time_seconds,
+            "duration_seconds": (
+                self.focus_seconds
+                + self.extra_time_seconds
+            ),
             "away_seconds": self.session_away_seconds,
             "completed_at": datetime.now().isoformat(timespec="seconds")
         }
@@ -2078,8 +2458,309 @@ class FocusPage(ctk.CTkFrame):
     def start_alarm(self):
         self.app.play_alarm("focus")
 
+    def show_completion_choice_controls(self):
+
+        # -------------------------
+        # NORMAL VIEW
+        # -------------------------
+
+        self.start_button.grid_remove()
+        self.reset_button.grid_remove()
+
+        self.stop_alarm_button.configure(
+            text=self.app.t("continue_to_break"),
+            command=self.continue_to_break
+        )
+
+        self.stop_alarm_button.grid(
+            row=1,
+            column=0,
+            columnspan=1,
+            pady=(16, 0),
+            padx=(0, 8)
+        )
+
+        self.extra_time_button.grid(
+            row=1,
+            column=1,
+            columnspan=1,
+            pady=(16, 0),
+            padx=(8, 0)
+        )
+
+        self.finish_extra_time_button.grid_remove()
+
+
+        # -------------------------
+        # FULLSCREEN VIEW
+        # -------------------------
+
+        if not self.fullscreen_mode:
+            return
+
+        if (
+            self.fullscreen_start_button is not None
+            and self.fullscreen_start_button.winfo_exists()
+        ):
+            self.fullscreen_start_button.grid_remove()
+
+        self.show_fullscreen_alarm_button()
+
+
+    def hide_completion_choice_controls(self):
+        self.stop_alarm_button.grid_remove()
+        self.extra_time_button.grid_remove()
+        self.finish_extra_time_button.grid_remove()
+
+        if (
+            self.fullscreen_stop_alarm_button is not None
+            and self.fullscreen_stop_alarm_button.winfo_exists()
+        ):
+            self.fullscreen_stop_alarm_button.grid_remove()
+
+        if (
+            self.fullscreen_extra_time_button is not None
+            and self.fullscreen_extra_time_button.winfo_exists()
+        ):
+            self.fullscreen_extra_time_button.grid_remove()
+
+        if (
+            self.fullscreen_finish_extra_time_button is not None
+            and self.fullscreen_finish_extra_time_button.winfo_exists()
+        ):
+            self.fullscreen_finish_extra_time_button.grid_remove()
+
+
+    def restore_normal_timer_controls(self):
+        self.start_button.grid(
+            row=0,
+            column=0,
+            padx=8
+        )
+
+        self.reset_button.grid(
+            row=0,
+            column=2,
+            padx=8
+        )
+
+    def start_extra_time(self):
+        if not self.is_waiting_for_completion_choice:
+            return
+
+        self.app.stop_alarm()
+
+        self.is_waiting_for_completion_choice = False
+        self.is_extra_time = True
+        self.extra_time_seconds = 0
+
+        self.stop_alarm_button.grid_remove()
+        self.extra_time_button.grid_remove()
+
+        if (
+            self.fullscreen_stop_alarm_button is not None
+            and self.fullscreen_stop_alarm_button.winfo_exists()
+        ):
+            self.fullscreen_stop_alarm_button.grid_remove()
+
+        if (
+            self.fullscreen_extra_time_button is not None
+            and self.fullscreen_extra_time_button.winfo_exists()
+        ):
+            self.fullscreen_extra_time_button.grid_remove()
+
+        self.finish_extra_time_button.grid(
+            row=1,
+            column=0,
+            columnspan=3,
+            pady=(16, 0)
+        )
+
+        if (
+            self.fullscreen_mode
+            and self.fullscreen_alarm_frame is not None
+            and self.fullscreen_alarm_frame.winfo_exists()
+        ):
+            if (
+                self.fullscreen_finish_extra_time_button is None
+                or not self.fullscreen_finish_extra_time_button.winfo_exists()
+            ):
+                self.fullscreen_finish_extra_time_button = ctk.CTkButton(
+                    self.fullscreen_alarm_frame,
+                    text=self.app.t("finish"),
+                    command=self.finish_extra_time,
+                    width=220,
+                    height=50,
+                    corner_radius=16,
+                    fg_color=COLORS["green"],
+                    text_color=COLORS["white"],
+                    font=ctk.CTkFont(
+                        size=15,
+                        weight="bold"
+                    )
+                )
+
+            self.fullscreen_finish_extra_time_button.grid(
+                row=0,
+                column=0,
+                columnspan=2,
+                padx=8,
+                pady=4
+            )
+
+        self.timer_label.configure(
+            text="00:00"
+        )
+
+        self.status_pill.configure(
+            text=self.app.t("extra_time"),
+            fg_color=COLORS["primary_soft"],
+            text_color=COLORS["white"]
+        )
+
+        self.count_extra_time()
+
+
+    def count_extra_time(self):
+        if not self.is_extra_time:
+            return
+
+        time_text = self.format_time(
+            self.extra_time_seconds
+        )
+
+        self.timer_label.configure(
+            text=time_text
+        )
+
+        fullscreen_timer_label = getattr(
+            self,
+            "fullscreen_timer_label",
+            None
+        )
+
+        if (
+            fullscreen_timer_label is not None
+            and fullscreen_timer_label.winfo_exists()
+        ):
+            fullscreen_timer_label.configure(
+                text=time_text
+            )
+
+        self.extra_time_seconds += 1
+
+        self.after(
+            1000,
+            self.count_extra_time
+        )
+
+
+    def finish_extra_time(self):
+        if not self.is_extra_time:
+            return
+
+        if (
+            self.fullscreen_finish_extra_time_button is not None
+            and self.fullscreen_finish_extra_time_button.winfo_exists()
+        ):
+            self.fullscreen_finish_extra_time_button.grid_remove()
+
+        self.is_extra_time = False
+
+        self.finish_extra_time_button.grid_remove()
+
+        self.finalize_focus_session()
+
+    def finalize_focus_session(self):
+        active_task = self.app.get_active_task()
+
+        active_task_id = (
+            active_task.get("id")
+            if active_task
+            else None
+        )
+
+        total_focus_seconds = (
+            self.focus_seconds
+            + self.extra_time_seconds
+        )
+
+        self.app.app_data["total_focus_seconds_today"] = (
+            self.app.app_data.get(
+                "total_focus_seconds_today",
+                0
+            )
+            + total_focus_seconds
+        )
+
+        self.log_focus_session()
+
+        if self.app.app_data.get(
+            "queue_mode_active",
+            False
+        ):
+            self.app.mark_task_completed(
+                active_task_id
+            )
+
+        self.app.save_app_data()
+
+        self.update_total_focus_label()
+
+        if hasattr(
+            self.app,
+            "statistics_page"
+        ):
+            self.app.statistics_page.refresh_stats()
+
+        self.session_away_seconds = 0
+        self.away_seconds = 0
+
+        self.update_away_metric()
+
+        self.is_waiting_for_completion_choice = False
+        self.is_extra_time = False
+
+        self.hide_completion_choice_controls()
+        self.restore_normal_timer_controls()
+
+        self.switch_to_break_ready()
+
+        self.extra_time_seconds = 0
+
+    def continue_to_break(self):
+        if not self.is_waiting_for_completion_choice:
+            return
+
+        # Alarm çalıyorsa sustur.
+        self.app.stop_alarm()
+
+        # Completion choice ekranını kapat.
+        self.hide_completion_choice_controls()
+
+        self.is_waiting_for_completion_choice = False
+        self.is_extra_time = False
+
+        # Focus session'ını kaydet ve Break Ready durumuna geçir.
+        self.finalize_focus_session()
+
+        # Auto Start kapalı olsa bile kullanıcı özellikle
+        # "Molaya Geç" dediği için break'i hemen başlat.
+        if (
+            self.current_mode == "break"
+            and not self.is_running
+        ):
+            self.start_timer(manual_start=False)
+
     def dismiss_alarm(self):
         self.app.stop_alarm()
+
+        if (
+            self.current_mode == "focus"
+            and self.is_waiting_for_completion_choice
+        ):
+            self.hide_completion_choice_controls()
+            self.finalize_focus_session()
 
     def show_alarm_controls(self):
         if self.fullscreen_mode:
@@ -2091,23 +2772,39 @@ class FocusPage(ctk.CTkFrame):
 
     def hide_alarm_controls(self):
 
+        # Focus tamamlandı ve kullanıcı henüz
+        # Break / Extra Time kararını vermediyse
+        # karar butonlarını gizleme.
+        if self.is_waiting_for_completion_choice:
+            return
+
         self.hide_normal_alarm_button()
         self.hide_fullscreen_alarm_button()
 
     def show_normal_alarm_button(self):
 
         if (
-            self.stop_alarm_button is not None
-            and self.stop_alarm_button.winfo_exists()
+            self.stop_alarm_button is None
+            or not self.stop_alarm_button.winfo_exists()
         ):
-            self.stop_alarm_button.grid(
-                row=1,
-                column=0,
-                columnspan=3,
-                pady=(16, 0)
-            )
-            self.stop_alarm_button.lift()
+            return
 
+        # Bu fonksiyon gerçek alarm susturma hali için.
+        self.stop_alarm_button.configure(
+            text=f"🔕 {self.app.t('stop_alarm')}",
+            command=self.dismiss_alarm
+        )
+
+        self.stop_alarm_button.grid(
+            row=1,
+            column=0,
+            columnspan=3,
+            padx=8,
+            pady=(16, 0)
+        )
+
+        self.stop_alarm_button.lift()
+        
     def hide_normal_alarm_button(self):
 
         if (
@@ -2115,6 +2812,19 @@ class FocusPage(ctk.CTkFrame):
             and self.stop_alarm_button.winfo_exists()
         ):
             self.stop_alarm_button.grid_remove()
+
+    def hide_skip_break_controls(self):
+        if (
+            self.skip_break_button is not None
+            and self.skip_break_button.winfo_exists()
+        ):
+            self.skip_break_button.grid_remove()
+
+        if (
+            self.fullscreen_skip_break_button is not None
+            and self.fullscreen_skip_break_button.winfo_exists()
+        ):
+            self.fullscreen_skip_break_button.grid_remove()
 
     def show_fullscreen_alarm_button(self):
 
@@ -2124,19 +2834,18 @@ class FocusPage(ctk.CTkFrame):
         ):
             return
 
+        # SOL BUTON:
+        # completion choice sırasında -> Continue to Break
+        # normal alarm sırasında -> Stop Alarm
         if (
             self.fullscreen_stop_alarm_button is None
             or not self.fullscreen_stop_alarm_button.winfo_exists()
         ):
             self.fullscreen_stop_alarm_button = ctk.CTkButton(
                 self.fullscreen_alarm_frame,
-                text=f"🔕 {self.app.t('stop_alarm')}",
-                command=self.dismiss_alarm,
                 width=220,
                 height=50,
                 corner_radius=16,
-                fg_color=COLORS["red"],
-                hover_color="#DC2626",
                 text_color=COLORS["white"],
                 font=ctk.CTkFont(
                     size=15,
@@ -2144,12 +2853,77 @@ class FocusPage(ctk.CTkFrame):
                 )
             )
 
-        self.fullscreen_stop_alarm_button.grid(
-            row=0,
-            column=0,
-            padx=4,
-            pady=4
-        )
+        # EXTRA TIME
+        if (
+            self.fullscreen_extra_time_button is None
+            or not self.fullscreen_extra_time_button.winfo_exists()
+        ):
+            self.fullscreen_extra_time_button = ctk.CTkButton(
+                self.fullscreen_alarm_frame,
+                text=f"+ {self.app.t('extra_time')}",
+                command=self.start_extra_time,
+                width=220,
+                height=50,
+                corner_radius=16,
+                fg_color=COLORS["primary"],
+                hover_color=COLORS["primary_hover"],
+                text_color=COLORS["white"],
+                font=ctk.CTkFont(
+                    size=15,
+                    weight="bold"
+                )
+            )
+
+        # ------------------------------------
+        # FOCUS BİTTİ, KULLANICI SEÇİM BEKLİYOR
+        # ------------------------------------
+        if self.is_waiting_for_completion_choice:
+
+            self.fullscreen_stop_alarm_button.configure(
+                text=self.app.t("continue_to_break"),
+                command=self.continue_to_break,
+                fg_color=COLORS["green"],
+                hover_color=COLORS["green"]
+            )
+
+            self.fullscreen_stop_alarm_button.grid(
+                row=0,
+                column=0,
+                columnspan=1,
+                padx=8,
+                pady=4
+            )
+
+            self.fullscreen_extra_time_button.grid(
+                row=0,
+                column=1,
+                columnspan=1,
+                padx=8,
+                pady=4
+            )
+
+        # ------------------------------------
+        # NORMAL ALARM
+        # örn. Auto Start ile break başladı
+        # ------------------------------------
+        else:
+
+            self.fullscreen_stop_alarm_button.configure(
+                text=f"🔕 {self.app.t('stop_alarm')}",
+                command=self.dismiss_alarm,
+                fg_color=COLORS["red"],
+                hover_color="#DC2626"
+            )
+
+            self.fullscreen_stop_alarm_button.grid(
+                row=0,
+                column=0,
+                columnspan=2,
+                padx=8,
+                pady=4
+            )
+
+            self.fullscreen_extra_time_button.grid_remove()
 
         self.app.after_idle(
             self.resize_fullscreen_view
@@ -2163,3 +2937,9 @@ class FocusPage(ctk.CTkFrame):
             and self.fullscreen_stop_alarm_button.winfo_exists()
         ):
             self.fullscreen_stop_alarm_button.grid_remove()
+
+        if (
+            self.fullscreen_extra_time_button is not None
+            and self.fullscreen_extra_time_button.winfo_exists()
+        ):
+            self.fullscreen_extra_time_button.grid_remove()
