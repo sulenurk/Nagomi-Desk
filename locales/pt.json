@@ -232,5 +232,11 @@
   "alarm_dance": "Dança",
 
   "always_on_top": "Sempre no Topo",
-  "always_on_top_desc": "Mantém a visualização mínima do temporizador acima das outras janelas."
+  "always_on_top_desc": "Mantém a visualização mínima do temporizador acima das outras janelas.",
+
+  "extra_time": "Tempo extra",
+  "extra_time_desc": "Mostrar uma opção de tempo extra para continuar trabalhando após o término do tempo de foco.",
+  "finish": "Concluir",
+  "skip_break": "Pular pausa",
+  "continue_to_break": "Ir para a pausa"
 }

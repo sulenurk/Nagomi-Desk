@@ -1,5 +1,5 @@
 #define MyAppName "Nagomi Desk"
-#define MyAppVersion "1.1.0"
+#define MyAppVersion "1.1.1"
 #define MyAppPublisher "SK Labs"
 #define MyAppExeName "NagomiDesk.exe"
 

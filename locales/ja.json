@@ -232,5 +232,11 @@
   "alarm_dance": "ダンス",
 
   "always_on_top": "常に手前に表示",
-  "always_on_top_desc": "最小表示のタイマーを他のウィンドウより手前に表示します。"
+  "always_on_top_desc": "最小表示のタイマーを他のウィンドウより手前に表示します。",
+
+  "extra_time": "追加時間",
+  "extra_time_desc": "集中時間が終了した後も作業を続けるための追加時間オプションを表示します。",
+  "finish": "完了",
+  "skip_break": "休憩をスキップ",
+  "continue_to_break": "休憩へ進む"
 }

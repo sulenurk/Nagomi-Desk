@@ -232,5 +232,11 @@
   "alarm_dance": "Baile",
 
   "always_on_top": "Siempre Visible",
-  "always_on_top_desc": "Mantiene la vista mínima del temporizador sobre las demás ventanas."
+  "always_on_top_desc": "Mantiene la vista mínima del temporizador sobre las demás ventanas.",
+
+  "extra_time": "Tiempo extra",
+  "extra_time_desc": "Mostrar una opción de tiempo extra para seguir trabajando cuando termine el tiempo de concentración.",
+  "finish": "Finalizar",
+  "skip_break": "Omitir descanso",
+  "continue_to_break": "Ir al descanso"
 }

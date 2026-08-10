@@ -232,5 +232,12 @@
   "alarm_dance": "Dans",
 
   "always_on_top": "Her Zaman Üstte",
-  "always_on_top_desc": "Minimal sayaç görünümünü diğer pencerelerin üzerinde tutar."
+  "always_on_top_desc": "Minimal sayaç görünümünü diğer pencerelerin üzerinde tutar.",
+
+  "extra_time": "Ek Süre",
+  "extra_time_desc": "Odak süresi bittiğinde çalışmaya devam etmek için ek süre seçeneğini göster.",
+  "finish": "Tamamla",
+
+  "skip_break": "Molayı Atla",
+  "continue_to_break": "Molaya Geç"
 }

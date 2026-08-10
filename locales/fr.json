@@ -232,5 +232,11 @@
   "alarm_dance": "Danse",
 
   "always_on_top": "Toujours au Premier Plan",
-  "always_on_top_desc": "Maintient la vue minimale du minuteur au-dessus des autres fenêtres."
+  "always_on_top_desc": "Maintient la vue minimale du minuteur au-dessus des autres fenêtres.",
+
+  "extra_time": "Temps supplémentaire",
+  "extra_time_desc": "Afficher une option de temps supplémentaire pour continuer à travailler après la fin du temps de concentration.",
+  "finish": "Terminer",
+  "skip_break": "Passer la pause",
+  "continue_to_break": "Passer à la pause"
 }

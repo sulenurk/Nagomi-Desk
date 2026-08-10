@@ -232,5 +232,11 @@
   "alarm_dance": "舞蹈",
 
   "always_on_top": "始终置顶",
-  "always_on_top_desc": "使最小计时器视图始终显示在其他窗口上方。"
+  "always_on_top_desc": "使最小计时器视图始终显示在其他窗口上方。",
+
+  "extra_time": "额外时间",
+  "extra_time_desc": "专注时间结束后，显示额外时间选项以继续工作。",
+  "finish": "完成",
+  "skip_break": "跳过休息",
+  "continue_to_break": "进入休息"
 }

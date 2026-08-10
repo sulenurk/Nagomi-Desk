@@ -232,5 +232,12 @@
   "alarm_dance": "Tanz",
 
   "always_on_top": "Immer im Vordergrund",
-  "always_on_top_desc": "Hält die minimale Timeransicht über anderen Fenstern."
+  "always_on_top_desc": "Hält die minimale Timeransicht über anderen Fenstern.",
+
+    
+  "extra_time": "Zusatzzeit",
+  "extra_time_desc": "Zeigt nach Ablauf der Fokuszeit eine Option für zusätzliche Arbeitszeit an.",
+  "finish": "Beenden",
+  "skip_break": "Pause überspringen",
+  "continue_to_break": "Zur Pause"
 }

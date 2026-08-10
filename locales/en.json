@@ -232,5 +232,13 @@
   "alarm_dance": "Dance",
 
   "always_on_top": "Always on Top",
-  "always_on_top_desc": "Keeps the minimal timer view above other windows."
+  "always_on_top_desc": "Keeps the minimal timer view above other windows.",
+
+  "extra_time": "Extra Time",
+  "extra_time_desc": "Show an option to continue working after the planned focus time ends.",
+  "finish": "Finish",
+
+  "skip_break": "Skip Break",
+  "continue_to_break": "Continue to Break"
+
 }
