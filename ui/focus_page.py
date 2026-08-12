@@ -419,6 +419,61 @@ class FocusPage(ctk.CTkFrame):
             padx=3 if tiny_mode else horizontal_padding
         )
 
+        # Skip Break butonu
+        if (
+            self.fullscreen_skip_break_button is not None
+            and self.fullscreen_skip_break_button.winfo_exists()
+        ):
+            if tiny_mode:
+                skip_width = 72
+                skip_height = 24
+                skip_font_size = 8
+
+            elif compact_mode:
+                skip_width = max(
+                    90,
+                    min(int(150 * scale), 140)
+                )
+
+                skip_height = max(
+                    26,
+                    min(int(40 * scale), 36)
+                )
+
+                skip_font_size = max(
+                    9,
+                    min(int(12 * scale), 12)
+                )
+
+            else:
+                skip_width = max(
+                    110,
+                    min(int(150 * scale), 180)
+                )
+
+                skip_height = max(
+                    32,
+                    min(int(46 * scale), 52)
+                )
+
+                skip_font_size = max(
+                    10,
+                    min(int(14 * scale), 16)
+                )
+
+            self.fullscreen_skip_break_button.configure(
+                width=skip_width,
+                height=skip_height,
+                corner_radius=max(
+                    8,
+                    skip_height // 3
+                ),
+                font=ctk.CTkFont(
+                    size=skip_font_size,
+                    weight="bold"
+                )
+            )
+
         # Timer ve butonların dikey yerleşimi
         if tiny_mode:
             self.fullscreen_timer_label.grid_configure(
@@ -539,6 +594,27 @@ class FocusPage(ctk.CTkFrame):
                     weight="bold"
                 )
             )
+
+            for button in (
+                self.fullscreen_extra_time_button,
+                self.fullscreen_finish_extra_time_button,
+            ):
+                if (
+                    button is not None
+                    and button.winfo_exists()
+                ):
+                    button.configure(
+                        width=alarm_button_width,
+                        height=alarm_button_height,
+                        corner_radius=max(
+                            8,
+                            alarm_button_height // 3
+                        ),
+                        font=ctk.CTkFont(
+                            size=alarm_button_font_size,
+                            weight="bold"
+                        )
+                    )
 
             if (
                 getattr(self.app, "alarm_active", False)
