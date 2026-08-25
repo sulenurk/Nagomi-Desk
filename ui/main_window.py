@@ -19,7 +19,7 @@ from core.alarm_sounds import ALARM_SOUNDS, get_alarm_path
 class NagomiDeskApp(ctk.CTk):
     def __init__(self):
         super().__init__()
-        
+
         app_data_dir = os.path.join(
             os.environ.get("LOCALAPPDATA", os.path.expanduser("~")),
             "NagomiDesk"
@@ -37,13 +37,21 @@ class NagomiDeskApp(ctk.CTk):
         self.app_data = self.load_app_data()
         self.ensure_app_data_defaults()
         self.apply_saved_theme()
+
         self.language = self.app_data.get("language", "en")
         self.translations = self.load_translations()
 
         self.active_page = "pomodoro"
 
         self.title(self.t("app_name"))
-        self.center_window(1360, 820)
+
+        # Biraz daha küçük pencere; eski üst kenar konumu korunur.
+        self.center_window(
+            width=1320,
+            height=780,
+            top_reference_height=820
+        )
+
         self.configure(fg_color=COLORS["bg"])
 
         ctk.set_appearance_mode(
@@ -51,11 +59,9 @@ class NagomiDeskApp(ctk.CTk):
         )
         ctk.set_default_color_theme("blue")
 
-        self.after(100, self.apply_windows_title_bar_theme)
-
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
-        
+
         self.alarm_active = False
         self.alarm_source = None
         self.alarm_stop_after_id = None
@@ -68,11 +74,12 @@ class NagomiDeskApp(ctk.CTk):
                 pygame.mixer.init()
             except pygame.error as error:
                 print(f"Ses sistemi başlatılamadı: {error}")
-        
+
         self.create_sidebar()
         self.create_pages()
-
         self.show_pomodoro_page()
+
+        self.after(100, self.apply_windows_title_bar_theme)
 
     def resource_path(self, relative_path):
         if hasattr(sys, "_MEIPASS"):
@@ -83,25 +90,56 @@ class NagomiDeskApp(ctk.CTk):
             relative_path
         )
     
-    def center_window(self, width=1360, height=820):
+    def center_window(
+        self,
+        width=1320,
+        height=780,
+        top_reference_height=None
+    ):
         screen_width = self.winfo_screenwidth()
         screen_height = self.winfo_screenheight()
 
         x = (screen_width - width) // 2
-        y = (screen_height - height) // 2
+
+        reference_height = top_reference_height or height
+        y = (screen_height - reference_height) // 2
 
         self.geometry(f"{width}x{height}+{x}+{y}")
 
-    def apply_windows_title_bar_theme(self):
-        """Windows başlık çubuğunu uygulamanın temasına göre ayarlar."""
+    @staticmethod
+    def _hex_to_colorref(hex_color):
+        color = str(hex_color).lstrip("#")
+
+        if len(color) != 6:
+            raise ValueError("Invalid hexadecimal color")
+
+        red = int(color[0:2], 16)
+        green = int(color[2:4], 16)
+        blue = int(color[4:6], 16)
+
+        return red | (green << 8) | (blue << 16)
+
+    def _set_windows_frame_color(self, hwnd, attribute, hex_color):
+        color_ref = wintypes.DWORD(self._hex_to_colorref(hex_color))
+
+        ctypes.windll.dwmapi.DwmSetWindowAttribute(
+            hwnd,
+            attribute,
+            ctypes.byref(color_ref),
+            ctypes.sizeof(color_ref)
+        )
+
+    def apply_windows_title_bar_theme(self, target_window=None):
+        """Match a native Windows title bar and border to the active app theme."""
 
         if sys.platform != "win32":
             return
 
         try:
-            self.update_idletasks()
+            window = target_window or self
+            window.update_idletasks()
 
-            hwnd = ctypes.windll.user32.GetParent(self.winfo_id())
+            hwnd = ctypes.windll.user32.GetParent(window.winfo_id())
 
             appearance_mode = self.app_data.get(
                 "settings",
@@ -133,8 +171,59 @@ class NagomiDeskApp(ctk.CTk):
                     ctypes.sizeof(use_dark_mode)
                 )
 
-        except (AttributeError, OSError) as error:
+            # Windows 11 native frame colors. Unsupported attributes are
+            # ignored by older Windows builds without affecting the window.
+            self._set_windows_frame_color(hwnd, 34, COLORS["card_border"])
+            self._set_windows_frame_color(hwnd, 35, COLORS["bg"])
+            self._set_windows_frame_color(hwnd, 36, COLORS["text"])
+
+        except (AttributeError, OSError, ValueError) as error:
             print(f"[WINDOW THEME ERROR] {error}")
+
+    def get_window_work_area(self, target_window=None):
+        """Return the usable monitor area, excluding the Windows taskbar."""
+        window = target_window or self
+
+        if sys.platform != "win32":
+            return (
+                0,
+                0,
+                window.winfo_screenwidth(),
+                window.winfo_screenheight()
+            )
+
+        class MonitorInfo(ctypes.Structure):
+            _fields_ = [
+                ("cbSize", wintypes.DWORD),
+                ("rcMonitor", wintypes.RECT),
+                ("rcWork", wintypes.RECT),
+                ("dwFlags", wintypes.DWORD),
+            ]
+
+        try:
+            window.update_idletasks()
+            hwnd = ctypes.windll.user32.GetParent(window.winfo_id())
+            monitor = ctypes.windll.user32.MonitorFromWindow(hwnd, 2)
+
+            monitor_info = MonitorInfo()
+            monitor_info.cbSize = ctypes.sizeof(MonitorInfo)
+
+            if ctypes.windll.user32.GetMonitorInfoW(
+                monitor,
+                ctypes.byref(monitor_info)
+            ):
+                work = monitor_info.rcWork
+                return work.left, work.top, work.right, work.bottom
+
+        except (AttributeError, OSError):
+            pass
+
+        return (
+            0,
+            0,
+            window.winfo_screenwidth(),
+            window.winfo_screenheight()
+        )
 
     def ensure_app_data_defaults(self):
         self.app_data.setdefault("language", "en")
@@ -803,6 +892,19 @@ class NagomiDeskApp(ctk.CTk):
         self.language_menu.set(self.get_language_display_name(self.language))
         # Dil menüsünün üst boşluğunu (pady) burada kontrol edebilirsin:
         self.language_menu.grid(row=1, column=0, sticky="ew", pady=(4, 0))
+
+        self.brand_footer = ctk.CTkLabel(
+            self.bottom_container,
+            text="SKLabs®",
+            text_color=COLORS["muted"],
+            font=ctk.CTkFont(size=11, weight="bold")
+        )
+        self.brand_footer.grid(
+            row=2,
+            column=0,
+            pady=(14, 0),
+            sticky="ew"
+        )
 
     def hide_sidebar(self):
         self.sidebar.grid_remove()

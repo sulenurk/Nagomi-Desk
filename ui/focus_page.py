@@ -931,6 +931,8 @@ class FocusPage(ctk.CTkFrame):
                 pady=4
             )
 
+            self.app.after_idle(self.resize_fullscreen_view)
+
 
         elif (
             getattr(self.app, "alarm_active", False)
@@ -2683,6 +2685,8 @@ class FocusPage(ctk.CTkFrame):
                 padx=8,
                 pady=4
             )
+
+            self.app.after_idle(self.resize_fullscreen_view)
 
         self.timer_label.configure(
             text="00:00"

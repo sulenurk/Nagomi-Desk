@@ -9,12 +9,68 @@ from ui.theme import COLORS, THEME_PALETTES
 from ui.components import AppCard, PageTitle, PageSubtitle, PrimaryButton, AppEntry
 from core.alarm_sounds import ALARM_SOUNDS
 
+
+PRIVACY_POLICY_TEXT = """PRIVACY POLICY
+
+Last updated: August 25, 2026
+
+NagomiDesk is a desktop productivity application developed by Şulenur Kule.
+
+DATA COLLECTION
+
+NagomiDesk does not collect, transmit, sell, share, or otherwise process users' personal information.
+
+The application does not require users to create an account and does not collect names, email addresses, location information, device identifiers, or usage data.
+
+LOCAL DATA STORAGE
+
+All application data is stored locally on the user's device. This may include:
+
+• study tasks and subjects
+• study plans
+• focus session history
+• productivity statistics
+• application preferences and settings
+
+This information is not transmitted to the developer or to any external server.
+
+USER CONTROL AND DATA RETENTION
+
+Users can delete their study history through the application settings.
+
+NagomiDesk also allows users to export their study history as an Excel file. Exported files are created and stored locally at a location selected by the user. NagomiDesk does not upload or share exported files.
+
+Users are responsible for managing, sharing, or deleting files they export from the application.
+
+INTERNET CONNECTION
+
+NagomiDesk does not require an internet connection for its core functionality.
+
+THIRD-PARTY SERVICES
+
+NagomiDesk does not use third-party analytics, advertising, tracking, or telemetry services.
+
+Application data is not shared with third parties.
+
+CHANGES TO THIS PRIVACY POLICY
+
+This Privacy Policy may be updated if the application's functionality or data practices change. Any updates will be published with a revised "Last updated" date.
+
+CONTACT
+
+If you have any questions about this Privacy Policy, please contact:
+
+nagomiapps.official@gmail.com
+"""
+
+
 class SettingsPage(ctk.CTkFrame):
     def __init__(self, parent, app):
         super().__init__(parent, fg_color=COLORS["bg"])
         self.app = app
         self.pending_reset_action = None
         self.pending_import_file_path = None
+        self.privacy_policy_window = None
 
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
@@ -566,12 +622,175 @@ class SettingsPage(ctk.CTkFrame):
         )
         self.import_data_button.grid(row=4, column=1, padx=(8, 18), pady=(0, 10), sticky="ew")
 
+        self.privacy_frame = ctk.CTkFrame(
+            self.settings_card,
+            fg_color=COLORS["surface"],
+            corner_radius=18
+        )
+        self.privacy_frame.grid(row=12, column=0, padx=20, pady=(0, 20), sticky="ew")
+        self.privacy_frame.grid_columnconfigure(0, weight=1)
+
+        self.privacy_title = ctk.CTkLabel(
+            self.privacy_frame,
+            text="Privacy Policy",
+            text_color=COLORS["text"],
+            font=ctk.CTkFont(size=15, weight="bold"),
+            anchor="w"
+        )
+        self.privacy_title.grid(row=0, column=0, padx=18, pady=(16, 2), sticky="w")
+
+        self.privacy_desc = ctk.CTkLabel(
+            self.privacy_frame,
+            text="Read how NagomiDesk stores and handles your data.",
+            text_color=COLORS["muted"],
+            font=ctk.CTkFont(size=13),
+            wraplength=520,
+            justify="left",
+            anchor="w"
+        )
+        self.privacy_desc.grid(row=1, column=0, padx=18, pady=(0, 16), sticky="w")
+
+        self.privacy_button = PrimaryButton(
+            self.privacy_frame,
+            text="View",
+            command=self.open_privacy_policy,
+            width=120
+        )
+        self.privacy_button.grid(
+            row=0,
+            column=1,
+            rowspan=2,
+            padx=20,
+            pady=18,
+            sticky="e"
+        )
+
         self.status_label = ctk.CTkLabel(
             self.settings_card,
             text="",
             text_color=COLORS["green"],
             font=ctk.CTkFont(size=13, weight="bold"))
-        self.status_label.grid(row=12, column=0, padx=20, pady=(0, 18), sticky="w")
+        self.status_label.grid(row=13, column=0, padx=20, pady=(0, 18), sticky="w")
+
+    def open_privacy_policy(self):
+        if (
+            self.privacy_policy_window is not None
+            and self.privacy_policy_window.winfo_exists()
+        ):
+            self.privacy_policy_window.deiconify()
+            self.privacy_policy_window.lift()
+            self.privacy_policy_window.focus_force()
+            return
+
+        window = ctk.CTkToplevel(self)
+        self.privacy_policy_window = window
+        window.withdraw()
+
+        window.title("NagomiDesk - Privacy Policy")
+        window.geometry("620x500")
+        window.minsize(460, 360)
+        window.configure(fg_color=COLORS["bg"])
+        window.transient(self.winfo_toplevel())
+        window.grid_columnconfigure(0, weight=1)
+        window.grid_rowconfigure(1, weight=1)
+
+        title = ctk.CTkLabel(
+            window,
+            text="Privacy Policy",
+            text_color=COLORS["text"],
+            font=ctk.CTkFont(size=24, weight="bold"),
+            anchor="w"
+        )
+        title.grid(row=0, column=0, padx=28, pady=(24, 14), sticky="ew")
+
+        policy_text = ctk.CTkTextbox(
+            window,
+            fg_color=COLORS["surface"],
+            text_color=COLORS["text"],
+            border_width=1,
+            border_color=COLORS.get("card_border", COLORS["soft"]),
+            corner_radius=16,
+            font=ctk.CTkFont(size=14),
+            wrap="word"
+        )
+        policy_text.grid(row=1, column=0, padx=28, pady=(0, 18), sticky="nsew")
+        policy_text.insert("1.0", PRIVACY_POLICY_TEXT)
+        policy_text.configure(state="disabled")
+
+        close_button = PrimaryButton(
+            window,
+            text="Close",
+            command=self.close_privacy_policy,
+            width=120
+        )
+        close_button.grid(row=2, column=0, padx=28, pady=(0, 24), sticky="e")
+
+        window.protocol("WM_DELETE_WINDOW", self.close_privacy_policy)
+        window.bind("<Escape>", lambda _event: self.close_privacy_policy())
+        window.after_idle(lambda: self.show_privacy_policy(window))
+
+    def show_privacy_policy(self, window):
+        if not window.winfo_exists():
+            return
+
+        self.center_privacy_policy(window)
+
+        if hasattr(self.app, "apply_windows_title_bar_theme"):
+            self.app.apply_windows_title_bar_theme(window)
+
+        window.deiconify()
+        window.lift()
+        window.focus_force()
+        window.grab_set()
+
+        # Reapply after Windows has finished drawing the native frame.
+        if hasattr(self.app, "apply_windows_title_bar_theme"):
+            window.after(
+                50,
+                lambda: self.app.apply_windows_title_bar_theme(window)
+                if window.winfo_exists()
+                else None
+            )
+
+    def center_privacy_policy(self, window):
+        window.update_idletasks()
+
+        parent = self.winfo_toplevel()
+        parent.update_idletasks()
+
+        if hasattr(self.app, "get_window_work_area"):
+            left, top, right, bottom = self.app.get_window_work_area(parent)
+        else:
+            left = 0
+            top = 0
+            right = window.winfo_screenwidth()
+            bottom = window.winfo_screenheight()
+
+        available_width = right - left
+        available_height = bottom - top
+
+        width = min(620, max(460, available_width - 80))
+        height = min(500, max(360, available_height - 80))
+
+        x = parent.winfo_rootx() + (parent.winfo_width() - width) // 2
+        y = parent.winfo_rooty() + (parent.winfo_height() - height) // 2
+
+        x = max(left + 20, min(x, right - width - 20))
+        y = max(top + 20, min(y, bottom - height - 20))
+
+        window.geometry(f"{width}x{height}+{x}+{y}")
+
+    def close_privacy_policy(self):
+        window = self.privacy_policy_window
+
+        if window is not None and window.winfo_exists():
+            try:
+                window.grab_release()
+            except Exception:
+                pass
+            window.destroy()
+
+        self.privacy_policy_window = None
 
     def export_study_history_excel(self):
         sessions = self.app.app_data.get("sessions", [])
