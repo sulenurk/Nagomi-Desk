@@ -10,60 +10,6 @@ from ui.components import AppCard, PageTitle, PageSubtitle, PrimaryButton, AppEn
 from core.alarm_sounds import ALARM_SOUNDS
 
 
-PRIVACY_POLICY_TEXT = """PRIVACY POLICY
-
-Last updated: August 25, 2026
-
-NagomiDesk is a desktop productivity application developed by Şulenur Kule.
-
-DATA COLLECTION
-
-NagomiDesk does not collect, transmit, sell, share, or otherwise process users' personal information.
-
-The application does not require users to create an account and does not collect names, email addresses, location information, device identifiers, or usage data.
-
-LOCAL DATA STORAGE
-
-All application data is stored locally on the user's device. This may include:
-
-• study tasks and subjects
-• study plans
-• focus session history
-• productivity statistics
-• application preferences and settings
-
-This information is not transmitted to the developer or to any external server.
-
-USER CONTROL AND DATA RETENTION
-
-Users can delete their study history through the application settings.
-
-NagomiDesk also allows users to export their study history as an Excel file. Exported files are created and stored locally at a location selected by the user. NagomiDesk does not upload or share exported files.
-
-Users are responsible for managing, sharing, or deleting files they export from the application.
-
-INTERNET CONNECTION
-
-NagomiDesk does not require an internet connection for its core functionality.
-
-THIRD-PARTY SERVICES
-
-NagomiDesk does not use third-party analytics, advertising, tracking, or telemetry services.
-
-Application data is not shared with third parties.
-
-CHANGES TO THIS PRIVACY POLICY
-
-This Privacy Policy may be updated if the application's functionality or data practices change. Any updates will be published with a revised "Last updated" date.
-
-CONTACT
-
-If you have any questions about this Privacy Policy, please contact:
-
-nagomiapps.official@gmail.com
-"""
-
-
 class SettingsPage(ctk.CTkFrame):
     def __init__(self, parent, app):
         super().__init__(parent, fg_color=COLORS["bg"])
@@ -71,6 +17,9 @@ class SettingsPage(ctk.CTkFrame):
         self.pending_reset_action = None
         self.pending_import_file_path = None
         self.privacy_policy_window = None
+        self.privacy_policy_title_label = None
+        self.privacy_policy_textbox = None
+        self.privacy_policy_close_button = None
 
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
@@ -632,7 +581,7 @@ class SettingsPage(ctk.CTkFrame):
 
         self.privacy_title = ctk.CTkLabel(
             self.privacy_frame,
-            text="Privacy Policy",
+            text=self.app.t("privacy_policy_title"),
             text_color=COLORS["text"],
             font=ctk.CTkFont(size=15, weight="bold"),
             anchor="w"
@@ -641,7 +590,7 @@ class SettingsPage(ctk.CTkFrame):
 
         self.privacy_desc = ctk.CTkLabel(
             self.privacy_frame,
-            text="Read how NagomiDesk stores and handles your data.",
+            text=self.app.t("privacy_policy_description"),
             text_color=COLORS["muted"],
             font=ctk.CTkFont(size=13),
             wraplength=520,
@@ -652,7 +601,7 @@ class SettingsPage(ctk.CTkFrame):
 
         self.privacy_button = PrimaryButton(
             self.privacy_frame,
-            text="View",
+            text=self.app.t("privacy_policy_view"),
             command=self.open_privacy_policy,
             width=120
         )
@@ -686,7 +635,8 @@ class SettingsPage(ctk.CTkFrame):
         self.privacy_policy_window = window
         window.withdraw()
 
-        window.title("NagomiDesk - Privacy Policy")
+        privacy_title = self.app.t("privacy_policy_title")
+        window.title(f"NagomiDesk - {privacy_title}")
         window.geometry("620x500")
         window.minsize(460, 360)
         window.configure(fg_color=COLORS["bg"])
@@ -694,16 +644,22 @@ class SettingsPage(ctk.CTkFrame):
         window.grid_columnconfigure(0, weight=1)
         window.grid_rowconfigure(1, weight=1)
 
-        title = ctk.CTkLabel(
+        self.privacy_policy_title_label = ctk.CTkLabel(
             window,
-            text="Privacy Policy",
+            text=privacy_title,
             text_color=COLORS["text"],
             font=ctk.CTkFont(size=24, weight="bold"),
             anchor="w"
         )
-        title.grid(row=0, column=0, padx=28, pady=(24, 14), sticky="ew")
+        self.privacy_policy_title_label.grid(
+            row=0,
+            column=0,
+            padx=28,
+            pady=(24, 14),
+            sticky="ew"
+        )
 
-        policy_text = ctk.CTkTextbox(
+        self.privacy_policy_textbox = ctk.CTkTextbox(
             window,
             fg_color=COLORS["surface"],
             text_color=COLORS["text"],
@@ -713,17 +669,32 @@ class SettingsPage(ctk.CTkFrame):
             font=ctk.CTkFont(size=14),
             wrap="word"
         )
-        policy_text.grid(row=1, column=0, padx=28, pady=(0, 18), sticky="nsew")
-        policy_text.insert("1.0", PRIVACY_POLICY_TEXT)
-        policy_text.configure(state="disabled")
+        self.privacy_policy_textbox.grid(
+            row=1,
+            column=0,
+            padx=28,
+            pady=(0, 18),
+            sticky="nsew"
+        )
+        self.privacy_policy_textbox.insert(
+            "1.0",
+            self.app.t("privacy_policy_text")
+        )
+        self.privacy_policy_textbox.configure(state="disabled")
 
-        close_button = PrimaryButton(
+        self.privacy_policy_close_button = PrimaryButton(
             window,
-            text="Close",
+            text=self.app.t("privacy_policy_close"),
             command=self.close_privacy_policy,
             width=120
         )
-        close_button.grid(row=2, column=0, padx=28, pady=(0, 24), sticky="e")
+        self.privacy_policy_close_button.grid(
+            row=2,
+            column=0,
+            padx=28,
+            pady=(0, 24),
+            sticky="e"
+        )
 
         window.protocol("WM_DELETE_WINDOW", self.close_privacy_policy)
         window.bind("<Escape>", lambda _event: self.close_privacy_policy())
@@ -791,6 +762,9 @@ class SettingsPage(ctk.CTkFrame):
             window.destroy()
 
         self.privacy_policy_window = None
+        self.privacy_policy_title_label = None
+        self.privacy_policy_textbox = None
+        self.privacy_policy_close_button = None
 
     def export_study_history_excel(self):
         sessions = self.app.app_data.get("sessions", [])
@@ -1258,3 +1232,41 @@ class SettingsPage(ctk.CTkFrame):
         self.export_history_button.configure(text=self.app.t("export_study_history"))
         self.reset_stats_button.configure(text=self.app.t("reset_statistics"))
         self.reset_app_button.configure(text=self.app.t("reset_application"))
+
+        self.privacy_title.configure(
+            text=self.app.t("privacy_policy_title")
+        )
+        self.privacy_desc.configure(
+            text=self.app.t("privacy_policy_description")
+        )
+        self.privacy_button.configure(
+            text=self.app.t("privacy_policy_view")
+        )
+
+        if (
+            self.privacy_policy_window is not None
+            and self.privacy_policy_window.winfo_exists()
+        ):
+            privacy_title = self.app.t("privacy_policy_title")
+            self.privacy_policy_window.title(
+                f"NagomiDesk - {privacy_title}"
+            )
+
+            if self.privacy_policy_title_label is not None:
+                self.privacy_policy_title_label.configure(
+                    text=privacy_title
+                )
+
+            if self.privacy_policy_textbox is not None:
+                self.privacy_policy_textbox.configure(state="normal")
+                self.privacy_policy_textbox.delete("1.0", "end")
+                self.privacy_policy_textbox.insert(
+                    "1.0",
+                    self.app.t("privacy_policy_text")
+                )
+                self.privacy_policy_textbox.configure(state="disabled")
+
+            if self.privacy_policy_close_button is not None:
+                self.privacy_policy_close_button.configure(
+                    text=self.app.t("privacy_policy_close")
+                )

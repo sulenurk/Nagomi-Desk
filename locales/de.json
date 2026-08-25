@@ -239,5 +239,11 @@
   "extra_time_desc": "Zeigt nach Ablauf der Fokuszeit eine Option für zusätzliche Arbeitszeit an.",
   "finish": "Beenden",
   "skip_break": "Pause überspringen",
-  "continue_to_break": "Zur Pause"
+  "continue_to_break": "Zur Pause",
+
+  "privacy_policy_title": "Datenschutzrichtlinie",
+  "privacy_policy_description": "Erfahren Sie, wie NagomiDesk Ihre Daten speichert und verarbeitet.",
+  "privacy_policy_view": "Anzeigen",
+  "privacy_policy_close": "Schließen",
+  "privacy_policy_text": "DATENSCHUTZRICHTLINIE\n\nZuletzt aktualisiert: 25. August 2026\n\nNagomiDesk ist eine von SKLabs entwickelte Desktop-Produktivitätsanwendung.\n\nDATENERHEBUNG\n\nNagomiDesk erhebt, übermittelt, verkauft oder teilt keine personenbezogenen Daten der Nutzer und verarbeitet diese auch nicht auf andere Weise.\n\nDie Anwendung erfordert kein Benutzerkonto und erhebt keine Namen, E-Mail-Adressen, Standortinformationen, Gerätekennungen oder Nutzungsdaten.\n\nLOKALE DATENSPEICHERUNG\n\nAlle Anwendungsdaten werden lokal auf dem Gerät des Nutzers gespeichert. Dazu können gehören:\n\n• Lernaufgaben und Fächer\n• Lernpläne\n• Verlauf der Fokussitzungen\n• Produktivitätsstatistiken\n• Anwendungseinstellungen und Präferenzen\n\nDiese Informationen werden weder an die Entwicklerin noch an einen externen Server übermittelt.\n\nNUTZERKONTROLLE UND DATENAUFBEWAHRUNG\n\nNutzer können ihren Lernverlauf über die Anwendungseinstellungen löschen.\n\nNagomiDesk ermöglicht es Nutzern außerdem, ihren Lernverlauf als Excel-Datei zu exportieren. Exportierte Dateien werden lokal an einem vom Nutzer gewählten Speicherort erstellt und gespeichert. NagomiDesk lädt exportierte Dateien nicht hoch und gibt sie nicht weiter.\n\nDie Nutzer sind selbst dafür verantwortlich, die aus der Anwendung exportierten Dateien zu verwalten, weiterzugeben oder zu löschen.\n\nINTERNETVERBINDUNG\n\nNagomiDesk benötigt für seine Kernfunktionen keine Internetverbindung.\n\nDIENSTE DRITTER\n\nNagomiDesk verwendet keine Analyse-, Werbe-, Tracking- oder Telemetriedienste von Drittanbietern.\n\nAnwendungsdaten werden nicht an Dritte weitergegeben.\n\nÄNDERUNGEN DIESER DATENSCHUTZRICHTLINIE\n\nDiese Datenschutzrichtlinie kann aktualisiert werden, wenn sich die Funktionen oder Datenpraktiken der Anwendung ändern. Aktualisierungen werden mit einem geänderten Datum unter „Zuletzt aktualisiert“ veröffentlicht.\n\nKONTAKT\n\nWenn Sie Fragen zu dieser Datenschutzrichtlinie haben, kontaktieren Sie uns bitte unter:\n\nnagomiapps.official@gmail.com"
 }

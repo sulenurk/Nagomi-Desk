@@ -238,5 +238,11 @@
   "extra_time_desc": "Mostrar uma opção de tempo extra para continuar trabalhando após o término do tempo de foco.",
   "finish": "Concluir",
   "skip_break": "Pular pausa",
-  "continue_to_break": "Ir para a pausa"
+  "continue_to_break": "Ir para a pausa",
+
+  "privacy_policy_title": "Política de Privacidade",
+  "privacy_policy_description": "Saiba como o NagomiDesk armazena e trata os seus dados.",
+  "privacy_policy_view": "Ver",
+  "privacy_policy_close": "Fechar",
+  "privacy_policy_text": "POLÍTICA DE PRIVACIDADE\n\nÚltima atualização: 25 de agosto de 2026\n\nNagomiDesk é uma aplicação de produtividade para computador desenvolvida por SKLabs.\n\nRECOLHA DE DADOS\n\nO NagomiDesk não recolhe, transmite, vende, partilha nem trata de qualquer outra forma as informações pessoais dos utilizadores.\n\nA aplicação não exige a criação de uma conta e não recolhe nomes, endereços de e-mail, informações de localização, identificadores de dispositivos ou dados de utilização.\n\nARMAZENAMENTO LOCAL DE DADOS\n\nTodos os dados da aplicação são armazenados localmente no dispositivo do utilizador. Estes podem incluir:\n\n• tarefas e disciplinas de estudo\n• planos de estudo\n• histórico de sessões de concentração\n• estatísticas de produtividade\n• preferências e definições da aplicação\n\nEstas informações não são transmitidas à programadora nem a qualquer servidor externo.\n\nCONTROLO DO UTILIZADOR E CONSERVAÇÃO DE DADOS\n\nOs utilizadores podem eliminar o histórico de estudo através das definições da aplicação.\n\nO NagomiDesk também permite exportar o histórico de estudo como um ficheiro Excel. Os ficheiros exportados são criados e armazenados localmente num local escolhido pelo utilizador. O NagomiDesk não carrega nem partilha os ficheiros exportados.\n\nOs utilizadores são responsáveis por gerir, partilhar ou eliminar os ficheiros que exportam da aplicação.\n\nLIGAÇÃO À INTERNET\n\nO NagomiDesk não necessita de ligação à Internet para as suas funcionalidades principais.\n\nSERVIÇOS DE TERCEIROS\n\nO NagomiDesk não utiliza serviços de terceiros de análise, publicidade, monitorização ou telemetria.\n\nOs dados da aplicação não são partilhados com terceiros.\n\nALTERAÇÕES A ESTA POLÍTICA DE PRIVACIDADE\n\nEsta Política de Privacidade pode ser atualizada se as funcionalidades ou as práticas de dados da aplicação forem alteradas. As atualizações serão publicadas com uma nova data de «Última atualização».\n\nCONTACTO\n\nSe tiver dúvidas sobre esta Política de Privacidade, contacte:\n\nnagomiapps.official@gmail.com"
 }

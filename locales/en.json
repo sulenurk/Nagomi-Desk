@@ -239,6 +239,11 @@
   "finish": "Finish",
 
   "skip_break": "Skip Break",
-  "continue_to_break": "Continue to Break"
+  "continue_to_break": "Continue to Break",
 
+  "privacy_policy_title": "Privacy Policy",
+  "privacy_policy_description": "Read how NagomiDesk stores and handles your data.",
+  "privacy_policy_view": "View",
+  "privacy_policy_close": "Close",
+  "privacy_policy_text": "PRIVACY POLICY\n\nLast updated: August 25, 2026\n\nNagomiDesk is a desktop productivity application developed by SKLabs.\n\nDATA COLLECTION\n\nNagomiDesk does not collect, transmit, sell, share, or otherwise process users' personal information.\n\nThe application does not require users to create an account and does not collect names, email addresses, location information, device identifiers, or usage data.\n\nLOCAL DATA STORAGE\n\nAll application data is stored locally on the user's device. This may include:\n\n• study tasks and subjects\n• study plans\n• focus session history\n• productivity statistics\n• application preferences and settings\n\nThis information is not transmitted to the developer or to any external server.\n\nUSER CONTROL AND DATA RETENTION\n\nUsers can delete their study history through the application settings.\n\nNagomiDesk also allows users to export their study history as an Excel file. Exported files are created and stored locally at a location selected by the user. NagomiDesk does not upload or share exported files.\n\nUsers are responsible for managing, sharing, or deleting files they export from the application.\n\nINTERNET CONNECTION\n\nNagomiDesk does not require an internet connection for its core functionality.\n\nTHIRD-PARTY SERVICES\n\nNagomiDesk does not use third-party analytics, advertising, tracking, or telemetry services.\n\nApplication data is not shared with third parties.\n\nCHANGES TO THIS PRIVACY POLICY\n\nThis Privacy Policy may be updated if the application's functionality or data practices change. Any updates will be published with a revised \"Last updated\" date.\n\nCONTACT\n\nIf you have any questions about this Privacy Policy, please contact:\n\nnagomiapps.official@gmail.com"
 }

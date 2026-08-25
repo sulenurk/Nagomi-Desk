@@ -238,5 +238,11 @@
   "extra_time_desc": "专注时间结束后，显示额外时间选项以继续工作。",
   "finish": "完成",
   "skip_break": "跳过休息",
-  "continue_to_break": "进入休息"
+  "continue_to_break": "进入休息",
+
+  "privacy_policy_title": "隐私政策",
+  "privacy_policy_description": "了解 NagomiDesk 如何存储和处理您的数据。",
+  "privacy_policy_view": "查看",
+  "privacy_policy_close": "关闭",
+  "privacy_policy_text": "隐私政策\n\n最后更新：2026年8月25日\n\nNagomiDesk 是由 SKLabs 开发的桌面效率应用程序。\n\n数据收集\n\nNagomiDesk 不会收集、传输、出售、共享或以其他方式处理用户的个人信息。\n\n本应用程序不要求用户创建账户，也不会收集姓名、电子邮件地址、位置信息、设备标识符或使用数据。\n\n本地数据存储\n\n所有应用程序数据均存储在用户设备本地，其中可能包括：\n\n• 学习任务和科目\n• 学习计划\n• 专注会话历史记录\n• 效率统计数据\n• 应用程序偏好和设置\n\n这些信息不会传输给开发者或任何外部服务器。\n\n用户控制和数据保留\n\n用户可以通过应用程序设置删除学习历史记录。\n\nNagomiDesk 还允许用户将学习历史记录导出为 Excel 文件。导出的文件会在用户选择的位置创建并存储于本地。NagomiDesk 不会上传或共享导出的文件。\n\n用户负责管理、共享或删除从应用程序导出的文件。\n\n互联网连接\n\nNagomiDesk 的核心功能无需互联网连接。\n\n第三方服务\n\nNagomiDesk 不使用第三方分析、广告、跟踪或遥测服务。\n\n应用程序数据不会与第三方共享。\n\n本隐私政策的变更\n\n如果应用程序的功能或数据处理方式发生变化，本隐私政策可能会更新。任何更新都会随修订后的“最后更新”日期一起发布。\n\n联系方式\n\n如果您对本隐私政策有任何疑问，请联系：\n\nnagomiapps.official@gmail.com"
 }

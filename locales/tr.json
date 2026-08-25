@@ -239,5 +239,11 @@
   "finish": "Tamamla",
 
   "skip_break": "Molayı Atla",
-  "continue_to_break": "Molaya Geç"
+  "continue_to_break": "Molaya Geç",
+
+  "privacy_policy_title": "Gizlilik Politikası",
+  "privacy_policy_description": "NagomiDesk'in verilerinizi nasıl sakladığını ve işlediğini okuyun.",
+  "privacy_policy_view": "Görüntüle",
+  "privacy_policy_close": "Kapat",
+  "privacy_policy_text": "GİZLİLİK POLİTİKASI\n\nSon güncelleme: 25 Ağustos 2026\n\nNagomiDesk, SKLabs tarafından geliştirilen bir masaüstü verimlilik uygulamasıdır.\n\nVERİ TOPLAMA\n\nNagomiDesk, kullanıcıların kişisel bilgilerini toplamaz, iletmez, satmaz, paylaşmaz veya başka bir şekilde işlemez.\n\nUygulama, kullanıcıların hesap oluşturmasını gerektirmez; ad, e-posta adresi, konum bilgisi, cihaz tanımlayıcıları veya kullanım verileri toplamaz.\n\nYEREL VERİ DEPOLAMA\n\nTüm uygulama verileri kullanıcının cihazında yerel olarak saklanır. Bunlara şunlar dahil olabilir:\n\n• çalışma görevleri ve dersler\n• çalışma planları\n• odaklanma oturumu geçmişi\n• verimlilik istatistikleri\n• uygulama tercihleri ve ayarları\n\nBu bilgiler geliştiriciye veya herhangi bir harici sunucuya iletilmez.\n\nKULLANICI KONTROLÜ VE VERİ SAKLAMA\n\nKullanıcılar çalışma geçmişlerini uygulama ayarları üzerinden silebilir.\n\nNagomiDesk ayrıca kullanıcıların çalışma geçmişlerini Excel dosyası olarak dışa aktarmalarına olanak tanır. Dışa aktarılan dosyalar, kullanıcının seçtiği konumda yerel olarak oluşturulur ve saklanır. NagomiDesk dışa aktarılan dosyaları yüklemez veya paylaşmaz.\n\nKullanıcılar, uygulamadan dışa aktardıkları dosyaları yönetmekten, paylaşmaktan veya silmekten sorumludur.\n\nİNTERNET BAĞLANTISI\n\nNagomiDesk, temel işlevleri için internet bağlantısı gerektirmez.\n\nÜÇÜNCÜ TARAF HİZMETLERİ\n\nNagomiDesk üçüncü taraf analiz, reklam, takip veya telemetri hizmetleri kullanmaz.\n\nUygulama verileri üçüncü taraflarla paylaşılmaz.\n\nBU GİZLİLİK POLİTİKASINDAKİ DEĞİŞİKLİKLER\n\nUygulamanın işlevleri veya veri uygulamaları değişirse bu Gizlilik Politikası güncellenebilir. Güncellemeler, yenilenmiş bir “Son güncelleme” tarihiyle yayımlanır.\n\nİLETİŞİM\n\nBu Gizlilik Politikası hakkında sorularınız varsa lütfen iletişime geçin:\n\nnagomiapps.official@gmail.com"
 }
